@@ -43,6 +43,89 @@ interface RealEstate {
   description?: string;
 }
 
+// === DISCOUNT MARQUEE (CONTINUOUS & SMOOTH) ===
+const DiscountMarquee = () => {
+  const text = "* 10% discount on all items this December *";
+  return (
+    <div className="bg-gradient-to-r from-orange-500 to-amber-500  mt-20 via-orange-600 to-red-700 text-white overflow-hidden py-3 shadow-md">
+      <div className="flex">
+        <div className="animate-marquee-inline flex whitespace-nowrap">
+          <span className="mx-8 text-lg font-bold tracking-wide">{text}</span>
+          <span className="mx-8 text-lg font-bold tracking-wide">{text}</span>
+          <span className="mx-8 text-lg font-bold tracking-wide">{text}</span>
+          <span className="mx-8 text-lg font-bold tracking-wide">{text}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// === ROTATING WORDS (SMOOTH TRANSITIONS) ===
+const RotatingWords = () => {
+  const words = ['Food','Internet', 'Appliances', 'Household items', 'Housing', 'Fast Delivery'];
+  const [index, setIndex] = useState(0);
+  const [showFinal, setShowFinal] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  
+  useEffect(() => {
+    if (index < words.length) {
+      const fadeOut = setTimeout(() => setIsVisible(false), 800);
+      const changeWord = setTimeout(() => {
+        setIndex(index + 1);
+        setIsVisible(true);
+      }, 1000);
+      return () => {
+        clearTimeout(fadeOut);
+        clearTimeout(changeWord);
+      };
+    } else if (index === words.length && !showFinal) {
+      const fadeOut = setTimeout(() => setIsVisible(false), 800);
+      const showFinalMsg = setTimeout(() => {
+        setShowFinal(true);
+        setIsVisible(true);
+      }, 1000);
+      return () => {
+        clearTimeout(fadeOut);
+        clearTimeout(showFinalMsg);
+      };
+    } else if (showFinal) {
+      const fadeOut = setTimeout(() => setIsVisible(false), 2800);
+      const reset = setTimeout(() => {
+        setIndex(0);
+        setShowFinal(false);
+        setIsVisible(true);
+      }, 3000);
+      return () => {
+        clearTimeout(fadeOut);
+        clearTimeout(reset);
+      };
+    }
+  }, [index, showFinal]);
+  
+  return (
+    <div className="mt-6 text-center">
+      <div style={{ 
+        opacity: isVisible ? 1 : 0,
+        transition: 'opacity 0.4s ease-in-out',
+        minHeight: '60px'
+      }}>
+        {index < words.length ? (
+          <p className="text-xl md:text-2xl font-bold text-white">
+            Nigeria's No.1 Student Platform for{' '}
+            <span className="inline-block min-w-[220px] text-left text-yellow-300">
+              {words[index]}
+            </span>
+          </p>
+        ) : showFinal ? (
+          <p className="text-2xl md:text-3xl font-bold text-amber-300">
+            An atmosphere of good feelings
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
 export default function LandingPage() {
   const router = useRouter();
   const { fetchCategories, loading: categoriesLoading } = usePublicCategories();
@@ -106,179 +189,101 @@ export default function LandingPage() {
   const handleCategoryHover = async (categoryId: string) => {
     setHoveredCategory(categoryId);
     
-    if (categoryProducts[categoryId]) {
-      return;
-    }
+    if (categoryProducts[categoryId]) return;
 
     setLoadingProducts(prev => ({ ...prev, [categoryId]: true }));
     
     try {
-      console.log('Fetching products for category:', categoryId);
       const response = await getProductsByCategory(categoryId, { limit: 8 });
-      console.log('Products response:', response);
-      
       let products = response.products || [];
-      
       const filteredProducts = products.filter(product => {
         const productCategoryId = typeof product.category === 'string' 
           ? product.category 
           : product.category._id;
         return productCategoryId === categoryId;
       });
-      
-      console.log(`Filtered ${filteredProducts.length} products for category ${categoryId}`);
-      
-      if (filteredProducts.length === 0) {
-        console.log('No products from API after filtering, trying client-side filtering');
-        const clientSideProducts = allProducts.filter(product => {
-          const productCategoryId = typeof product.category === 'string' 
-            ? product.category 
-            : product.category._id;
-          return productCategoryId === categoryId;
-        }).slice(0, 8);
-        
-        setCategoryProducts(prev => ({
-          ...prev,
-          [categoryId]: clientSideProducts
-        }));
-      } else {
-        setCategoryProducts(prev => ({
-          ...prev,
-          [categoryId]: filteredProducts.slice(0, 8)
-        }));
-      }
-    } catch (err) {
-      console.error('Failed to fetch products for category:', err);
-      
-      const filteredProducts = allProducts.filter(product => {
-        const productCategoryId = typeof product.category === 'string' 
-          ? product.category 
-          : product.category._id;
-        return productCategoryId === categoryId;
-      }).slice(0, 8);
-      
-      console.log(`Fallback filtered ${filteredProducts.length} products for category ${categoryId}`);
-      
+
       setCategoryProducts(prev => ({
         ...prev,
-        [categoryId]: filteredProducts
+        [categoryId]: filteredProducts.length > 0 
+          ? filteredProducts.slice(0, 8)
+          : allProducts.filter(p => {
+              const id = typeof p.category === 'string' ? p.category : p.category._id;
+              return id === categoryId;
+            }).slice(0, 8)
       }));
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
     } finally {
       setLoadingProducts(prev => ({ ...prev, [categoryId]: false }));
     }
   };
 
   const getProductCategoryId = (product: Product): string => {
-    return typeof product.category === 'string' 
-      ? product.category 
-      : product.category._id;
+    return typeof product.category === 'string' ? product.category : product.category._id;
   };
 
   const getCategoryIcon = (categoryName: string): string => {
-    if (categoryIconMap[categoryName]) {
-      return categoryIconMap[categoryName];
-    }
-    
+    if (categoryIconMap[categoryName]) return categoryIconMap[categoryName];
     const normalizedName = categoryName.toLowerCase();
     for (const [key, value] of Object.entries(categoryIconMap)) {
-      if (key.toLowerCase() === normalizedName) {
-        return value;
-      }
+      if (key.toLowerCase() === normalizedName) return value;
     }
-    
     return '/assets/images/categories/furniture.png';
   };
 
   const getCategoryIconForHomeItems = (categoryName: string): string | null => {
-    // Direct match
-    if (categoryIconMap[categoryName]) {
-      return categoryIconMap[categoryName];
-    }
-    
-    // Case-insensitive match
+    if (categoryIconMap[categoryName]) return categoryIconMap[categoryName];
     const normalizedName = categoryName.toLowerCase();
     for (const [key, value] of Object.entries(categoryIconMap)) {
-      if (key.toLowerCase() === normalizedName) {
+      if (key.toLowerCase() === normalizedName || normalizedName.includes(key.toLowerCase())) {
         return value;
       }
     }
-    
-    // Partial match (e.g., "Furniture Sets" matches "Furniture")
-    for (const [key, value] of Object.entries(categoryIconMap)) {
-      if (normalizedName.includes(key.toLowerCase()) || key.toLowerCase().includes(normalizedName)) {
-        return value;
-      }
-    }
-    
-    return null; // No match found
+    return null;
   };
 
   const cards = [
-    { 
-      icon: '/assets/images/card/food-order.png', 
-      label: 'Order Food',
-      route: '/food'
-    },
-    { 
-      icon: '/assets/images/card/household.png', 
-      label: 'Household Items',
-      route: '/home-items'
-    },
-    { 
-      icon: '/assets/images/card/properties.png', 
-      label: 'Properties',
-      route: '/real-estates'
-    },
-    { 
-      icon: '/assets/images/card/internet.png', 
-      label: 'Internet',
-      route: '/internet'
-    },
+    { icon: '/assets/images/card/food-order.png', label: 'Order Food', route: '/food' },
+    { icon: '/assets/images/card/household.png', label: 'Household Items', route: '/home-items' },
+    { icon: '/assets/images/card/properties.png', label: 'Properties', route: '/real-estates' },
+    { icon: '/assets/images/card/internet.png', label: 'Internet', route: '/internet' },
   ];
 
-  const handleCardClick = (route: string) => {
-    router.push(route);
-  };
-
-  const handleCategoryClick = (categoryId: string) => {
-    router.push(`/food?category=${categoryId}`);
-  };
-
+  const handleCardClick = (route: string) => router.push(route);
+  const handleCategoryClick = (categoryId: string) => router.push(`/food?category=${categoryId}`);
   const handleProductClick = (productId: string, productName: string) => {
-    const slug = productName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    const slug = productName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
     router.push(`/${slug}/${productId}`);
   };
-
-  const handleRealEstateClick = (realEstateId: string, title: string) => {
-    router.push(`/real-estates/${realEstateId}`);
-  };
-
-  const handleHomeItemCategoryClick = (categoryId: string) => {
-    router.push(`/home-items?category=${categoryId}`);
-  };
+  const handleRealEstateClick = (realEstateId: string, title: string) => router.push(`/real-estates/${realEstateId}`);
+  const handleHomeItemCategoryClick = (categoryId: string) => router.push(`/home-items?category=${categoryId}`);
 
   return (
     <>
       <Head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap"
-          rel="stylesheet"
-        />
+        <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet" />
       </Head>
-      <div className="min-h-screen mt-20 bg-[#f8f5e6] dark:bg-gray-900 transition-colors duration-300">
-        {/* Welcome Section */}
+
+      {/* === 1. DISCOUNT MARQUEE (FIXED & VISIBLE) === */}
+      <DiscountMarquee />
+
+      <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 transition-colors duration-300">
+        {/* === 2. WELCOME SECTION WITH ROTATING TEXT === */}
         <section className="w-full bg-gradient-to-r from-[#f89b64] dark:from-gray-800 to-[#f47a45] dark:to-gray-700 text-white dark:text-gray-200 text-center py-12 md:py-16 rounded-b-[50px] shadow-lg dark:shadow-gray-900 transition-all duration-300">
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <h1 className="text-5xl md:text-7xl font-bold mb-2" style={{ fontFamily: 'Parisienne, cursive' }}>
               Welcome to Flamingo
             </h1>
-            <p className="text-lg md:text-xl font-semibold mb-8 tracking-wide">
+
+            {/* Rotating Words */}
+            <RotatingWords />
+
+            <p className="text-lg md:text-xl font-semibold mt-8 tracking-wide">
               What do you want to buy?
             </p>
-            <div className="flex flex-col md:flex-row justify-center gap-4 px-4 animate-in fade-in-0 slide-in-from-top-2 duration-300">
+
+            <div className="flex flex-col md:flex-row justify-center gap-4 px-4 mt-6">
               {categoriesLoading ? (
                 <>
                   <SkeletonLoader variant="search" className="w-full md:w-48" animate={true} />
@@ -300,113 +305,83 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Main Content Area */}
+        {/* === MAIN CONTENT (UNCHANGED) === */}
         <div className="container bg-[#f8f5e6] mx-auto px-4 md:px-6 lg:px-8 pt-10">
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar - Web View with Dynamic Categories */}
+            {/* Sidebar - Web View */}
             <aside className="hidden lg:block w-1/4 bg-[#f58c55] dark:bg-gray-800 text-white p-6 rounded-tl-[40px] rounded-bl-[40px] shadow-lg transition-colors duration-300 relative">
-              <h2 className="text-3xl font-bold mb-6" style={{ fontFamily: 'Parisienne, cursive' }}>
-                Categories
-              </h2>
+              <h2 className="text-3xl font-bold mb-6" style={{ fontFamily: 'Parisienne, cursive' }}>Categories</h2>
               <div className="space-y-3">
                 {categoriesLoading ? (
-                  <>
-                    {Array.from({ length: 8 }).map((_, index) => (
-                      <SkeletonLoader 
-                        key={`cat-skeleton-${index}`}
-                        variant="category" 
-                        className="w-full"
-                      />
-                    ))}
-                  </>
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <SkeletonLoader key={`cat-skel-${i}`} variant="category" className="w-full" />
+                  ))
                 ) : dynamicCategories.length > 0 ? (
                   dynamicCategories.map((cat) => (
-                    <div 
+                    <div
                       key={cat._id}
                       className="relative"
                       onMouseEnter={() => handleCategoryHover(cat._id)}
                       onMouseLeave={() => setHoveredCategory(null)}
                     >
-                      <div 
+                      <div
                         className="flex items-center justify-between gap-3 p-4 hover:bg-[#f7a16b] dark:hover:bg-gray-700 rounded-xl cursor-pointer transition-all duration-300 hover:scale-105"
                         onClick={() => handleCategoryClick(cat._id)}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-lg font-bold text-white tracking-tight">{cat.name}</span>
-                        </div>
+                        <span className="text-lg font-bold text-white tracking-tight">{cat.name}</span>
                         <ChevronRight className="w-4 h-4 text-white opacity-70" />
                       </div>
 
                       {hoveredCategory === cat._id && (
-                        <div 
+                        <div
                           className="absolute left-full top-0 ml-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-4 z-50 border border-gray-200 dark:border-gray-600"
                           onMouseEnter={() => setHoveredCategory(cat._id)}
                           onMouseLeave={() => setHoveredCategory(null)}
                         >
                           {loadingProducts[cat._id] ? (
-                            <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-600">
+                            <div className="space-y-3">
                               <SkeletonLoader variant="line" height="20px" width="60%" />
                               <SkeletonLoader variant="line" height="14px" width="80%" className="mt-2" />
-                              <div className="space-y-3 max-h-96 overflow-y-auto">
-                                {Array.from({ length: 6 }).map((_, index) => (
-                                  <div key={`hover-product-skeleton-${index}`} className="flex items-center gap-3 p-2">
-                                    <SkeletonLoader variant="image" width="48px" height="48px" />
-                                    <div className="flex-1 space-y-1">
-                                      <SkeletonLoader variant="line" height="14px" width="80%" />
-                                      <SkeletonLoader variant="line" height="12px" width="40%" />
-                                    </div>
+                              {Array.from({ length: 6 }).map((_, i) => (
+                                <div key={i} className="flex items-center gap-3 p-2">
+                                  <SkeletonLoader variant="image" width="48px" height="48px" />
+                                  <div className="flex-1 space-y-1">
+                                    <SkeletonLoader variant="line" height="14px" width="80%" />
+                                    <SkeletonLoader variant="line" height="12px" width="40%" />
                                   </div>
-                                ))}
-                              </div>
+                                </div>
+                              ))}
                             </div>
                           ) : (
                             <>
                               <div className="mb-3 pb-3 border-b border-gray-200 dark:border-gray-600">
-                                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">
-                                  {cat.name}
-                                </h3>
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200">{cat.name}</h3>
                                 <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                                   {cat.description || 'Browse products in this category'}
                                 </p>
                               </div>
-
-                              {categoryProducts[cat._id] && categoryProducts[cat._id].length > 0 ? (
+                              {categoryProducts[cat._id]?.length > 0 ? (
                                 <div className="space-y-2 max-h-96 overflow-y-auto">
                                   {categoryProducts[cat._id].map((product) => {
-                                    const productCategoryId = getProductCategoryId(product);
-                                    if (productCategoryId !== cat._id) {
-                                      return null;
-                                    }
-                                    
+                                    if (getProductCategoryId(product) !== cat._id) return null;
                                     return (
                                       <div
                                         key={product._id}
                                         className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer transition-all"
                                         onClick={() => handleProductClick(product._id, product.name)}
                                       >
-                                        {product.images && product.images.length > 0 && (
+                                        {product.images?.[0] && (
                                           <div className="w-12 h-12 relative flex-shrink-0">
-                                            <Image
-                                              src={product.images[0]}
-                                              alt={product.name}
-                                              width={48}
-                                              height={48}
-                                              className="object-cover rounded"
-                                            />
+                                            <Image src={product.images[0]} alt={product.name} width={48} height={48} className="object-cover rounded" />
                                           </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">
-                                            {product.name}
-                                          </p>
-                                          <p className="text-xs text-[#f47a45] dark:text-[#f7a16b] font-bold">
-                                            ₦{product.price.toLocaleString()}
-                                          </p>
+                                          <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{product.name}</p>
+                                          <p className="text-xs text-[#f47a45] dark:text-[#f7a16b] font-bold">₦{product.price.toLocaleString()}</p>
                                         </div>
                                       </div>
                                     );
-                                  }).filter(Boolean)}
-                                  
+                                  })}
                                   <button
                                     onClick={() => handleCategoryClick(cat._id)}
                                     className="w-full mt-2 py-2 text-sm font-semibold text-[#f47a45] dark:text-[#f7a16b] hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-all"
@@ -415,9 +390,7 @@ export default function LandingPage() {
                                   </button>
                                 </div>
                               ) : (
-                                <div className="text-center py-6">
-                                  <p className="text-gray-600 dark:text-gray-400 text-sm">No products available in this category</p>
-                                </div>
+                                <p className="text-center py-6 text-gray-600 dark:text-gray-400 text-sm">No products available</p>
                               )}
                             </>
                           )}
@@ -426,48 +399,34 @@ export default function LandingPage() {
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-4">
-                    <p className="text-white">No categories available</p>
-                  </div>
+                  <p className="text-center py-4 text-white">No categories available</p>
                 )}
               </div>
             </aside>
 
             {/* Main Content */}
             <main className="flex-1 bg-[#f8f5e6]">
-              {/* Cards Section */}
+              {/* Cards */}
               <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-8">
                 {categoriesLoading ? (
-                  <>
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <SkeletonLoader 
-                        key={`card-skeleton-${index}`}
-                        variant="card"
-                        className="w-full h-52"
-                      />
-                    ))}
-                  </>
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <SkeletonLoader key={`card-skel-${i}`} variant="card" className="w-full h-52" />
+                  ))
                 ) : (
                   <>
-                    {cards.map((card, index) => (
+                    {cards.map((card, i) => (
                       <div
-                        key={index}
-                        className="w-52 h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer dark:text-gray-200"
+                        key={i}
+                        className="w-52 h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer"
                         onClick={() => handleCardClick(card.route)}
                       >
                         <div className="w-28 h-28 relative">
-                          <Image 
-                            src={card.icon} 
-                            alt={card.label}
-                            width={112}
-                            height={112}
-                            className="object-contain"
-                          />
+                          <Image src={card.icon} alt={card.label} width={112} height={112} className="object-contain" />
                         </div>
                         <span className="text-gray-800 dark:text-gray-200 text-lg font-semibold text-center">{card.label}</span>
                       </div>
                     ))}
-                    <div 
+                    <div
                       className="w-52 h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer"
                       onClick={() => handleCardClick('/post-ads')}
                     >
@@ -478,44 +437,29 @@ export default function LandingPage() {
                 )}
               </section>
 
-              {/* Sidebar - Categories on Mobile (Dynamic from Home Items) */}
+              {/* Mobile Categories */}
               <aside className="lg:hidden">
                 <div className="grid grid-cols-2 gap-6 py-8">
                   {homeItemCategoriesLoading ? (
-                    <>
-                      {Array.from({ length: 10 }).map((_, index) => (
-                        <SkeletonLoader 
-                          key={`mobile-cat-skeleton-${index}`}
-                          variant="category" 
-                          className="w-full h-20"
-                        />
-                      ))}
-                    </>
+                    Array.from({ length: 10 }).map((_, i) => (
+                      <SkeletonLoader key={`mob-cat-${i}`} variant="category" className="w-full h-20" />
+                    ))
                   ) : homeItemCategories.length > 0 ? (
                     homeItemCategories.map((cat) => {
                       const icon = getCategoryIconForHomeItems(cat.name);
-                      
                       return (
-                        <div 
-                          key={cat._id} 
+                        <div
+                          key={cat._id}
                           className="flex items-center gap-4 p-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 bg-[#f5f3eb] dark:bg-gray-800 border border-[#f0e6d0] dark:border-gray-700 cursor-pointer"
                           onClick={() => handleHomeItemCategoryClick(cat._id)}
                         >
                           {icon ? (
                             <div className="w-10 h-10 relative flex-shrink-0">
-                              <Image 
-                                src={icon} 
-                                alt={cat.name}
-                                width={40}
-                                height={40}
-                                className="object-contain"
-                              />
+                              <Image src={icon} alt={cat.name} width={40} height={40} className="object-contain" />
                             </div>
                           ) : (
-                            <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-[#f89b64] to-[#f47a45] rounded-lg flex items-center justify-center">
-                              <span className="text-white font-bold text-lg">
-                                {cat.name.charAt(0).toUpperCase()}
-                              </span>
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#f89b64] to-[#f47a45] rounded-lg flex items-center justify-center">
+                              <span className="text-white font-bold text-lg">{cat.name[0]}</span>
                             </div>
                           )}
                           <span className="text-base font-bold text-gray-800 dark:text-gray-200 tracking-tight line-clamp-2">
@@ -532,43 +476,30 @@ export default function LandingPage() {
                 </div>
               </aside>
 
-              {/* Trending Properties Section */}
+              {/* Properties */}
               <section className="py-8">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200" style={{ fontFamily: 'Parisienne, cursive' }}>
                     Properties
                   </h2>
-                  {realEstatesLoading && (
-                    <SkeletonLoader 
-                      variant="line" 
-                      width="20%" 
-                      height="24px"
-                    />
-                  )}
                 </div>
                 {realEstatesLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {Array.from({ length: 8 }).map((_, index) => (
-                      <SkeletonLoader 
-                        key={`property-skeleton-${index}`}
-                        variant="property"
-                        className="w-full"
-                      />
+                    {Array.from({ length: 8 }).map((_, i) => (
+                      <SkeletonLoader key={`prop-${i}`} variant="property" className="w-full" />
                     ))}
                   </div>
                 ) : realEstatesError ? (
-                  <div className="text-center py-6">
-                    <p className="text-red-500 dark:text-red-400 text-sm">Network error. Please try again later</p>
-                  </div>
+                  <p className="text-center text-red-500">Network error. Try again later.</p>
                 ) : realEstates && realEstates.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {(realEstates as RealEstate[]).slice(0, 8).map((realEstate) => {
-                      const id = realEstate.id || realEstate._id || `estate-${Math.random()}`;
-                      const title = realEstate.title || 'Untitled Property';
-                      const price = realEstate.price || realEstate.amount || 0;
-                      const address = realEstate.address || realEstate.location || 'Address not specified';
-                      const images = realEstate.images || realEstate.image || [];
-                      const mainImage = images.length > 0 ? images[0] : '/assets/images/placeholder.png';
+                    {(realEstates as RealEstate[]).slice(0, 8).map((estate) => {
+                      const id = estate.id || estate._id || `estate-${Math.random()}`;
+                      const title = estate.title || 'Untitled';
+                      const price = estate.price || estate.amount || 0;
+                      const address = estate.address || estate.location || 'No address';
+                      const images = estate.images || estate.image || [];
+                      const mainImage = images[0] || '/assets/images/placeholder.png';
 
                       return (
                         <div
@@ -577,25 +508,13 @@ export default function LandingPage() {
                           onClick={() => handleRealEstateClick(id, title)}
                         >
                           <div className="w-full h-48 relative bg-gray-100 dark:bg-gray-700">
-                            <Image 
-                              src={mainImage}
-                              alt={title}
-                              fill
-                              className="object-cover"
-                              onError={(e) => {
-                                e.currentTarget.src = '/assets/images/placeholder.png';
-                              }}
-                            />
+                            <Image src={mainImage} alt={title} fill className="object-cover" onError={(e) => { e.currentTarget.src = '/assets/images/placeholder.png'; }} />
                             <div className="absolute top-3 left-3 bg-[#f47a45] text-white px-3 py-1 rounded-full text-sm font-semibold">
                               ₦{price.toLocaleString()}
                             </div>
                           </div>
-                          
                           <div className="p-4">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2">
-                              {title}
-                            </h3>
-                            
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2">{title}</h3>
                             <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mb-2">
                               <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -603,23 +522,22 @@ export default function LandingPage() {
                               </svg>
                               <span className="line-clamp-1">{address}</span>
                             </div>
-
-                            {(realEstate.bedrooms || realEstate.bathrooms) && (
+                            {(estate.bedrooms || estate.bathrooms) && (
                               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                                {realEstate.bedrooms && (
+                                {estate.bedrooms && (
                                   <span className="flex items-center">
                                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                     </svg>
-                                    {realEstate.bedrooms} bed{realEstate.bedrooms !== 1 ? 's' : ''}
+                                    {estate.bedrooms} bed{estate.bedrooms !== 1 ? 's' : ''}
                                   </span>
                                 )}
-                                {realEstate.bathrooms && (
+                                {estate.bathrooms && (
                                   <span className="flex items-center">
                                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                     </svg>
-                                    {realEstate.bathrooms} bath{realEstate.bathrooms !== 1 ? 's' : ''}
+                                    {estate.bathrooms} bath{estate.bathrooms !== 1 ? 's' : ''}
                                   </span>
                                 )}
                               </div>
@@ -631,16 +549,11 @@ export default function LandingPage() {
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-                    <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">No Properties Available</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Check back later for new property listings</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Check back later</p>
                     <button
                       onClick={() => handleCardClick('/real-estates')}
-                      className="px-6 py-2 bg-[#f47a45] hover:bg-[#f58c55] text-white rounded-lg font-semibold transition-colors duration-300"
+                      className="px-6 py-2 bg-[#f47a45] hover:bg-[#f58c55] text-white rounded-lg font-semibold transition-colors"
                     >
                       Browse All Properties
                     </button>
@@ -652,27 +565,25 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* === GLOBAL STYLES & ANIMATIONS === */}
       <style jsx global>{`
-        .line-clamp-1 {
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 1;
+        .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+
+        @keyframes marquee-inline {
+          0% { transform: translateX(0%); }
+          100% { transform: translateX(-50%); }
         }
-        .line-clamp-2 {
-          overflow: hidden;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
+        .animate-marquee-inline {
+          animation: marquee-inline 25s linear infinite;
         }
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
+
+        @keyframes fadeSlide {
+          0% { opacity: 0; transform: translateY(10px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
-        .animate-pulse {
-          animation: shimmer 1.5s infinite;
-          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-          background-size: 200% 100%;
+        .animate-fadeSlide {
+          animation: fadeSlide 0.6s ease-out forwards;
         }
       `}</style>
     </>

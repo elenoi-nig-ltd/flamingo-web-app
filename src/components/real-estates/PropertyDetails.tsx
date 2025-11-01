@@ -10,7 +10,7 @@ const DisclaimerModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-gray-900/80">
+    <div className="fixed mt-20 inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-gray-900/80">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md mx-4 p-6 border border-gray-200 dark:border-gray-700">
         <div className="flex items-center mb-4">
           <div className="w-8 h-8 bg-orange-50 dark:bg-orange-900/50 rounded-full flex items-center justify-center mr-3">

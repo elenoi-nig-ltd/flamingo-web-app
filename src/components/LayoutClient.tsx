@@ -15,7 +15,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Routes where header should be shown (home, auth pages, and dynamic product pages)
-  const showHeader = ['/', '/admin/login', '/admin/register', '/terms', '/policy', '/cookies'].includes(pathname) || 
+  const showHeader = ['/', '/admin/login', '/admin/register', '/terms', '/policy', '/cookies', '/cancellation'].includes(pathname) || 
                     /^\/[a-zA-Z0-9-]+\/[a-zA-Z0-9]+$/.test(pathname);
   
   // Routes where sidebar should be shown (admin routes)

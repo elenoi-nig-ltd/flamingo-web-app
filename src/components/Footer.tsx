@@ -5,7 +5,7 @@ export default function Footer() {
     <>
       <footer className="bg-[#f58c55] dark:bg-gray-800 mt-20 text-white dark:text-gray-200 py-12 shadow-lg dark:shadow-gray-900 transition-colors duration-300">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12 justify-items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12 justify-items-center">
             {/* Flamingo Links */}
             <div className="flex flex-col items-center space-y-4">
               <h3 className="text-3xl font-semibold text-white dark:text-gray-100" style={{ fontFamily: 'Parisienne, cursive' }}>
@@ -99,6 +99,11 @@ export default function Footer() {
                   </a>
                 </li>
                 <li>
+                  <a href="/cancellation" className="hover:text-[#f8f5e6] dark:hover:text-white transition-colors duration-200">
+                    Cancellation Policy
+                  </a>
+                </li>
+                <li>
                   <a href="/terms" className="hover:text-[#f8f5e6] dark:hover:text-white transition-colors duration-200">
                     Terms of Service
                   </a>
@@ -107,6 +112,39 @@ export default function Footer() {
                   <a href="/cookies" className="hover:text-[#f8f5e6] dark:hover:text-white transition-colors duration-200">
                     Cookie Settings
                   </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Locations */}
+            <div className="flex flex-col items-center space-y-4">
+              <h3 className="text-3xl font-semibold text-white dark:text-gray-100" style={{ fontFamily: 'Parisienne, cursive' }}>
+                Locations
+              </h3>
+              <ul className="space-y-3 text-sm font-medium text-white/90 dark:text-gray-300 text-center max-w-xs">
+                <li className="hover:text-[#f8f5e6] dark:hover:text-white transition-colors duration-200">
+                  <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  Opposite FUT Main Campus, Gidan Kwano, Minna
+                </li>
+                <li className="hover:text-[#f8f5e6] dark:hover:text-white transition-colors duration-200">
+                  <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  Shop 1, Opposite Castle Snow Plaza, Talba Road, Gidan Kwano
+                </li>
+                <li className="hover:text-[#f8f5e6] dark:hover:text-white transition-colors duration-200">
+                  <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  Flamingo Warehouse, Gidan Mangoro, Minna
+                </li>
+                <li className="hover:text-[#f8f5e6] dark:hover:text-white transition-colors duration-200">
+                  <svg className="w-4 h-4 inline-block mr-1 -mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  Elenoi Head Office, No. 4 KFF Street, After Central Mosque, Gidan Kwano
                 </li>
               </ul>
             </div>

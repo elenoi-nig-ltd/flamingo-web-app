@@ -147,7 +147,7 @@ export const PropertyDetails = () => {
   return (
     <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 font-sans">
       <Header />
-      <DisclaimerModal isOpen={showDisclaimer} onClose={handleCloseDisclaimer} />
+      {/* <DisclaimerModal isOpen={showDisclaimer} onClose={handleCloseDisclaimer} /> */}
       
       <div className="container mx-auto px-6 py-10">
         <div className="flex justify-between items-center mb-6">

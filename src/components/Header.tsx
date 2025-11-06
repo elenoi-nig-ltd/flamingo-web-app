@@ -65,15 +65,20 @@ const Header = () => {
   return (
     <header className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 shadow-sm py-4 px-6 z-[9999] isolate"> {/* Explicitly highest z-index and isolate for stacking context */}
       <div className="container mx-auto flex justify-between items-center">
-        <div className="flex items-center">
-          <Image
-            src={'/assets/icons/logo.png'}
-            alt="Flamingo Logo"
-            width={160}
-            height={60}
-            className="h-12 w-auto"
-          />
-        </div>
+       <button
+        onClick={() => window.location.href = '/'}
+        className="focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-500 rounded-md"
+        aria-label="Go to homepage"
+      >
+        <Image
+          src={'/assets/icons/logo.png'}
+          alt="Flamingo Logo"
+          width={160}
+          height={60}
+          className="h-12 w-auto cursor-pointer"
+        />
+      </button>
+    
 
         {/* Desktop nav */}
         <nav className="hidden md:flex space-x-6">

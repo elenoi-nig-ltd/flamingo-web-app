@@ -188,15 +188,19 @@ For support, please contact us with your Order ID.
     }
   };
 
-  // FIXED: Async logic with proper loading control
+  // Handle Paystack callback
   useEffect(() => {
     const processPaymentCallback = async () => {
+      const reference = searchParams.get('reference');
+      const trxref = searchParams.get('trxref');
       const status = searchParams.get('status');
-      const txRef = searchParams.get('tx_ref') || searchParams.get('transaction_id');
+      
+      // Use reference or trxref as transaction ID
+      const transactionId = reference || trxref;
       const pendingOrder = getPendingOrder();
 
       // Validate required data
-      if (!status || !pendingOrder) {
+      if (!transactionId || !pendingOrder) {
         setPaymentStatus({
           success: false,
           message: 'Payment not confirmed. Please contact support.',
@@ -205,8 +209,8 @@ For support, please contact us with your Order ID.
         return;
       }
 
-      // Handle successful payment
-      if (status === 'successful' || status === 'completed') {
+      // Handle Paystack callback
+      if (status === 'success' || status === 'completed') {
         if (pendingOrder.orderType !== 'internet') {
           clearCart();
         }
@@ -223,44 +227,35 @@ For support, please contact us with your Order ID.
           return;
         }
 
-        // Internet plan: verify voucher
-        if (txRef) {
-          try {
-            const res = await fetch(`${BASEURL}/internet/public/pay/status/${txRef}`, {
-              method: 'GET',
-              headers: { 'Content-Type': 'application/json' },
-            });
-            const data = await res.json();
+        // Internet plan: verify voucher via Paystack
+        try {
+          const res = await fetch(`${BASEURL}/internet/public/pay/status/${transactionId}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const data = await res.json();
 
-            if (data.status === 'success' && data.voucherCode) {
-              setPaymentStatus({
-                success: true,
-                message: 'Your payment has been processed successfully and your internet plan is activated.',
-                order: { ...pendingOrder, voucherCode: data.voucherCode },
-              });
-            } else {
-              setPaymentStatus({
-                success: false,
-                message: 'Payment was successful, but no voucher code was received. Please contact support.',
-                order: pendingOrder,
-              });
-            }
-          } catch (err) {
-            console.error('Error fetching voucher code:', err);
+          if (data.status === 'success' && data.voucherCode) {
+            setPaymentStatus({
+              success: true,
+              message: 'Your payment has been processed successfully and your internet plan is activated.',
+              order: { ...pendingOrder, voucherCode: data.voucherCode },
+            });
+          } else {
             setPaymentStatus({
               success: false,
-              message: 'Error verifying payment. Please contact support.',
+              message: data.message || 'Payment was successful, but no voucher code was received. Please contact support.',
               order: pendingOrder,
             });
-          } finally {
-            setLoading(false); // Only exit loading here
           }
-        } else {
+        } catch (err) {
+          console.error('Error fetching voucher code:', err);
           setPaymentStatus({
             success: false,
-            message: 'Transaction reference missing. Please contact support.',
+            message: 'Error verifying payment. Please contact support.',
             order: pendingOrder,
           });
+        } finally {
           setLoading(false);
         }
       }

@@ -16,7 +16,8 @@ import {
   Receipt,
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
-
+import axios from 'axios';
+import { BASEURL } from '@/config/api/contants';
 interface PendingOrder {
   orderId: string;
   items: Array<{
@@ -33,7 +34,7 @@ interface PendingOrder {
   };
   orderType: string;
   redirectUrl: string;
-  tx_ref: string;
+  reference: string;               // Paystack reference (formerly tx_ref)
 }
 
 const PaymentCallbackPage = () => {
@@ -42,185 +43,186 @@ const PaymentCallbackPage = () => {
   const { clearCart } = useCart();
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  const [paymentStatus, setPaymentStatus] = useState<{
-    success: boolean;
-    message: string;
-    order?: PendingOrder;
-  } | null>(null);
+const [paymentStatus, setPaymentStatus] = useState<{
+  success: boolean;
+  message: string;
+  order?: PendingOrder | null;
+} | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
 
+  // --------------------------------------------------------------
+  // 1. Retrieve pending order from storage
+  // --------------------------------------------------------------
   const getPendingOrder = (): PendingOrder | null => {
     try {
-      const sessionOrder = sessionStorage.getItem('pendingOrder');
-      if (sessionOrder) return JSON.parse(sessionOrder);
-      const localOrder = localStorage.getItem('pendingOrder');
-      if (localOrder) return JSON.parse(localOrder);
+      const session = sessionStorage.getItem('pendingOrder');
+      if (session) return JSON.parse(session);
+      const local = localStorage.getItem('pendingOrder');
+      if (local) return JSON.parse(local);
       return null;
-    } catch (error) {
-      console.error('Error retrieving pending order:', error);
+    } catch (e) {
+      console.error('Parse pending order failed', e);
       return null;
     }
   };
 
-  const cleanupStorage = () => {
+  // --------------------------------------------------------------
+  // 2. Cleanup storage (including order_{reference} key)
+  // --------------------------------------------------------------
+  const cleanupStorage = (reference?: string) => {
     try {
       sessionStorage.removeItem('pendingOrder');
       localStorage.removeItem('pendingOrder');
-    } catch (error) {
-      console.error('Error cleaning up storage:', error);
+      if (reference) {
+        localStorage.removeItem(`order_${reference}`);
+      }
+    } catch (e) {
+      console.error('Cleanup error', e);
     }
   };
 
+  // --------------------------------------------------------------
+  // 3. Verify payment with backend (Paystack reference)
+  // --------------------------------------------------------------
+  const verifyPayment = async (reference: string): Promise<boolean> => {
+    try {
+      await axios.get(`${BASEURL}/payments/verify/${reference}`);
+      return true;
+    } catch (err) {
+      console.error('Backend verification failed', err);
+      return false;
+    }
+  };
+
+  // --------------------------------------------------------------
+  // 4. Text & Image Receipt (unchanged)
+  // --------------------------------------------------------------
   const downloadTextReceipt = () => {
     if (!paymentStatus?.order) return;
+    const o = paymentStatus.order;
+    const date = new Date().toLocaleString();
 
-    const order = paymentStatus.order;
-    const orderDate = new Date().toLocaleString();
-
-    const orderDetails = `
+    const txt = `
 Order Receipt
 ===============================
+Order ID: ${o.orderId}
+Transaction Ref: ${o.reference}
+Date: ${date}
+Status: ${o.status.toUpperCase()}
+Type: ${o.orderType}
 
-Order ID: ${order.orderId}
-Transaction Reference: ${order.tx_ref}
-Order Date: ${orderDate}
-Status: ${order.status.toUpperCase()}
-Order Type: ${order.orderType}
+Customer
+--------
+Name: ${o.customerInfo.name}
+Email: ${o.customerInfo.email}
+Phone: ${o.customerInfo.phone}
 
-CUSTOMER INFORMATION
--------------------
-Name: ${order.customerInfo.name}
-Email: ${order.customerInfo.email}
-Phone: ${order.customerInfo.phone}
+Items
+-----
+${o.items.map((i, idx) => `${idx + 1}. ${i.name} × ${i.quantity}`).join('\n')}
 
-ORDER ITEMS
------------
-${order.items
-  .map((item, index) => `${index + 1}. Product: ${item.name}, Quantity: ${item.quantity}`)
-  .join('\n')}
-
-TOTAL AMOUNT: ₦${order.totalAmount.toLocaleString()}
-
-Thank you for your order!
-For support, please contact us with your Order ID.
+TOTAL: ₦${o.totalAmount.toLocaleString()}
     `.trim();
 
-    const blob = new Blob([orderDetails], { type: 'text/plain' });
+    const blob = new Blob([txt], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `order-receipt-${order.orderId}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `receipt-${o.orderId}.txt`;
+    a.click();
     URL.revokeObjectURL(url);
   };
 
   const downloadImageReceipt = async () => {
-    if (!paymentStatus?.order || !receiptRef.current) return;
-
+    if (!receiptRef.current || !paymentStatus?.order) return;
     setDownloading(true);
     try {
-      const receiptElement = receiptRef.current;
+      const el = receiptRef.current;
+      el.style.position = 'absolute';
+      el.style.left = '0';
+      el.style.top = '0';
+      el.style.display = 'block';
+      el.style.opacity = '1';
+      el.style.zIndex = '10000';
+      await new Promise(r => setTimeout(r, 50));
 
-      receiptElement.style.position = 'absolute';
-      receiptElement.style.left = '0';
-      receiptElement.style.top = '0';
-      receiptElement.style.display = 'block';
-      receiptElement.style.opacity = '1';
-      receiptElement.style.zIndex = '10000';
-
-      receiptElement.offsetHeight;
-
-      const dataUrl = await toPng(receiptElement, {
+      const dataUrl = await toPng(el, {
         backgroundColor: '#fff8f0',
-        quality: 1.0,
+        quality: 1,
         pixelRatio: 2,
-        width: receiptElement.scrollWidth,
-        height: receiptElement.scrollHeight,
-        style: {
-          transform: 'none',
-          margin: '0',
-          padding: '20px',
-          boxShadow: 'none',
-          border: '1px solid #fed7aa',
-        },
+        style: { margin: '0', padding: '20px', boxShadow: 'none', border: '1px solid #fed7aa' },
       });
 
-      const link = document.createElement('a');
-      link.download = `order-receipt-${paymentStatus.order.orderId}.png`;
-      link.href = dataUrl;
-      link.click();
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `receipt-${paymentStatus.order.orderId}.png`;
+      a.click();
 
-      receiptElement.style.position = 'fixed';
-      receiptElement.style.left = '-9999px';
-      receiptElement.style.top = '0';
-      receiptElement.style.display = 'none';
-      receiptElement.style.opacity = '0';
-      receiptElement.style.zIndex = '-1';
-    } catch (error) {
-      console.error('Error generating image:', error);
+      el.style.display = 'none';
+    } catch (e) {
+      console.error(e);
       downloadTextReceipt();
     } finally {
       setDownloading(false);
     }
   };
 
+  // --------------------------------------------------------------
+  // 5. Main effect – Paystack callback logic
+  // --------------------------------------------------------------
   useEffect(() => {
-    const processPaymentCallback = () => {
-      const status = searchParams.get('status');
-      const pendingOrder = getPendingOrder();
+    const run = async () => {
+      // Paystack redirects with ?reference=xxxxx
+      const reference = searchParams.get('reference');
+      const pending = getPendingOrder();
 
-      if (status === 'successful' || status === 'completed') {
-        if (pendingOrder) {
+      if (!reference) {
+        setPaymentStatus({ success: false, message: 'No payment reference found.' });
+        setLoading(false);
+        return;
+      }
+
+      const verified = await verifyPayment(reference);
+
+      if (verified) {
+        // SUCCESS
+        if (pending) {
           clearCart();
-          cleanupStorage();
+          cleanupStorage(reference);
           setPaymentStatus({
             success: true,
-            message: 'Your payment has been processed successfully and your order is now being prepared.',
-            order: pendingOrder,
+            message: 'Payment successful! Your order is being prepared.',
+            order: { ...pending, reference, status: 'completed' },
           });
         } else {
-          setPaymentStatus({
-            success: false,
-            message: 'Payment successful, but order details not found. Contact support.',
-          });
+          setPaymentStatus({ success: true, message: 'Payment verified, but order details missing.' });
         }
-      } else if (status === 'cancelled') {
-        cleanupStorage();
-        setPaymentStatus({
-          success: false,
-          message: "Your payment was cancelled. You can try again whenever you're ready.",
-          order: pendingOrder || undefined,
-        });
-      } else if (status === 'failed') {
-        cleanupStorage();
-        setPaymentStatus({
-          success: false,
-          message: 'Payment failed. Please check your details and try again.',
-          order: pendingOrder || undefined,
-        });
       } else {
+        // FAILURE
+        cleanupStorage(reference);
         setPaymentStatus({
           success: false,
-          message: "We couldn't determine your payment status. Please contact support.",
-          order: pendingOrder || undefined,
+          message: 'Payment failed. Please try again.',
+          order: pending,
         });
       }
 
       setLoading(false);
     };
 
-    if (loading) processPaymentCallback();
+    if (loading) run();
   }, [searchParams, loading, clearCart]);
 
   const handleBackToMenu = () => {
-    const redirectUrl = paymentStatus?.order?.redirectUrl || '/food';
-    router.push(redirectUrl);
+    const url = paymentStatus?.order?.redirectUrl || '/food';
+    router.push(url);
   };
 
+  // --------------------------------------------------------------
+  // 6. Render
+  // --------------------------------------------------------------
   return (
     <div className="min-h-screen mt-20 bg-gradient-to-br from-orange-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
       {/* Hidden Printable Receipt */}
@@ -312,7 +314,9 @@ For support, please contact us with your Order ID.
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Transaction Ref:</span>
-                    <span className="font-semibold text-xs break-all">{paymentStatus.order.tx_ref}</span>
+                    <span className="font-semibold text-xs break-all">
+                      {paymentStatus.order.reference}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Order Type:</span>
@@ -351,7 +355,7 @@ For support, please contact us with your Order ID.
               </div>
 
               {/* Footer */}
-              <div className="mt-8 text-center">
+              <div className="mt- alternate text-center">
                 <div className="flex justify-center mb-4">
                   <div
                     className="bg-[#f58c55] p-4 rounded-full shadow-lg"
@@ -508,7 +512,9 @@ For support, please contact us with your Order ID.
                     </div>
                     <div className="p-3 bg-red-50 rounded-lg">
                       <span className="text-sm text-gray-600 block">Transaction:</span>
-                      <span className="font-bold text-red-700 text-xs break-all">{paymentStatus.order.tx_ref}</span>
+                      <span className="font-bold text-red-700 text-xs break-all">
+                        {paymentStatus.order.reference}
+                      </span>
                     </div>
                   </div>
 

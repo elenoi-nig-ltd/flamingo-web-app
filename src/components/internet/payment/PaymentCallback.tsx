@@ -14,6 +14,9 @@ import {
   Calendar,
   User,
   Receipt,
+  RefreshCw,
+  Clock,
+  HelpCircle,
 } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { BASEURL } from '@/config/api/contants';
@@ -45,6 +48,14 @@ interface PendingOrder {
   voucherCode?: string;
 }
 
+interface TransactionStatus {
+  status: 'success' | 'failed' | 'pending' | 'abandoned' | 'unknown';
+  message: string;
+  voucherCode?: string;
+  plan?: any;
+  timestamp?: string;
+}
+
 const PaymentCallbackPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -55,11 +66,120 @@ const PaymentCallbackPage = () => {
     success: boolean;
     message: string;
     order?: PendingOrder;
+    transactionStatus?: TransactionStatus;
   } | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
   const [hasDownloaded, setHasDownloaded] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date | null>(null);
+
+  // Enhanced transaction status checking
+  const checkTransactionStatus = async (transactionId: string): Promise<TransactionStatus> => {
+    try {
+      console.log(`Checking transaction status for:`, transactionId);
+      
+      const res = await fetch(`${BASEURL}/internet/public/pay/status/${transactionId}`, {
+        method: 'GET',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
+      const data = await res.json();
+      console.log('Transaction status response:', data);
+
+      return {
+        status: data.status,
+        message: data.message || '',
+        voucherCode: data.voucherCode,
+        plan: data.plan,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error checking transaction status:', error);
+      return {
+        status: 'unknown',
+        message: 'Unable to verify transaction status. Please try again or contact support.',
+        timestamp: new Date().toISOString()
+      };
+    }
+  };
+
+  // Get user-friendly status messages
+  const getStatusMessage = (status: string): string => {
+    const messages: { [key: string]: string } = {
+      success: 'Payment completed successfully! Your order has been processed.',
+      failed: 'Payment failed. Please check your payment details and try again.',
+      pending: 'Payment is being processed. Please wait for confirmation.',
+      abandoned: 'Payment was not completed. You can try again when ready.',
+      unknown: 'Unable to determine payment status. Please contact support.'
+    };
+    return messages[status] || 'Payment status unknown.';
+  };
+
+  // Enhanced payment verification with comprehensive status checking
+  const verifyPaymentWithRetry = async (transactionId: string, maxRetries = 8): Promise<TransactionStatus> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`Payment verification attempt ${attempt} for transaction:`, transactionId);
+        
+        const status = await checkTransactionStatus(transactionId);
+        setLastChecked(new Date());
+        
+        // If we have a definitive status, return it
+        if (status.status === 'success' || status.status === 'failed' || status.status === 'abandoned') {
+          return status;
+        }
+        
+        // If pending and we have more retries, wait with exponential backoff
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 15000); // Max 15 seconds
+          console.log(`Payment pending, retrying in ${delay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      } catch (error) {
+        console.error(`Verification attempt ${attempt} failed:`, error);
+        if (attempt === maxRetries) {
+          return {
+            status: 'unknown',
+            message: 'Verification failed after multiple attempts. Please contact support.',
+            timestamp: new Date().toISOString()
+          };
+        }
+        // Wait before retry on error too
+        await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+      }
+    }
+    
+    return {
+      status: 'pending',
+      message: 'Payment is still being processed. You can check back later or contact support if this persists.',
+      timestamp: new Date().toISOString()
+    };
+  };
+
+  // Check if transaction might be abandoned (no activity for 30 minutes)
+  const checkForAbandonedTransaction = (pendingOrder: PendingOrder): boolean => {
+    try {
+      const orderTimestamp = parseInt(pendingOrder.orderId.split('-').pop() || '0');
+      if (orderTimestamp) {
+        const orderTime = new Date(orderTimestamp);
+        const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
+        return orderTime < thirtyMinutesAgo;
+      }
+    } catch (error) {
+      console.error('Error checking transaction age:', error);
+    }
+    return false;
+  };
 
   const getPendingOrder = (): PendingOrder | null => {
     try {
@@ -88,6 +208,7 @@ const PaymentCallbackPage = () => {
 
     const order = paymentStatus.order;
     const orderDate = new Date().toLocaleString();
+    const status = paymentStatus.transactionStatus?.status || 'unknown';
 
     const orderDetails = `
 Order Receipt
@@ -96,7 +217,7 @@ Order Receipt
 Order ID: ${order.orderId}
 Transaction Reference: ${order.tx_ref}
 Order Date: ${orderDate}
-Status: ${order.status.toUpperCase()}
+Status: ${status.toUpperCase()}
 Order Type: ${order.orderType}
 
 CUSTOMER INFORMATION
@@ -123,6 +244,9 @@ ${order.items?.map((item, index) =>
 
 TOTAL AMOUNT: ₦${order.totalAmount.toLocaleString()}
 
+STATUS: ${status.toUpperCase()}
+${paymentStatus.transactionStatus?.message ? `MESSAGE: ${paymentStatus.transactionStatus.message}` : ''}
+
 Thank you for your order!
 For support, please contact us with your Order ID.
     `.trim();
@@ -144,21 +268,23 @@ For support, please contact us with your Order ID.
     setDownloading(true);
     try {
       const receiptElement = receiptRef.current;
-      receiptElement.style.position = 'absolute';
-      receiptElement.style.left = '0';
-      receiptElement.style.top = '0';
-      receiptElement.style.display = 'block';
-      receiptElement.style.opacity = '1';
-      receiptElement.style.zIndex = '10000';
+      
+      const clone = receiptElement.cloneNode(true) as HTMLDivElement;
+      clone.style.position = 'fixed';
+      clone.style.left = '0';
+      clone.style.top = '0';
+      clone.style.display = 'block';
+      clone.style.opacity = '1';
+      clone.style.zIndex = '10000';
+      clone.style.background = '#fff8f0';
+      document.body.appendChild(clone);
 
-      receiptElement.offsetHeight;
-
-      const dataUrl = await toPng(receiptElement, {
+      const dataUrl = await toPng(clone, {
         backgroundColor: '#fff8f0',
         quality: 1.0,
         pixelRatio: 2,
-        width: receiptElement.scrollWidth,
-        height: receiptElement.scrollHeight,
+        width: clone.scrollWidth,
+        height: clone.scrollHeight,
         style: {
           transform: 'none',
           margin: '0',
@@ -173,12 +299,7 @@ For support, please contact us with your Order ID.
       link.href = dataUrl;
       link.click();
 
-      receiptElement.style.position = 'fixed';
-      receiptElement.style.left = '-9999px';
-      receiptElement.style.top = '0';
-      receiptElement.style.display = 'none';
-      receiptElement.style.opacity = '0';
-      receiptElement.style.zIndex = '-1';
+      document.body.removeChild(clone);
     } catch (error) {
       console.error('Error generating image:', error);
       downloadTextReceipt();
@@ -188,101 +309,244 @@ For support, please contact us with your Order ID.
     }
   };
 
-  // Handle Paystack callback
+  const handleManualVerification = async () => {
+    const reference = searchParams.get('reference');
+    const trxref = searchParams.get('trxref');
+    const transactionId = reference || trxref;
+    
+    if (!transactionId) {
+      setPaymentStatus(prev => prev ? {
+        ...prev,
+        message: 'No transaction ID found. Please contact support with your order details.'
+      } : null);
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      const transactionStatus = await verifyPaymentWithRetry(transactionId, 3);
+      setRetryCount(prev => prev + 1);
+
+      const pendingOrder = getPendingOrder();
+      
+      if (transactionStatus.status === 'success') {
+        cleanupStorage();
+        if (pendingOrder?.orderType !== 'internet') {
+          clearCart();
+        }
+        setPaymentStatus({
+          success: true,
+          message: transactionStatus.message,
+          order: pendingOrder ? { 
+            ...pendingOrder, 
+            voucherCode: transactionStatus.voucherCode 
+          } : undefined,
+          transactionStatus
+        });
+      } else {
+        setPaymentStatus({
+          success: false,
+          message: transactionStatus.message,
+          order: pendingOrder || undefined,
+          transactionStatus
+        });
+      }
+    } catch (error) {
+      console.error('Manual verification failed:', error);
+      setPaymentStatus(prev => prev ? {
+        ...prev,
+        message: 'Verification failed. Please contact support with your transaction reference.',
+        transactionStatus: {
+          status: 'unknown',
+          message: 'Verification service unavailable.',
+          timestamp: new Date().toISOString()
+        }
+      } : null);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // Handle Paystack callback with enhanced status checking
   useEffect(() => {
     const processPaymentCallback = async () => {
       const reference = searchParams.get('reference');
       const trxref = searchParams.get('trxref');
       const status = searchParams.get('status');
+      const message = searchParams.get('message');
       
-      // Use reference or trxref as transaction ID
       const transactionId = reference || trxref;
       const pendingOrder = getPendingOrder();
+
+      console.log('Payment callback parameters:', {
+        reference,
+        trxref,
+        status,
+        message,
+        transactionId,
+        hasPendingOrder: !!pendingOrder
+      });
 
       // Validate required data
       if (!transactionId || !pendingOrder) {
         setPaymentStatus({
           success: false,
-          message: 'Payment not confirmed. Please contact support.',
+          message: 'Transaction details not found. Please contact support with your payment information.',
+          transactionStatus: {
+            status: 'unknown',
+            message: 'Missing transaction or order data.',
+            timestamp: new Date().toISOString()
+          }
         });
         setLoading(false);
         return;
       }
 
-      // Handle Paystack callback
-      if (status === 'success' || status === 'completed') {
-        if (pendingOrder.orderType !== 'internet') {
-          clearCart();
-        }
+      // Check if transaction might be abandoned
+      if (checkForAbandonedTransaction(pendingOrder)) {
         cleanupStorage();
+        setPaymentStatus({
+          success: false,
+          message: 'This transaction appears to have been abandoned. Please start a new payment.',
+          order: pendingOrder,
+          transactionStatus: {
+            status: 'abandoned',
+            message: 'Transaction was not completed within expected time.',
+            timestamp: new Date().toISOString()
+          }
+        });
+        setLoading(false);
+        return;
+      }
 
+      // Handle different initial statuses
+      if (status === 'success' || status === 'completed') {
+        console.log('Payment successful, processing order...');
+        
         // Non-internet orders: immediate success
         if (pendingOrder.orderType !== 'internet') {
+          clearCart();
+          cleanupStorage();
           setPaymentStatus({
             success: true,
             message: 'Your payment has been processed successfully and your order is now being prepared.',
             order: pendingOrder,
+            transactionStatus: {
+              status: 'success',
+              message: 'Payment completed successfully.',
+              timestamp: new Date().toISOString()
+            }
           });
           setLoading(false);
           return;
         }
 
-        // Internet plan: verify voucher via Paystack
+        // Internet plan: verify voucher via backend
         try {
-          const res = await fetch(`${BASEURL}/internet/public/pay/status/${transactionId}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          });
-          const data = await res.json();
+          setIsVerifying(true);
+          const transactionStatus = await verifyPaymentWithRetry(transactionId);
+          setRetryCount(prev => prev + 1);
 
-          if (data.status === 'success' && data.voucherCode) {
+          if (transactionStatus.status === 'success' && transactionStatus.voucherCode) {
+            cleanupStorage();
             setPaymentStatus({
               success: true,
-              message: 'Your payment has been processed successfully and your internet plan is activated.',
-              order: { ...pendingOrder, voucherCode: data.voucherCode },
+              message: transactionStatus.message,
+              order: { ...pendingOrder, voucherCode: transactionStatus.voucherCode },
+              transactionStatus
             });
           } else {
             setPaymentStatus({
               success: false,
-              message: data.message || 'Payment was successful, but no voucher code was received. Please contact support.',
+              message: transactionStatus.message,
               order: pendingOrder,
+              transactionStatus
             });
           }
         } catch (err) {
-          console.error('Error fetching voucher code:', err);
+          console.error('Error verifying payment:', err);
           setPaymentStatus({
             success: false,
-            message: 'Error verifying payment. Please contact support.',
+            message: 'Error verifying payment. Please try manual verification or contact support.',
             order: pendingOrder,
+            transactionStatus: {
+              status: 'unknown',
+              message: 'Verification process failed.',
+              timestamp: new Date().toISOString()
+            }
           });
         } finally {
+          setIsVerifying(false);
           setLoading(false);
         }
       }
-      // Handle other statuses
       else if (status === 'cancelled') {
         cleanupStorage();
         setPaymentStatus({
           success: false,
           message: "Your payment was cancelled. You can try again whenever you're ready.",
           order: pendingOrder,
+          transactionStatus: {
+            status: 'failed',
+            message: 'Payment was cancelled by user.',
+            timestamp: new Date().toISOString()
+          }
         });
         setLoading(false);
       } else if (status === 'failed') {
         cleanupStorage();
         setPaymentStatus({
           success: false,
-          message: 'Payment failed. Please check your details and try again.',
+          message: message || 'Payment failed. Please check your payment details and try again.',
           order: pendingOrder,
+          transactionStatus: {
+            status: 'failed',
+            message: 'Payment processing failed.',
+            timestamp: new Date().toISOString()
+          }
         });
         setLoading(false);
       } else {
-        setPaymentStatus({
-          success: false,
-          message: "We couldn't determine your payment status. Please contact support.",
-          order: pendingOrder,
-        });
-        setLoading(false);
+        // Unknown status - perform comprehensive verification
+        try {
+          setIsVerifying(true);
+          const transactionStatus = await verifyPaymentWithRetry(transactionId, 4);
+          
+          if (transactionStatus.status === 'success') {
+            cleanupStorage();
+            if (pendingOrder.orderType !== 'internet') {
+              clearCart();
+            }
+            setPaymentStatus({
+              success: true,
+              message: transactionStatus.message,
+              order: { ...pendingOrder, voucherCode: transactionStatus.voucherCode },
+              transactionStatus
+            });
+          } else {
+            setPaymentStatus({
+              success: false,
+              message: transactionStatus.message,
+              order: pendingOrder,
+              transactionStatus
+            });
+          }
+        } catch (error) {
+          console.error('Error verifying unknown status:', error);
+          setPaymentStatus({
+            success: false,
+            message: "We're having trouble verifying your payment status. Please try again or contact support.",
+            order: pendingOrder,
+            transactionStatus: {
+              status: 'unknown',
+              message: 'Status verification unavailable.',
+              timestamp: new Date().toISOString()
+            }
+          });
+        } finally {
+          setIsVerifying(false);
+          setLoading(false);
+        }
       }
     };
 
@@ -293,13 +557,43 @@ For support, please contact us with your Order ID.
 
   useEffect(() => {
     if (!loading && paymentStatus?.success && paymentStatus.order && !hasDownloaded) {
+      // Auto-download receipt on success
       downloadImageReceipt();
     }
   }, [loading, paymentStatus, hasDownloaded]);
 
   const handleBackToMenu = () => {
-    const redirectUrl = paymentStatus?.order?.redirectUrl || '/internet';
+    const redirectUrl = paymentStatus?.order?.redirectUrl || 
+                      (paymentStatus?.order?.orderType === 'internet' ? '/internet' : '/menu');
     router.push(redirectUrl);
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'success':
+        return <CheckCircle className="w-6 h-6 text-green-600" />;
+      case 'failed':
+      case 'abandoned':
+        return <XCircle className="w-6 h-6 text-red-600" />;
+      case 'pending':
+        return <Clock className="w-6 h-6 text-orange-500" />;
+      default:
+        return <HelpCircle className="w-6 h-6 text-gray-500" />;
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'success':
+        return 'text-green-700 bg-green-50 border-green-200';
+      case 'failed':
+      case 'abandoned':
+        return 'text-red-700 bg-red-50 border-red-200';
+      case 'pending':
+        return 'text-orange-700 bg-orange-50 border-orange-200';
+      default:
+        return 'text-gray-700 bg-gray-50 border-gray-200';
+    }
   };
 
   return (
@@ -310,6 +604,7 @@ For support, please contact us with your Order ID.
         className="fixed left-[-9999px] top-0 w-[430px] bg-white p-8 rounded-xl border border-orange-200 shadow-xl overflow-hidden"
         style={{ display: 'none', opacity: 0, zIndex: -1 }}
       >
+        {/* Receipt content remains the same */}
         {paymentStatus?.order && (
           <>
             <div className="absolute inset-0 pointer-events-none opacity-5">
@@ -357,6 +652,26 @@ For support, please contact us with your Order ID.
                   <span className="text-sm font-medium">{new Date().toLocaleString()}</span>
                 </div>
               </div>
+
+              {/* Transaction Status */}
+              {paymentStatus.transactionStatus && (
+                <div className="mb-5 p-3 bg-orange-50 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    {getStatusIcon(paymentStatus.transactionStatus.status)}
+                    <span className="font-semibold capitalize">
+                      Status: {paymentStatus.transactionStatus.status}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    {paymentStatus.transactionStatus.message}
+                  </p>
+                  {paymentStatus.transactionStatus.timestamp && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Last checked: {new Date(paymentStatus.transactionStatus.timestamp).toLocaleString()}
+                    </p>
+                  )}
+                </div>
+              )}
 
               {/* Customer Info */}
               <div className="mb-5">
@@ -500,27 +815,97 @@ For support, please contact us with your Order ID.
         </h1>
 
         <AnimatePresence>
-          {loading ? (
+          {loading || isVerifying ? (
             <motion.div className="text-center py-12">
               <div className="w-12 h-12 border-4 border-[#f58c55] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-lg text-gray-700 dark:text-gray-300">Verifying payment...</p>
+              <p className="text-lg text-gray-700 dark:text-gray-300">
+                {isVerifying ? 'Checking transaction status...' : 'Processing payment...'}
+              </p>
+              {retryCount > 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Verification attempt {retryCount}
+                </p>
+              )}
+              {lastChecked && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Last checked: {lastChecked.toLocaleTimeString()}
+                </p>
+              )}
             </motion.div>
-          ) : paymentStatus?.success ? (
+          ) : paymentStatus ? (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-orange-50 to-white dark:from-orange-900/10 dark:to-gray-800 border border-orange-200 dark:border-orange-700 rounded-3xl p-8 mb-8"
+              className={`rounded-3xl p-8 mb-8 border ${
+                paymentStatus.success 
+                  ? 'bg-gradient-to-br from-green-50 to-white border-green-200' 
+                  : 'bg-gradient-to-br from-red-50 to-orange-50 border-red-200'
+              }`}
             >
+              {/* Transaction Status Banner */}
+              {paymentStatus.transactionStatus && (
+                <div className={`mb-6 p-4 rounded-xl border ${getStatusColor(paymentStatus.transactionStatus.status)}`}>
+                  <div className="flex items-center gap-3">
+                    {getStatusIcon(paymentStatus.transactionStatus.status)}
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg capitalize">
+                        {paymentStatus.transactionStatus.status}
+                      </h3>
+                      <p className="text-sm mt-1">{paymentStatus.transactionStatus.message}</p>
+                      {paymentStatus.transactionStatus.timestamp && (
+                        <p className="text-xs opacity-75 mt-1">
+                          Last updated: {new Date(paymentStatus.transactionStatus.timestamp).toLocaleString()}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-[#f58c55] rounded-full flex items-center justify-center shadow-lg">
-                  <CheckCircle className="w-8 h-8 text-white" />
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-lg ${
+                  paymentStatus.success ? 'bg-[#f58c55]' : 'bg-red-500'
+                }`}>
+                  {paymentStatus.success ? (
+                    <CheckCircle className="w-8 h-8 text-white" />
+                  ) : (
+                    <XCircle className="w-8 h-8 text-white" />
+                  )}
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#f58c55]">Payment Successful!</p>
-                  <p className="text-sm text-gray-600">Order confirmed</p>
+                  <p className={`text-2xl font-bold ${
+                    paymentStatus.success ? 'text-[#f58c55]' : 'text-red-700'
+                  }`}>
+                    {paymentStatus.success ? 'Payment Successful!' : 'Payment Issue'}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {paymentStatus.success ? 'Order confirmed' : 'Please check details'}
+                  </p>
                 </div>
               </div>
-              <p className="text-center text-gray-700 dark:text-gray-300 mb-6">{paymentStatus.message}</p>
+
+              <p className="text-center text-gray-700 dark:text-gray-300 mb-6">
+                {paymentStatus.message}
+              </p>
+
+              {/* Manual verification for non-success states */}
+              {!paymentStatus.success && paymentStatus.transactionStatus?.status !== 'success' && (
+                <div className="text-center mb-6">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleManualVerification}
+                    disabled={isVerifying}
+                    className="px-6 py-3 bg-[#f58c55] hover:bg-orange-600 text-white rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 mx-auto shadow-md disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isVerifying ? 'animate-spin' : ''}`} />
+                    {isVerifying ? 'Checking...' : 'Check Status Again'}
+                  </motion.button>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Last check: {lastChecked ? lastChecked.toLocaleTimeString() : 'Never'}
+                  </p>
+                </div>
+              )}
 
               {paymentStatus.order && (
                 <div className="bg-white dark:bg-gray-800 rounded-2xl border border-orange-100 dark:border-orange-700 p-6">
@@ -606,60 +991,18 @@ For support, please contact us with your Order ID.
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-900/20 dark:to-orange-900/20 border border-red-200 dark:border-red-700 rounded-3xl p-8 mb-8"
+              className="text-center py-12"
             >
-              <div className="flex items-center justify-center gap-4 mb-6">
-                <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
-                  <XCircle className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-red-700">Payment Failed</p>
-                  <p className="text-sm text-red-600">Please try again</p>
-                </div>
-              </div>
-              <p className="text-center text-gray-700 dark:text-gray-300 mb-6">{paymentStatus?.message}</p>
-
-              {paymentStatus?.order && (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-red-100 p-6">
-                  <div className="flex items-center justify-center mb-6">
-                    <AlertCircle className="w-6 h-6 text-red-500 mr-3" />
-                    <h3 className="text-xl font-bold text-red-700">Order Reference</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="p-3 bg-red-50 rounded-lg">
-                      <span className="text-sm text-gray-600 block">Order ID:</span>
-                      <span className="font-bold text-red-700">{paymentStatus.order.orderId}</span>
-                    </div>
-                    <div className="p-3 bg-red-50 rounded-lg">
-                      <span className="text-sm text-gray-600 block">Transaction:</span>
-                      <span className="font-bold text-red-700 text-xs break-all">{paymentStatus.order.tx_ref}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={downloadTextReceipt}
-                      className="flex-1 px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-md"
-                    >
-                      <Download className="w-4 h-4" />
-                      Text Receipt
-                    </motion.button>
-
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={downloadImageReceipt}
-                      disabled={downloading}
-                      className="flex-1 px-6 py-3 bg-[#f58c55] hover:bg-orange-600 text-white rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2 shadow-md disabled:opacity-50"
-                    >
-                      <Receipt className="w-4 h-4" />
-                      {downloading ? 'Generating...' : 'Image Receipt'}
-                    </motion.button>
-                  </div>
-                </div>
-              )}
+              <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-lg text-gray-700 dark:text-gray-300">
+                Unable to load payment status.
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-4 px-6 py-2 bg-[#f58c55] text-white rounded-lg hover:bg-orange-600 transition-colors"
+              >
+                Reload Page
+              </button>
             </motion.div>
           )}
         </AnimatePresence>

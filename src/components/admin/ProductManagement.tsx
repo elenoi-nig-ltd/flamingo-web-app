@@ -309,7 +309,7 @@ const ProductManagement = () => {
           </div>
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Price ($)
+              Price (₦)
             </label>
             <input
               type="number"
@@ -491,7 +491,7 @@ const ProductManagement = () => {
                   </td>
                   <td className="py-3 px-4 font-medium text-gray-800 dark:text-gray-200">{product.name}</td>
                   <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{getCategoryName(product.category)}</td>
-                  <td className="py-3 px-4 text-gray-700 dark:text-gray-300">${product.price.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-gray-700 dark:text-gray-300">₦{product.price.toFixed(2)}</td>
                   <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{product.stock}</td>
                   <td className="py-3 px-4 flex space-x-3">
                     <motion.button

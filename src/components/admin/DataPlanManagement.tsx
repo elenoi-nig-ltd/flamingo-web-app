@@ -166,7 +166,7 @@ const DataPlanManagement = () => {
 
         <form onSubmit={handlePlanSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Amount (MB)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Amount (GB)</label>
             <input
               type="number"
               value={planForm.dataAmount}
@@ -213,7 +213,7 @@ const DataPlanManagement = () => {
             {planErrors?.bundle && <p className="text-red-500 dark:text-red-400 text-sm mt-1">{planErrors.bundle}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price ($)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Price (₦)</label>
             <input
               type="number"
               value={planForm.price}
@@ -259,7 +259,7 @@ const DataPlanManagement = () => {
                 <th className="py-3 px-4 text-left text-gray-700 dark:text-gray-200 font-semibold">Data (MB)</th>
                 <th className="py-3 px-4 text-left text-gray-700 dark:text-gray-200 font-semibold">Duration (days)</th>
                 <th className="py-3 px-4 text-left text-gray-700 dark:text-gray-200 font-semibold">Location</th>
-                <th className="py-3 px-4 text-left text-gray-700 dark:text-gray-200 font-semibold">Price ($)</th>
+                <th className="py-3 px-4 text-left text-gray-700 dark:text-gray-200 font-semibold">Price (₦)</th>
                 <th className="py-3 px-4 text-left text-gray-700 dark:text-gray-200 font-semibold">Created</th>
                 <th className="py-3 px-4 text-left text-gray-700 dark:text-gray-200 font-semibold">Actions</th>
               </tr>
@@ -288,7 +288,7 @@ const DataPlanManagement = () => {
                   <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{plan.dataAmount}</td>
                   <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{plan.duration}</td>
                   <td className="py-3 px-4 text-gray-600 dark:text-gray-300">{plan.location?.name ?? 'Unknown'}</td>
-                  <td className="py-3 px-4 text-gray-600 dark:text-gray-300">${plan.price.toFixed(2)}</td>
+                  <td className="py-3 px-4 text-gray-600 dark:text-gray-300">₦{plan.price.toFixed(2)}</td>
                   <td className="py-3 px-4 text-gray-600 dark:text-gray-300">
                     {new Date(plan.createdAt).toLocaleDateString()}
                   </td>

@@ -298,7 +298,7 @@ const VoucherManagement = () => {
                 value={voucherForm.code || ''}
                 onChange={(e) => setVoucherForm({ ...voucherForm, code: e.target.value })}
                 className={`w-full p-3 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#f58c55]/50 dark:focus:ring-[#f7a16b]/50 transition-all duration-300 text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 ${voucherErrors?.code ? 'border-red-500 dark:border-red-400' : 'border-gray-200/50 dark:border-gray-600/50'}`}
-                placeholder="e.g., ABC123XYZ"
+                placeholder="e.g., 768473"
                 maxLength={20}
                 disabled={loading}
               />
@@ -326,7 +326,7 @@ const VoucherManagement = () => {
                 onChange={(e) => setVoucherForm({ ...voucherForm, codes: e.target.value })}
                 rows={8}
                 className={`w-full p-3 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#f58c55]/50 dark:focus:ring-[#f7a16b]/50 transition-all duration-300 text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 resize-none ${voucherErrors?.codes ? 'border-red-500 dark:border-red-400' : 'border-gray-200/50 dark:border-gray-600/50'}`}
-                placeholder={`ABC123XYZ\nDEF456ABC\nGHI789DEF`}
+                placeholder={`558693\n338573\n557683`}
                 disabled={loading}
               />
               {codeCount > 0 && (

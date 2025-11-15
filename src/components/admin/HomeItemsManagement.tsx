@@ -559,7 +559,7 @@ const HomeItemManagement = () => {
           </div>
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Price ($)
+              Price (₦)
             </label>
             <input
               type="number"
@@ -751,7 +751,7 @@ const HomeItemManagement = () => {
                     </td>
                     <td className="py-3 px-4 font-medium text-gray-800 dark:text-gray-200">{homeItem.name}</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{homeItem.category?.name || 'Uncategorized'}</td>
-                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">${homeItem.price.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">₦{homeItem.price.toFixed(2)}</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{homeItem.stock}</td>
                     <td className="py-3 px-4 flex space-x-3">
                       <motion.button

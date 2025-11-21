@@ -234,16 +234,20 @@ const createBulkVouchers = useCallback(async (data: { codes: string; plan: strin
     }
   }, []);
 
-  const getVouchers = useCallback(async (query: QueryParams = {}) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({ ...(query.page && { page: query.page.toString() }), ...(query.limit && { limit: query.limit.toString() }) });
-      return await apiCall(`/vouchers${params.toString() ? `?${params.toString()}` : ''}`);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+// In your useInternet hook, update the getVouchers function:
+const getVouchers = useCallback(async (query: QueryParams = {}) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const params = new URLSearchParams();
+    if (query.page) params.append('page', query.page.toString());
+    if (query.limit) params.append('limit', query.limit.toString());
+    // Remove default limit to get all vouchers for frontend pagination
+    return await apiCall(`/vouchers${params.toString() ? `?${params.toString()}` : ''}`);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   const getVoucher = useCallback(async (id: string) => {
     setLoading(true);

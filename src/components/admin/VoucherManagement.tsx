@@ -11,7 +11,10 @@ import {
   FaCopy, 
   FaFilePdf, 
   FaUpload,
-  FaCheckCircle
+  FaCheckCircle,
+  FaChevronLeft,
+  FaChevronRight,
+  FaFilter
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
@@ -58,6 +61,12 @@ const VoucherManagement = () => {
   const [pdfUploadResult, setPdfUploadResult] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -74,6 +83,30 @@ const VoucherManagement = () => {
     };
     loadData();
   }, [getVouchers, getDataPlans, setError]);
+
+  // Filter and paginate vouchers
+  const filteredVouchers = vouchers.filter(voucher => {
+    const matchesSearch = voucher.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         voucher.plan?.bundle?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' ||
+                         (filterStatus === 'active' && !voucher.used && new Date(voucher.expiresAt) > new Date()) ||
+                         (filterStatus === 'used' && voucher.used) ||
+                         (filterStatus === 'expired' && !voucher.used && new Date(voucher.expiresAt) < new Date());
+    
+    return matchesSearch && matchesStatus;
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredVouchers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentVouchers = filteredVouchers.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterStatus, searchTerm, itemsPerPage]);
 
   const validateVoucher = (): boolean => {
     const errors: FormErrors = {};
@@ -269,6 +302,23 @@ const VoucherManagement = () => {
     }
     setShowDeleteModal(false);
     setItemToDelete(null);
+  };
+
+  // Pagination handlers
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   const codeCount = voucherForm.codes
@@ -635,12 +685,59 @@ const VoucherManagement = () => {
           )}
         </AnimatePresence>
 
-        {/* Vouchers Table */}
+        {/* Vouchers Table with Filters and Pagination */}
         <div className="overflow-x-auto">
           <div className="bg-gray-50/50 dark:bg-gray-700/50 px-4 py-3 rounded-t-xl border-b">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Voucher List</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Total: {vouchers.length} vouchers</p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200">Voucher List</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Showing {currentVouchers.length} of {filteredVouchers.length} vouchers
+                  {filterStatus !== 'all' && ` (filtered by ${filterStatus})`}
+                </p>
+              </div>
+              
+              {/* Filters */}
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                {/* Search Input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search vouchers..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f58c55]/50 w-full sm:w-64"
+                  />
+                  <FaFilter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                </div>
+
+                {/* Status Filter */}
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f58c55]/50"
+                >
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="used">Used</option>
+                  <option value="expired">Expired</option>
+                </select>
+
+                {/* Items Per Page */}
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f58c55]/50"
+                >
+                  <option value="10">10 per page</option>
+                  <option value="25">25 per page</option>
+                  <option value="50">50 per page</option>
+                  <option value="100">100 per page</option>
+                </select>
+              </div>
+            </div>
           </div>
+
           <table className="w-full text-sm">
             <thead className="bg-gray-50/50 dark:bg-gray-700/50">
               <tr>
@@ -661,16 +758,16 @@ const VoucherManagement = () => {
                   </td>
                 </tr>
               )}
-              {vouchers.length === 0 && !vouchersLoading && (
+              {currentVouchers.length === 0 && !vouchersLoading && (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-gray-500">
                     <FaTicketAlt className="mx-auto text-6xl mb-4 text-gray-400" />
                     <p className="text-lg">No vouchers found</p>
-                    <p className="text-sm">Create your first voucher above</p>
+                    <p className="text-sm">Try adjusting your filters or create new vouchers</p>
                   </td>
                 </tr>
               )}
-              {vouchers.map((voucher) => (
+              {currentVouchers.map((voucher) => (
                 <motion.tr
                   key={voucher._id}
                   className="border-b hover:bg-orange-50/50 dark:hover:bg-orange-900/20"
@@ -696,7 +793,7 @@ const VoucherManagement = () => {
                       voucher.used 
                         ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
                         : new Date(voucher.expiresAt) < new Date()
-                        ? 'bg-yellow-100 text-yellow-800'
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200'
                         : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
                     }`}>
                       {voucher.used ? 'Used' : new Date(voucher.expiresAt) < new Date() ? 'Expired' : 'Active'}
@@ -730,6 +827,73 @@ const VoucherManagement = () => {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="bg-gray-50/50 dark:bg-gray-700/50 px-4 py-3 rounded-b-xl border-t">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {startIndex + 1} to {Math.min(endIndex, filteredVouchers.length)} of {filteredVouchers.length} entries
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  {/* Previous Button */}
+                  <motion.button
+                    onClick={goToPrevPage}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    whileHover={{ scale: currentPage === 1 ? 1 : 1.05 }}
+                    whileTap={{ scale: currentPage === 1 ? 1 : 0.95 }}
+                  >
+                    <FaChevronLeft className="text-gray-600 dark:text-gray-400" />
+                  </motion.button>
+
+                  {/* Page Numbers */}
+                  <div className="flex space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+
+                      return (
+                        <motion.button
+                          key={pageNum}
+                          onClick={() => goToPage(pageNum)}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium ${
+                            currentPage === pageNum
+                              ? 'bg-[#f58c55] text-white'
+                              : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600'
+                          }`}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {pageNum}
+                        </motion.button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Next Button */}
+                  <motion.button
+                    onClick={goToNextPage}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    whileHover={{ scale: currentPage === totalPages ? 1 : 1.05 }}
+                    whileTap={{ scale: currentPage === totalPages ? 1 : 0.95 }}
+                  >
+                    <FaChevronRight className="text-gray-600 dark:text-gray-400" />
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Delete Confirmation Modal */}

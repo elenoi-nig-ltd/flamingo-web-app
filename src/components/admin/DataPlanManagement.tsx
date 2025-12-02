@@ -219,7 +219,7 @@ const DataPlanManagement = () => {
         <form onSubmit={handlePlanSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* ... (all your existing form fields remain exactly the same) ... */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Amount (MB)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Amount (GB)</label>
             <input
               type="number"
               value={planForm.dataAmount}
@@ -367,7 +367,7 @@ const DataPlanManagement = () => {
             <thead className="bg-gray-50/50 dark:bg-gray-700/50">
               <tr>
                 <th className="py-3 px-4 text-left font-semibold">Bundle</th>
-                <th className="py-3 px-4 text-left font-semibold">Data (MB)</th>
+                <th className="py-3 px-4 text-left font-semibold">Data (GB)</th>
                 <th className="py-3 px-4 text-left font-semibold">Duration (days)</th>
                 <th className="py-3 px-4 text-left font-semibold">Location</th>
                 <th className="py-3 px-4 text-left font-semibold">Price (₦)</th>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTrash, FaMinus, FaPlus, FaUser, FaPhone, FaEnvelope, FaTimes } from 'react-icons/fa';
+import { FaTrash, FaMinus, FaPlus, FaUser, FaPhone, FaEnvelope, FaTimes, FaStore, FaTruck } from 'react-icons/fa';
 import { usePayments } from '@/hooks/usePayments';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/hooks/useAuth';
@@ -94,6 +94,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
     email: '',
     phone: '',
   });
+  const [deliveryOption, setDeliveryOption] = useState<'pickup' | 'delivery'>('pickup');
   const { initiatePayment, loading: paymentLoading, error: paymentError } = usePayments();
   const { createOrder, loading: orderLoading, error: orderError } = useOrders();
   const { user } = useAuth();
@@ -117,6 +118,19 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
     setShowCustomerForm(true);
   };
 
+  // Calculate subtotal (sum of all items)
+  const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  
+  // Calculate delivery fee
+  const deliveryFee = deliveryOption === 'delivery' ? 500 : 0;
+  
+  // Calculate VAT (7.5% of subtotal + delivery fee)
+  const vatRate = 0.075; // 7.5%
+  const vatAmount = (subtotal + deliveryFee) * vatRate;
+  
+  // Calculate total (subtotal + delivery fee + VAT)
+  const totalWithFees = subtotal + deliveryFee + vatAmount;
+
   const handleCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -131,10 +145,14 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
       const orderData = {
         items: items.map((item) => ({
           product: item.id,
-          name: item.name, // Include product name
+          name: item.name,
           quantity: item.quantity,
         })),
-        totalAmount: totalPrice,
+        totalAmount: totalWithFees,
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        vatAmount: vatAmount,
+        deliveryOption: deliveryOption,
         status: 'pending' as const,
       };
 
@@ -150,7 +168,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
       const paymentData = {
         orderId: order._id,
         email: customerInfo.email,
-        amount: totalPrice,
+        amount: totalWithFees,
         currency: 'NGN',
       };
 
@@ -167,7 +185,11 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
       const pendingOrder = {
         orderId: order._id,
         items: orderData.items,
-        totalAmount: totalPrice,
+        totalAmount: totalWithFees,
+        subtotal: subtotal,
+        deliveryFee: deliveryFee,
+        vatAmount: vatAmount,
+        deliveryOption: deliveryOption,
         status: 'pending',
         tx_ref: paymentResult.transactionId,
         customerInfo,
@@ -335,6 +357,37 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                     ))}
                   </div>
                   <div className="flex-shrink-0 p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+                    {/* Delivery/Pickup Selection */}
+                    <div className="mb-4">
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Select Delivery Option</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryOption('pickup')}
+                          className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-lg border transition-all duration-300 ${
+                            deliveryOption === 'pickup'
+                              ? 'bg-[#f58c55] border-[#f58c55] text-white'
+                              : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          <FaStore />
+                          <span>Pickup</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDeliveryOption('delivery')}
+                          className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-lg border transition-all duration-300 ${
+                            deliveryOption === 'delivery'
+                              ? 'bg-[#f58c55] border-[#f58c55] text-white'
+                              : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          <FaTruck />
+                          <span>Delivery (+₦500)</span>
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-gray-600 dark:text-gray-400">Items: {items.length}</span>
                       <button
@@ -345,10 +398,36 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                         <span>Clear Cart</span>
                       </button>
                     </div>
+
+                    {/* Price Breakdown */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                        <span>Subtotal:</span>
+                        <span>₦{subtotal.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                        <span>Delivery Fee:</span>
+                        <span>{deliveryFee > 0 ? `+₦${deliveryFee.toLocaleString()}` : 'Free'}</span>
+                      </div>
+                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                        <span>VAT (7.5%):</span>
+                        <span>+₦{vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="border-t border-gray-300 dark:border-gray-700 pt-2 mt-2">
+                        <div className="flex justify-between font-bold text-gray-900 dark:text-white">
+                          <span>Total:</span>
+                          <span>₦{totalWithFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="bg-[#f58c55]/10 dark:bg-[#f58c55]/20 rounded-lg p-4 mb-4">
                       <div className="text-center">
                         <p className="text-[#f58c55] dark:text-[#f7a16b] font-bold text-xl">
-                          Total: ₦{totalPrice.toLocaleString()}
+                          Total: ₦{totalWithFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {deliveryOption === 'pickup' ? 'Pickup at store' : 'Delivery to your address'}
                         </p>
                       </div>
                     </div>
@@ -382,6 +461,14 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                       <p className="text-gray-600 dark:text-gray-400">
                         Please provide your details to continue with payment
                       </p>
+                      <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          {deliveryOption === 'pickup' ? 'Pickup Order' : 'Delivery Order'}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          Total: ₦{totalWithFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </p>
+                      </div>
                     </div>
                     <form onSubmit={handleCustomerSubmit} className="space-y-4">
                       <div>
@@ -429,7 +516,13 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                           required
                         />
                       </div>
- rescues
+                      {deliveryOption === 'delivery' && (
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            <span className="font-semibold">Note:</span> ₦500 delivery fee is included in your total.
+                          </p>
+                        </div>
+                      )}
                       <SafeErrorDisplay error={orderError || paymentError} />
                       <div className="flex gap-3 pt-4">
                         <button

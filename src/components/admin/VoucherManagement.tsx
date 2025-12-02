@@ -427,7 +427,7 @@ const VoucherManagement = () => {
               <option value="">Select data plan</option>
               {dataPlans.map((plan) => (
                 <option key={plan._id} value={plan._id} className="text-gray-900 dark:text-gray-200">
-                  {plan.location?.name} - {plan.bundle} ({plan.dataAmount}MB, {plan.duration} days) - ₦{plan.price}
+                  {plan.location?.name} - {plan.bundle} ({plan.dataAmount}GB, {plan.duration} days) - ₦{plan.price}
                 </option>
               ))}
             </select>
@@ -635,7 +635,7 @@ const VoucherManagement = () => {
                   <div className="mt-3 space-y-1 text-green-700 dark:text-green-300">
                     <p>Extracted <strong>{pdfUploadResult.total_codes}</strong> voucher codes</p>
                     <p>File: <strong>{pdfUploadResult.filename}</strong></p>
-                    <p>Plan: <strong>{pdfUploadResult.plan_details?.bundle}</strong> ({pdfUploadResult.plan_details?.dataAmount}MB)</p>
+                    <p>Plan: <strong>{pdfUploadResult.plan_details?.bundle}</strong> ({pdfUploadResult.plan_details?.dataAmount}GB)</p>
                   </div>
                 </div>
                 <motion.button
@@ -783,7 +783,7 @@ const VoucherManagement = () => {
                     <div>
                       <p className="font-medium">{voucher.plan?.bundle}</p>
                       <p className="text-xs text-gray-600 dark:text-gray-400">
-                        {voucher.plan?.dataAmount}MB / {voucher.plan?.duration} days
+                        {voucher.plan?.dataAmount}GB / {voucher.plan?.duration} days
                       </p>
                       <p className="text-xs text-gray-500">{voucher.plan?.location?.name}</p>
                     </div>

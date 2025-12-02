@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PlusCircle, ChevronRight, Search, X } from 'lucide-react';
@@ -23,19 +22,16 @@ interface HomeItem {
   images?: string[];
   category?: { _id: string; name: string };
 }
-
 interface UseHomeItemsReturn {
   homeItems: HomeItem[];
   loading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
 }
-
 const useHomeItems = (): UseHomeItemsReturn => {
   const [homeItems, setHomeItems] = useState<HomeItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
   const fetchHomeItems = async () => {
     setLoading(true);
     try {
@@ -51,11 +47,9 @@ const useHomeItems = (): UseHomeItemsReturn => {
       setLoading(false);
     }
   };
-
   useEffect(() => {
     fetchHomeItems();
   }, []);
-
   return { homeItems, loading, error, refetch: fetchHomeItems };
 };
 
@@ -69,7 +63,6 @@ interface Category {
   createdAt?: string;
   updatedAt?: string;
 }
-
 interface Product {
   _id: string;
   name: string;
@@ -79,7 +72,6 @@ interface Product {
   stock: number;
   images?: string[];
 }
-
 interface RealEstate {
   id: string;
   _id?: string;
@@ -118,7 +110,7 @@ const RotatingWords = () => {
   const [index, setIndex] = useState(0);
   const [showFinal, setShowFinal] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  
+ 
   useEffect(() => {
     if (index < words.length) {
       const fadeOut = setTimeout(() => setIsVisible(false), 800);
@@ -137,7 +129,7 @@ const RotatingWords = () => {
       return () => { clearTimeout(fadeOut); clearTimeout(reset); };
     }
   }, [index, showFinal]);
-  
+ 
   return (
     <div className="mt-6 text-center">
       <div style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.4s ease-in-out', minHeight: '60px' }}>
@@ -160,27 +152,22 @@ const RotatingWords = () => {
 
 export default function LandingPage() {
   const router = useRouter();
-
   // Existing hooks
   const { fetchCategories, loading: categoriesLoading } = usePublicCategories();
   const { getProductsByCategory, fetchProducts } = usePublicProducts();
   const { realEstates, loading: realEstatesLoading, error: realEstatesError } = useRealEstates({ fetchMode: 'public' });
   const { categories: homeItemCategories, loading: homeItemCategoriesLoading } = useHomeItemCategories();
-
   // NEW: Home items
   const { homeItems, loading: homeItemsLoading } = useHomeItems();
-
   const [dynamicCategories, setDynamicCategories] = useState<Category[]>([]);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
   const [loadingProducts, setLoadingProducts] = useState<Record<string, boolean>>({});
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-
   const categoryIconMap: Record<string, string> = {
     'Furnitures': '/assets/images/categories/furniture.png',
     'Furniture': '/assets/images/categories/furniture.png',
@@ -216,7 +203,6 @@ export default function LandingPage() {
     };
     loadCategories();
   }, []);
-
   useEffect(() => {
     const loadAllProducts = async () => {
       try {
@@ -233,21 +219,19 @@ export default function LandingPage() {
   const handleCategoryHover = async (categoryId: string) => {
     setHoveredCategory(categoryId);
     if (categoryProducts[categoryId]) return;
-
     setLoadingProducts(prev => ({ ...prev, [categoryId]: true }));
     try {
       const response = await getProductsByCategory(categoryId, { limit: 8 });
       let products = response.products || [];
       const filteredProducts = products.filter(product => {
-        const productCategoryId = typeof product.category === 'string' 
-          ? product.category 
+        const productCategoryId = typeof product.category === 'string'
+          ? product.category
           : product.category._id;
         return productCategoryId === categoryId;
       });
-
       setCategoryProducts(prev => ({
         ...prev,
-        [categoryId]: filteredProducts.length > 0 
+        [categoryId]: filteredProducts.length > 0
           ? filteredProducts.slice(0, 8)
           : allProducts.filter(p => {
               const id = typeof p.category === 'string' ? p.category : p.category._id;
@@ -260,11 +244,9 @@ export default function LandingPage() {
       setLoadingProducts(prev => ({ ...prev, [categoryId]: false }));
     }
   };
-
   const getProductCategoryId = (product: Product): string => {
     return typeof product.category === 'string' ? product.category : product.category._id;
   };
-
   const getCategoryIcon = (categoryName: string): string => {
     if (categoryIconMap[categoryName]) return categoryIconMap[categoryName];
     const normalizedName = categoryName.toLowerCase();
@@ -273,7 +255,6 @@ export default function LandingPage() {
     }
     return '/assets/images/categories/furniture.png';
   };
-
   const getCategoryIconForHomeItems = (categoryName: string): string | null => {
     if (categoryIconMap[categoryName]) return categoryIconMap[categoryName];
     const normalizedName = categoryName.toLowerCase();
@@ -284,14 +265,12 @@ export default function LandingPage() {
     }
     return null;
   };
-
   const cards = [
     { icon: '/assets/images/card/food-order.png', label: 'Order Food', route: '/food' },
     { icon: '/assets/images/card/household.png', label: 'Household Items', route: '/home-items' },
     { icon: '/assets/images/card/properties.png', label: 'Properties', route: '/real-estates' },
     { icon: '/assets/images/card/internet.png', label: 'Internet', route: '/internet' },
   ];
-
   const handleCardClick = (route: string) => router.push(route);
   const handleCategoryClick = (categoryId: string) => router.push(`/food?category=${categoryId}`);
   const handleProductClick = (productId: string, productName: string) => {
@@ -300,7 +279,6 @@ export default function LandingPage() {
   };
   const handleRealEstateClick = (realEstateId: string, title: string) => router.push(`/real-estates/${realEstateId}`);
   const handleHomeItemCategoryClick = (categoryId: string) => router.push(`/home-items?category=${categoryId}`);
-
   // NEW: Home item & property navigation
   const handleHomeItemClick = (itemId: string) => {
     router.push(`/home-items/${itemId}`);
@@ -318,12 +296,10 @@ export default function LandingPage() {
       image?: string;
       subtitle?: string;
     }[] = [];
-
     // Categories
     dynamicCategories.forEach(cat => {
       items.push({ id: cat._id, name: cat.name, type: 'category' });
     });
-
     // Products
     allProducts.forEach(p => {
       items.push({
@@ -334,7 +310,6 @@ export default function LandingPage() {
         image: p.images?.[0],
       });
     });
-
     // Home Items
     homeItems.forEach(item => {
       items.push({
@@ -345,7 +320,6 @@ export default function LandingPage() {
         image: item.images?.[0],
       });
     });
-
     // Properties (Real Estates)
     realEstates.forEach(estate => {
       const id = estate.id ;
@@ -354,7 +328,6 @@ export default function LandingPage() {
       const address = estate.address || '';
       const price = estate.price || 0;
       const image = (estate.images?.[0] ) || '/assets/images/placeholder.png';
-
       items.push({
         id,
         name: title,
@@ -364,7 +337,6 @@ export default function LandingPage() {
         subtitle: address,
       });
     });
-
     return items;
   }, [dynamicCategories, allProducts, homeItems, realEstates]);
 
@@ -372,8 +344,8 @@ export default function LandingPage() {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
     return searchableItems
-      .filter(i => 
-        i.name.toLowerCase().includes(q) || 
+      .filter(i =>
+        i.name.toLowerCase().includes(q) ||
         (i.subtitle && i.subtitle.toLowerCase().includes(q))
       )
       .slice(0, 12);
@@ -394,24 +366,24 @@ export default function LandingPage() {
     <>
       <Head>
         <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet" />
+        {/* Critical viewport fix for mobile */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Head>
 
       <DiscountMarquee />
 
-      <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 transition-colors duration-300">
+      {/* GLOBAL FIX: Prevent any horizontal scroll / drag on mobile */}
+      <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden">
         {/* WELCOME SECTION */}
         <section className="w-full bg-gradient-to-r from-[#f89b64] dark:from-gray-800 to-[#f47a45] dark:to-gray-700 text-white dark:text-gray-200 text-center py-12 md:py-16 rounded-b-[50px] shadow-lg dark:shadow-gray-900 transition-all duration-300">
           <div className="container mx-auto px-4">
             <h1 className="text-5xl md:text-7xl font-bold mb-2" style={{ fontFamily: 'Parisienne, cursive' }}>
               Welcome to Flamingo
             </h1>
-
             <RotatingWords />
-
             <p className="text-lg md:text-xl font-semibold mt-8 tracking-wide">
               What do you want to buy?
             </p>
-
             <div className="flex flex-col md:flex-row justify-center gap-4 px-4 mt-6">
               {categoriesLoading ? (
                 <>
@@ -423,7 +395,6 @@ export default function LandingPage() {
                   <select className="px-5 py-3 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f7a16b] dark:focus:ring-orange-400 w-full md:w-48 font-medium transition border border-gray-300 dark:border-gray-600">
                     <option>All Nigeria...</option>
                   </select>
-
                   {/* LIVE SEARCH BAR */}
                   <div className="relative w-full md:w-72" ref={searchInputRef}>
                     <div className="flex items-center gap-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 focus-within:ring-2 focus-within:ring-[#f7a16b] dark:focus-within:ring-orange-400 transition">
@@ -445,7 +416,6 @@ export default function LandingPage() {
                         </button>
                       )}
                     </div>
-
                     {/* RESULTS DROPDOWN */}
                     {searchOpen && filteredResults.length > 0 && (
                       <div
@@ -485,7 +455,6 @@ export default function LandingPage() {
                                 {item.name[0]}
                               </div>
                             )}
-
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
                                 {item.name}
@@ -501,8 +470,8 @@ export default function LandingPage() {
                                 </p>
                               )}
                               <p className="text-xs text-gray-500 dark:text-gray-400">
-                                {item.type === 'property' ? 'Property' : 
-                                 item.type === 'homeItem' ? 'Home Item' : 
+                                {item.type === 'property' ? 'Property' :
+                                 item.type === 'homeItem' ? 'Home Item' :
                                  item.type === 'product' ? 'Product' : 'Category'}
                               </p>
                             </div>
@@ -510,7 +479,6 @@ export default function LandingPage() {
                         ))}
                       </div>
                     )}
-
                     {/* NO RESULTS */}
                     {searchOpen && searchQuery && filteredResults.length === 0 && (
                       <div className="absolute left-0 right-0 mt-2 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 text-center text-gray-600 dark:text-gray-400">
@@ -524,8 +492,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* MAIN CONTENT (unchanged) */}
-        <div className="container bg-[#f8f5e6] mx-auto px-4 md:px-6 lg:px-8 pt-10">
+        {/* MAIN CONTENT */}
+        <div className="container  mx-auto px-4 md:px-6 lg:px-8 pt-10 max-w-7xl">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar */}
             <aside className="hidden lg:block w-1/4 bg-[#f58c55] dark:bg-gray-800 text-white p-6 rounded-tl-[40px] rounded-bl-[40px] shadow-lg transition-colors duration-300 relative">
@@ -550,7 +518,6 @@ export default function LandingPage() {
                         <span className="text-lg font-bold text-white tracking-tight">{cat.name}</span>
                         <ChevronRight className="w-4 h-4 text-white opacity-70" />
                       </div>
-
                       {hoveredCategory === cat._id && (
                         <div
                           className="absolute left-full top-0 ml-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-4 z-50 border border-gray-200 dark:border-gray-600"
@@ -624,33 +591,37 @@ export default function LandingPage() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 bg-[#f8f5e6]">
+            <main className="flex-1 bg-[#f8f5e6] dark:bg-gray-900">
               {/* Cards */}
-              <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-8">
+              <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 py-8 justify-items-center">
                 {categoriesLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
-                    <SkeletonLoader key={`card-skel-${i}`} variant="card" className="w-full h-52" />
+                    <SkeletonLoader key={`card-skel-${i}`} variant="card" className="w-full max-w-[208px] h-52" />
                   ))
                 ) : (
                   <>
                     {cards.map((card, i) => (
                       <div
                         key={i}
-                        className="w-52 h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer"
+                        className="w-full max-w-[208px] h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer"
                         onClick={() => handleCardClick(card.route)}
                       >
                         <div className="w-28 h-28 relative">
                           <Image src={card.icon} alt={card.label} width={112} height={112} className="object-contain" />
                         </div>
-                        <span className="text-gray-800 dark:text-gray-200 text-lg font-semibold text-center">{card.label}</span>
+                        <span className="text-gray-800 dark:text-gray-200 text-lg font-semibold text-center px-4">
+                          {card.label}
+                        </span>
                       </div>
                     ))}
                     <div
-                      className="w-52 h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer"
+                      className="w-full max-w-[208px] h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer"
                       onClick={() => handleCardClick('/post-ads')}
                     >
                       <PlusCircle className="text-[#f47a45] dark:text-[#f7a16b] w-20 h-20" />
-                      <span className="text-gray-800 dark:text-gray-200 text-lg font-semibold">Post Ads</span>
+                      <span className="text-gray-800 dark:text-gray-200 text-lg font-semibold px-4">
+                        Post Ads
+                      </span>
                     </div>
                   </>
                 )}
@@ -719,7 +690,6 @@ export default function LandingPage() {
                       const address = estate.address || estate.location || 'No address';
                       const images = estate.images || estate.image || [];
                       const mainImage = images[0] || '/assets/images/placeholder.png';
-
                       return (
                         <div
                           key={id}
@@ -784,17 +754,23 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* GLOBAL STYLES – ONLY FIXES ADDED */}
       <style jsx global>{`
-        .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
-        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
-
+        html, body, #__next {
+          overflow-x: hidden !important;
+          width: 100% !important;
+          position: relative !important;
+        }
+        * { -webkit-overflow-scrolling: touch; }
+        .animate-marquee-inline {
+          animation: marquee-inline 25s linear infinite;
+        }
         @keyframes marquee-inline {
           0% { transform: translateX(0%); }
           100% { transform: translateX(-50%); }
         }
-        .animate-marquee-inline {
-          animation: marquee-inline 25s linear infinite;
-        }
+        .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
+        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
       `}</style>
     </>
   );

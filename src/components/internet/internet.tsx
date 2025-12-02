@@ -457,75 +457,75 @@ export default function Internet() {
     return true;
   };
 
-  const handlePurchase = async (planId: string) => {
-    console.log(`Initiating purchase for plan: ${planId}`);
-    if (!validateInputs()) {
-      console.log('Validation failed');
-      return;
-    }
+const handlePurchase = async (planId: string) => {
+  console.log(`Initiating purchase for plan: ${planId}`);
+  if (!validateInputs()) {
+    console.log('Validation failed');
+    return;
+  }
 
-    setSelectedPlanId(planId);
-    setError(null);
-    setPaymentUrl(null);
+  setSelectedPlanId(planId);
+  setError(null);
+  setPaymentUrl(null);
 
-    try {
-      console.log('Calling initiatePayment with:', { email: email.trim(), phoneNumber: phoneNumber.trim(), planId });
-      const response = await initiatePayment(email.trim(), phoneNumber.trim(), planId);
-      console.log('Payment initiation response:', response);
+  try {
+    console.log('Calling initiatePayment with:', { email: email.trim(), phoneNumber: phoneNumber.trim(), planId });
+    const response = await initiatePayment(email.trim(), phoneNumber.trim(), planId);
+    console.log('Payment initiation response:', response);
 
-      if (response && response.paymentUrl) {
-        // Find the selected plan to store its details
-        const selectedPlan = plans.find(plan => plan._id === planId);
-        if (!selectedPlan) {
-          throw new Error('Selected plan not found');
-        }
-
-        // Create pendingOrder object
-        const pendingOrder = {
-          orderId: response.transactionId, // Using transactionId as orderId for consistency
-          plan: {
-            id: selectedPlan._id,
-            bundle: selectedPlan.bundle,
-            dataAmount: selectedPlan.dataAmount,
-            duration: selectedPlan.duration,
-            location: selectedPlan.location.name
-          },
-          totalAmount: selectedPlan.price,
-          status: 'pending',
-          customerInfo: {
-            name: user?.name || 'Customer', // Use user name if available, else default
-            email: email.trim(),
-            phone: phoneNumber.trim(),
-          },
-          orderType: 'internet',
-          redirectUrl: '/internet',
-          tx_ref: response.transactionId
-        };
-
-        // Store pendingOrder in both sessionStorage and localStorage
-        try {
-          sessionStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
-          localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
-          localStorage.setItem(`order_${response.transactionId}`, JSON.stringify(pendingOrder));
-          console.log('Pending order stored in storage:', pendingOrder);
-        } catch (storageError) {
-          console.error('Failed to store pending order:', storageError);
-        }
-
-        // Redirect to Flutterwave payment URL
-        window.location.href = response.paymentUrl;
-      } else {
-        console.error('No paymentUrl in response');
-        setError('Failed to initiate payment. Please try again or contact support.');
-        setSelectedPlanId('');
+    if (response && response.paymentUrl) {
+      // Find the selected plan to store its details
+      const selectedPlan = plans.find(plan => plan._id === planId);
+      if (!selectedPlan) {
+        throw new Error('Selected plan not found');
       }
-    } catch (err) {
-      console.error('Payment initiation error:', err);
-      setError('An error occurred during payment initiation. Please try again or contact support.');
+
+      // Create pendingOrder object - USE transactionId from response
+      const pendingOrder = {
+        orderId: response.transactionId, // Use the transactionId from payment response
+        plan: {
+          id: selectedPlan._id,
+          bundle: selectedPlan.bundle,
+          dataAmount: selectedPlan.dataAmount,
+          duration: selectedPlan.duration,
+          location: selectedPlan.location.name
+        },
+        totalAmount: selectedPlan.price,
+        status: 'pending',
+        customerInfo: {
+          name: user?.name || 'Customer',
+          email: email.trim(),
+          phone: phoneNumber.trim(),
+        },
+        orderType: 'internet',
+        redirectUrl: '/internet',
+        tx_ref: response.transactionId, // Use the same transactionId
+        // Store voucher code if provided
+        voucherCode: response.voucherCode || null
+      };
+
+      // Store pendingOrder with transactionId as key
+      try {
+        localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+        localStorage.setItem(`pendingOrder_${response.transactionId}`, JSON.stringify(pendingOrder));
+        console.log('Pending order stored:', pendingOrder);
+      } catch (storageError) {
+        console.error('Failed to store pending order:', storageError);
+      }
+
+      // Redirect to payment URL
+      window.location.href = response.paymentUrl;
+    } else {
+      console.error('No paymentUrl in response');
+      setError('Failed to initiate payment. Please try again or contact support.');
       setSelectedPlanId('');
     }
-  };
-
+  } catch (err) {
+    console.error('Payment initiation error:', err);
+    setError('An error occurred during payment initiation. Please try again or contact support.');
+    setSelectedPlanId('');
+  }
+};
   return (
     <div className="min-h-screen pt-24 bg-gradient-to-br from-[#f58c55]/10 via-orange-50 to-yellow-50/50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Header />

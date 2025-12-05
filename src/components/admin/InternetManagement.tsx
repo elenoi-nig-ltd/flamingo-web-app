@@ -18,8 +18,12 @@ const InternetManagement = () => {
   const [activeTab, setActiveTab] = useState(0);
 
   // Ensure we render a safe error string (some hooks may return an error object)
-  const errorMessage =
-    error && typeof error === 'object' ? (error.message || JSON.stringify(error)) : error;
+  const _err: any = error;
+  const errorMessage = _err
+    ? typeof _err === 'string'
+      ? _err
+      : _err?.message ?? JSON.stringify(_err)
+    : null;
 
   if (authLoading || loading) {
     return <DashboardSkeleton />;

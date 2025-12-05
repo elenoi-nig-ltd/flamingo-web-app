@@ -3,6 +3,7 @@
 
 import { useRouter } from 'next/navigation';
 import { FaUser, FaBox, FaSignOutAlt, FaShoppingCart, FaChartBar , FaWarehouse, FaCreditCard, FaHome, FaNetworkWired, FaBullhorn, FaEnvelope, FaTags } from 'react-icons/fa';
+import { FaCog } from 'react-icons/fa';
 import { ImSpoonKnife } from 'react-icons/im';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSidebar } from './SidebarContext';
@@ -26,6 +27,7 @@ export default function Sidebar() {
     { name: 'Promotions', icon: <FaBullhorn />, path: '/admin/promotions', active: false },
     { name: 'Messages', icon: <FaEnvelope />, path: '/admin/messages', active: false },
   ];
+ 
 
   const handleNavigation = (path: string, active: boolean) => {
     if (active) {

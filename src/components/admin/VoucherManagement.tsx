@@ -90,9 +90,8 @@ const VoucherManagement = () => {
                          voucher.plan?.bundle?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = filterStatus === 'all' ||
-                         (filterStatus === 'active' && !voucher.used && new Date(voucher.expiresAt) > new Date()) ||
-                         (filterStatus === 'used' && voucher.used) ||
-                         (filterStatus === 'expired' && !voucher.used && new Date(voucher.expiresAt) < new Date());
+               (filterStatus === 'active' && !voucher.used) ||
+               (filterStatus === 'used' && voucher.used);
     
     return matchesSearch && matchesStatus;
   });
@@ -720,7 +719,6 @@ const VoucherManagement = () => {
                   <option value="all">All Status</option>
                   <option value="active">Active</option>
                   <option value="used">Used</option>
-                  <option value="expired">Expired</option>
                 </select>
 
                 {/* Items Per Page */}
@@ -792,11 +790,9 @@ const VoucherManagement = () => {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                       voucher.used 
                         ? 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
-                        : new Date(voucher.expiresAt) < new Date()
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200'
                         : 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
                     }`}>
-                      {voucher.used ? 'Used' : new Date(voucher.expiresAt) < new Date() ? 'Expired' : 'Active'}
+                      {voucher.used ? 'Used' : 'Active'}
                     </span>
                   </td>
                   <td className="py-4 px-4 text-sm text-gray-600">

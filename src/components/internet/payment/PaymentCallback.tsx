@@ -99,6 +99,22 @@ const PaymentCallbackPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [canShare, setCanShare] = useState(false);
 
+  // If a voucher was previously saved and the user refreshes this page,
+  // redirect them to the voucher recovery page so they don't lose access.
+  useEffect(() => {
+    try {
+      if (typeof window === 'undefined') return;
+      const stored = sessionStorage.getItem('voucherDetails');
+      if (stored) {
+        // Replace current history entry so user doesn't loop back here on back
+        router.replace('/voucher');
+      }
+    } catch (err) {
+      // ignore storage errors
+      console.error('voucher redirect check failed', err);
+    }
+  }, [router]);
+
   // Check if mobile and Web Share API support on mount
   useEffect(() => {
     const checkMobile = () => {
@@ -473,10 +489,31 @@ For support, please contact us with your Order ID.
 
           if (transactionStatus.status === 'success' && transactionStatus.voucherCode) {
             cleanupPendingOrder();
+            const successOrder = { ...pendingOrder, voucherCode: transactionStatus.voucherCode };
+            
+            // Store voucher details in sessionStorage for persistence
+            try {
+              sessionStorage.setItem(
+                'voucherDetails',
+                JSON.stringify({
+                  code: transactionStatus.voucherCode,
+                  plan: transactionStatus.plan,
+                  orderInfo: {
+                    orderId: pendingOrder.orderId,
+                    email: pendingOrder.customerInfo.email,
+                    phone: pendingOrder.customerInfo.phone,
+                    timestamp: new Date().toISOString(),
+                  },
+                })
+              );
+            } catch (error) {
+              console.error('Failed to store voucher in sessionStorage:', error);
+            }
+            
             setPaymentStatus({
               success: true,
               message: transactionStatus.message,
-              order: { ...pendingOrder, voucherCode: transactionStatus.voucherCode },
+              order: successOrder,
               transactionStatus
             });
           } else {
@@ -543,10 +580,34 @@ For support, please contact us with your Order ID.
             if (pendingOrder.orderType !== 'internet') {
               clearCart();
             }
+            
+            const successOrder = { ...pendingOrder, voucherCode: transactionStatus.voucherCode };
+            
+            // Store voucher details in sessionStorage for persistence
+            if (transactionStatus.voucherCode && transactionStatus.plan) {
+              try {
+                sessionStorage.setItem(
+                  'voucherDetails',
+                  JSON.stringify({
+                    code: transactionStatus.voucherCode,
+                    plan: transactionStatus.plan,
+                    orderInfo: {
+                      orderId: pendingOrder.orderId,
+                      email: pendingOrder.customerInfo.email,
+                      phone: pendingOrder.customerInfo.phone,
+                      timestamp: new Date().toISOString(),
+                    },
+                  })
+                );
+              } catch (error) {
+                console.error('Failed to store voucher in sessionStorage:', error);
+              }
+            }
+            
             setPaymentStatus({
               success: true,
               message: transactionStatus.message,
-              order: { ...pendingOrder, voucherCode: transactionStatus.voucherCode },
+              order: successOrder,
               transactionStatus
             });
           } else {
@@ -1051,6 +1112,21 @@ For support, please contact us with your Order ID.
                   ) : (
                     <div className="mt-3 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-center">
                       <span className="text-[#f58c55] font-bold">{paymentStatus.order.items?.length || 0} item(s)</span>
+                    </div>
+                  )}
+
+                  {/* Voucher Recovery Link for Internet Orders */}
+                  {paymentStatus.success && paymentStatus.order.orderType === 'internet' && paymentStatus.order.voucherCode && (
+                    <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl">
+                      <p className="text-xs sm:text-sm text-green-800 dark:text-green-200 mb-2">
+                        💾 Your voucher is saved in your browser. Access it anytime:
+                      </p>
+                      <a
+                        href="/voucher"
+                        className="inline-block w-full text-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold transition-all duration-200 text-xs sm:text-sm"
+                      >
+                        View Saved Voucher
+                      </a>
                     </div>
                   )}
 

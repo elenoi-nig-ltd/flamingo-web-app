@@ -17,6 +17,10 @@ const InternetManagement = () => {
   const { loading, error } = useInternet();
   const [activeTab, setActiveTab] = useState(0);
 
+  // Ensure we render a safe error string (some hooks may return an error object)
+  const errorMessage =
+    error && typeof error === 'object' ? (error.message || JSON.stringify(error)) : error;
+
   if (authLoading || loading) {
     return <DashboardSkeleton />;
   }
@@ -30,7 +34,7 @@ const InternetManagement = () => {
         transition={{ duration: 0.5 }}
       >
         <p className="text-red-600 dark:text-red-400 font-semibold">
-          {error || 'Admin access required'}
+          {errorMessage || 'Admin access required'}
         </p>
       </motion.div>
     );

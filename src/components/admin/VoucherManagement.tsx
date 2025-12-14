@@ -742,7 +742,6 @@ const VoucherManagement = () => {
                 <th className="py-3 px-4 text-left font-semibold">Code</th>
                 <th className="py-3 px-4 text-left font-semibold">Plan</th>
                 <th className="py-3 px-4 text-left font-semibold">Status</th>
-                <th className="py-3 px-4 text-left font-semibold">Expires</th>
                 <th className="py-3 px-4 text-left font-semibold">Created</th>
                 <th className="py-3 px-4 text-right font-semibold">Actions</th>
               </tr>
@@ -795,9 +794,7 @@ const VoucherManagement = () => {
                       {voucher.used ? 'Used' : 'Active'}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-sm text-gray-600">
-                    {voucher.expiresAt ? new Date(voucher.expiresAt).toLocaleDateString() : 'N/A'}
-                  </td>
+                 
                   <td className="py-4 px-4 text-sm text-gray-600">
                     {new Date(voucher.createdAt).toLocaleDateString()}
                   </td>

@@ -199,7 +199,7 @@ const OrdersManagement = () => {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="totalAmount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Total Amount ($)
+              Total Amount (₦)
             </label>
             <input
               type="number"
@@ -351,7 +351,8 @@ const OrdersManagement = () => {
             <thead>
               <tr className="border-b bg-gray-50/50 dark:bg-gray-700/50">
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Order ID</th>
-                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Items</th>
+                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Date & Time</th>
+                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Products</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Total Amount</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Status</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Actions</th>
@@ -366,13 +367,28 @@ const OrdersManagement = () => {
                   >
                     <td className="py-3 px-4 font-medium text-gray-800 dark:text-gray-200">{order._id}</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
-                      {order.items
-                        .map((item) =>
-                          item.product ? `${item.product.name} (x${item.quantity})` : `Unknown Product (x${item.quantity})`
-                        )
-                        .join(', ')}
+                      <div className="text-sm">
+                        <div className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{new Date(order.createdAt).toLocaleTimeString()}</div>
+                      </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">${order.totalAmount.toFixed(2)}</td>
+                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
+                      <div className="space-y-1">
+                        {order.items.map((item, idx) => (
+                          <div key={idx} className="text-sm">
+                            {item.product ? (
+                              <span>
+                                <span className="font-medium">{item.product.name}</span>
+                                <span className="text-gray-500 dark:text-gray-400"> × {item.quantity}</span>
+                              </span>
+                            ) : (
+                              <span className="text-gray-500 dark:text-gray-400">Unknown Product × {item.quantity}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">₦{order.totalAmount.toFixed(2)}</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{order.status}</td>
                     <td className="py-3 px-4 flex space-x-3">
                       <motion.button
@@ -400,7 +416,7 @@ const OrdersManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="py-4 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={6} className="py-4 text-center text-gray-500 dark:text-gray-400">
                     {ordersLoading ? 'Loading orders...' : 'No orders found'}
                   </td>
                 </tr>

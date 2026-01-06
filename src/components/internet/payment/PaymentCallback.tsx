@@ -443,23 +443,6 @@ For support, please contact us with your Order ID.
         return;
       }
 
-      // Check if transaction might be abandoned
-      if (checkForAbandonedTransaction(pendingOrder)) {
-        cleanupPendingOrder();
-        setPaymentStatus({
-          success: false,
-          message: 'This transaction appears to have been abandoned. Please start a new payment.',
-          order: pendingOrder,
-          transactionStatus: {
-            status: 'abandoned',
-            message: 'Transaction was not completed within expected time.',
-            timestamp: new Date().toISOString()
-          }
-        });
-        setLoading(false);
-        return;
-      }
-
       // Handle different initial statuses
       if (status === 'success' || status === 'completed') {
         // Non-internet orders: immediate success
@@ -526,13 +509,21 @@ For support, please contact us with your Order ID.
           }
         } catch (err) {
           console.error('Error verifying payment:', err);
+          
+          // Check if this is an old transaction before marking as failed
+          const isOldTransaction = checkForAbandonedTransaction(pendingOrder);
+          
           setPaymentStatus({
             success: false,
-            message: 'Error verifying payment. Please try manual verification or contact support.',
+            message: isOldTransaction 
+              ? 'We could not verify this payment. If you completed the payment, please use the "Check Status Again" button or contact support with your transaction reference.'
+              : 'Error verifying payment. Please try manual verification or contact support.',
             order: pendingOrder,
             transactionStatus: {
-              status: 'unknown',
-              message: 'Verification process failed.',
+              status: isOldTransaction ? 'abandoned' : 'unknown',
+              message: isOldTransaction 
+                ? 'Transaction verification unavailable - may have expired.' 
+                : 'Verification process failed.',
               timestamp: new Date().toISOString()
             }
           });
@@ -620,13 +611,21 @@ For support, please contact us with your Order ID.
           }
         } catch (error) {
           console.error('Error verifying unknown status:', error);
+          
+          // Check if this is an old transaction
+          const isOldTransaction = checkForAbandonedTransaction(pendingOrder);
+          
           setPaymentStatus({
             success: false,
-            message: "We're having trouble verifying your payment status. Please try again or contact support.",
+            message: isOldTransaction
+              ? "This transaction appears to be from an earlier session. If you completed the payment, please use 'Check Status Again' or contact support with your transaction reference."
+              : "We're having trouble verifying your payment status. Please try again or contact support.",
             order: pendingOrder,
             transactionStatus: {
-              status: 'unknown',
-              message: 'Status verification unavailable.',
+              status: isOldTransaction ? 'abandoned' : 'unknown',
+              message: isOldTransaction 
+                ? 'Old transaction - verification recommended.' 
+                : 'Status verification unavailable.',
               timestamp: new Date().toISOString()
             }
           });

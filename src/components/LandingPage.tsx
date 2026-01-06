@@ -89,7 +89,7 @@ interface RealEstate {
 
 // === DISCOUNT MARQUEE ===
 const DiscountMarquee = () => {
-  const text = "* 10% discount on all items this December *";
+  const text = "*Welcome to 2026*";
   return (
     <div className="bg-gradient-to-r from-orange-500 to-amber-500 mt-20 via-orange-600 to-red-700 text-white overflow-hidden py-3 shadow-md">
       <div className="flex">

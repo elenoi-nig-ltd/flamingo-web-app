@@ -7,10 +7,12 @@ import { FaCog } from 'react-icons/fa';
 import { ImSpoonKnife } from 'react-icons/im';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSidebar } from './SidebarContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useState, useEffect } from 'react';
 
 export default function Sidebar() {
   const { isOpen, toggleSidebar } = useSidebar();
+  const { logout } = useAuth();
   const router = useRouter();
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
@@ -150,7 +152,12 @@ export default function Sidebar() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="flex items-center p-3 w-full rounded-xl bg-gradient-to-r from-[#f58c55]/10 to-[#f47a45]/10 dark:from-[#f7a16b]/10 dark:to-[#f58c55]/10 hover:from-[#f58c55]/20 hover:to-[#f47a45]/20 dark:hover:from-[#f7a16b]/20 dark:hover:to-[#f58c55]/20 text-[#f58c55] dark:text-[#f7a16b] transition-all duration-300"
-              onClick={() => router.push('/admin/login')}
+              onClick={() => {
+                logout();
+                if (isMobile) {
+                  toggleSidebar();
+                }
+              }}
             >
               <FaSignOutAlt className="text-xl mr-3" />
               <AnimatePresence>

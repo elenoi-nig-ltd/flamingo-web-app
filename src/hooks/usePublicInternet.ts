@@ -215,8 +215,9 @@ export const usePublicInternet = () => {
       const ts = parseInt(pendingOrder.orderId.split('-').pop() || '0', 10);
       if (!ts) return false;
       const orderTime = new Date(ts);
-      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
-      return orderTime < thirtyMinutesAgo;
+      // Increased to 2 hours to give users more time
+      const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+      return orderTime < twoHoursAgo;
     } catch {
       return false;
     }

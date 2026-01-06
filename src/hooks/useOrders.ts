@@ -7,16 +7,21 @@ import { BASEURL } from '@/config/api/contants';
 
 interface Order {
   _id: string;
-  items: { product: { _id: string; name: string }; quantity: number }[];
+  items: { product: { _id: string; name: string } | null; quantity: number }[];
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-
+  createdAt: string;
+  updatedAt?: string;
 }
 
 interface CreateOrderDto {
-  items: { product: string; quantity: number }[];
+  items: { product: string; name?: string; quantity: number }[];
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  subtotal?: number;
+  deliveryFee?: number;
+  vatAmount?: number;
+  deliveryOption?: 'pickup' | 'delivery';
 }
 
 interface UpdateOrderDto {

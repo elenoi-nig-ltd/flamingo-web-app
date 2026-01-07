@@ -5,8 +5,9 @@ import { useOrders } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useAuth } from '@/hooks/useAuth';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaBox, FaPlus, FaEdit, FaTrash, FaSpinner } from 'react-icons/fa';
+import { FaBox, FaPlus, FaEdit, FaTrash, FaSpinner, FaEye } from 'react-icons/fa';
 import { DashboardSkeleton } from '../ui/SkeletonLoader';
+import OrderDetails from './OrderDetails';
 import Link from 'next/link';
 
 interface OrderItem {
@@ -41,6 +42,8 @@ const OrdersManagement = () => {
   const [formErrors, setFormErrors] = useState<FormErrors>({});
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [showOrderDetails, setShowOrderDetails] = useState<boolean>(false);
 
   const validateForm = () => {
     const errors: FormErrors = {};
@@ -350,12 +353,14 @@ const OrdersManagement = () => {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-gray-50/50 dark:bg-gray-700/50">
-                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Order ID</th>
-                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Date & Time</th>
-                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Products</th>
-                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Total Amount</th>
-                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Status</th>
-                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Actions</th>
+                <th className="py-3 px-3 text-left text-gray-800 dark:text-gray-200 font-semibold text-xs">Order ID</th>
+                <th className="py-3 px-3 text-left text-gray-800 dark:text-gray-200 font-semibold text-xs">Date</th>
+                <th className="py-3 px-3 text-left text-gray-800 dark:text-gray-200 font-semibold text-xs">Items</th>
+                <th className="py-3 px-3 text-left text-gray-800 dark:text-gray-200 font-semibold text-xs">Total</th>
+                <th className="py-3 px-3 text-left text-gray-800 dark:text-gray-200 font-semibold text-xs">Delivery</th>
+                <th className="py-3 px-3 text-left text-gray-800 dark:text-gray-200 font-semibold text-xs max-w-[120px]">Address</th>
+                <th className="py-3 px-3 text-left text-gray-800 dark:text-gray-200 font-semibold text-xs">Status</th>
+                <th className="py-3 px-3 text-left text-gray-800 dark:text-gray-200 font-semibold text-xs">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -365,32 +370,87 @@ const OrdersManagement = () => {
                     key={order._id}
                     className="border-b border-gray-200/50 dark:border-gray-700/50 hover:bg-gradient-to-r hover:from-[#f58c55]/5 hover:to-[#f47a45]/5 dark:hover:from-[#f7a16b]/5 dark:hover:to-[#f58c55]/5 transition-all duration-300"
                   >
-                    <td className="py-3 px-4 font-medium text-gray-800 dark:text-gray-200">{order._id}</td>
-                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
-                      <div className="text-sm">
-                        <div className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">{new Date(order.createdAt).toLocaleTimeString()}</div>
+                    <td className="py-3 px-3 font-medium text-gray-800 dark:text-gray-200 text-xs truncate max-w-[100px]" title={order._id}>{order._id.slice(0, 8)}...</td>
+                    <td className="py-3 px-3 text-gray-700 dark:text-gray-300">
+                      <div className="text-xs">
+                        <div className="font-medium">{new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">{new Date(order.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</div>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
-                      <div className="space-y-1">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="text-sm">
-                            {item.product ? (
+                    <td className="py-3 px-3 text-gray-700 dark:text-gray-300">
+                      <div className="text-xs">
+                        {order.items.length === 1 ? (
+                          <div>
+                            {order.items[0].product ? (
                               <span>
-                                <span className="font-medium">{item.product.name}</span>
-                                <span className="text-gray-500 dark:text-gray-400"> × {item.quantity}</span>
+                                <span className="font-medium">{order.items[0].product.name}</span>
+                                <span className="text-gray-500 dark:text-gray-400"> ×{order.items[0].quantity}</span>
                               </span>
                             ) : (
-                              <span className="text-gray-500 dark:text-gray-400">Unknown Product × {item.quantity}</span>
+                              <span className="text-gray-500 dark:text-gray-400">Unknown ×{order.items[0].quantity}</span>
                             )}
                           </div>
-                        ))}
+                        ) : (
+                          <div>
+                            <span className="font-medium">{order.items.length} items</span>
+                            <button
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setShowOrderDetails(true);
+                              }}
+                              className="ml-1 text-[#f58c55] dark:text-[#f7a16b] hover:underline"
+                            >
+                              (view)
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">₦{order.totalAmount.toFixed(2)}</td>
-                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{order.status}</td>
-                    <td className="py-3 px-4 flex space-x-3">
+                    <td className="py-3 px-3 text-gray-700 dark:text-gray-300 text-xs font-medium">₦{order.totalAmount.toFixed(0)}</td>
+                    <td className="py-3 px-3 text-gray-700 dark:text-gray-300">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+                        order.deliveryOption === 'delivery' 
+                          ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' 
+                          : 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                      }`}>
+                        {order.deliveryOption === 'delivery' ? 'Delivery' : 'Pickup'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-gray-700 dark:text-gray-300">
+                      {order.deliveryOption === 'delivery' && order.deliveryAddress ? (
+                        <div className="text-xs max-w-[120px] truncate" title={order.deliveryAddress}>
+                          {order.deliveryAddress}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-500 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="py-3 px-3">
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-medium ${
+                        order.status === 'delivered' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
+                        order.status === 'cancelled' ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' :
+                        order.status === 'shipped' ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200' :
+                        order.status === 'processing' ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200' :
+                        'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3">
+                      <div className="flex items-center space-x-2">
+                      <motion.button
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowOrderDetails(true);
+                        }}
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        aria-label={`View order ${order._id}`}
+                        title="View Details"
+                      >
+                        <FaEye size={16} />
+                      </motion.button>
                       <motion.button
                         onClick={() => handleEdit(order)}
                         className="text-[#f58c55] dark:text-[#f7a16b] hover:text-[#f47a45] dark:hover:text-[#f58c55] disabled:text-gray-400 disabled:cursor-not-allowed"
@@ -398,8 +458,9 @@ const OrdersManagement = () => {
                         whileTap={{ scale: user && user.role === 'admin' ? 0.9 : 1 }}
                         disabled={!user || user.role !== 'admin'}
                         aria-label={`Edit order ${order._id}`}
+                        title="Edit Order"
                       >
-                        <FaEdit size={18} />
+                        <FaEdit size={16} />
                       </motion.button>
                       <motion.button
                         onClick={() => handleDeleteClick(order._id)}
@@ -408,15 +469,17 @@ const OrdersManagement = () => {
                         whileTap={{ scale: user && user.role === 'admin' ? 0.9 : 1 }}
                         disabled={!user || user.role !== 'admin'}
                         aria-label={`Delete order ${order._id}`}
+                        title="Delete Order"
                       >
-                        <FaTrash size={18} />
+                        <FaTrash size={16} />
                       </motion.button>
+                      </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="py-4 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={8} className="py-4 text-center text-gray-500 dark:text-gray-400">
                     {ordersLoading ? 'Loading orders...' : 'No orders found'}
                   </td>
                 </tr>
@@ -471,6 +534,16 @@ const OrdersManagement = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Order Details Modal */}
+      <OrderDetails
+        order={selectedOrder}
+        isOpen={showOrderDetails}
+        onClose={() => {
+          setShowOrderDetails(false);
+          setSelectedOrder(null);
+        }}
+      />
     </div>
   );
 };

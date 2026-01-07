@@ -35,6 +35,8 @@ interface PendingOrder {
   orderType: string;
   redirectUrl: string;
   reference: string;               // Paystack reference (formerly tx_ref)
+  deliveryOption?: 'pickup' | 'delivery';
+  deliveryAddress?: string;
 }
 
 const PaymentCallbackPage = () => {
@@ -298,6 +300,12 @@ TOTAL: ₦${o.totalAmount.toLocaleString()}
                     <span className="text-gray-600">Phone:</span>
                     <span className="font-semibold">{paymentStatus.order.customerInfo.phone}</span>
                   </div>
+                  {paymentStatus.order.deliveryOption === 'delivery' && paymentStatus.order.deliveryAddress && (
+                    <div className="pt-2 border-t border-gray-200">
+                      <span className="text-gray-600 block mb-1">Delivery Address:</span>
+                      <span className="font-semibold block">{paymentStatus.order.deliveryAddress}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -322,6 +330,12 @@ TOTAL: ₦${o.totalAmount.toLocaleString()}
                     <span className="text-gray-600">Order Type:</span>
                     <span className="font-semibold capitalize">{paymentStatus.order.orderType}</span>
                   </div>
+                  {paymentStatus.order.deliveryOption && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Delivery:</span>
+                      <span className="font-semibold capitalize">{paymentStatus.order.deliveryOption}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-600">Items Count:</span>
                     <span className="font-semibold">{paymentStatus.order.items.length} item(s)</span>
@@ -443,6 +457,18 @@ TOTAL: ₦${o.totalAmount.toLocaleString()}
                         ₦{paymentStatus.order.totalAmount.toLocaleString()}
                       </span>
                     </div>
+                    {paymentStatus.order.deliveryOption && (
+                      <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                        <span className="text-gray-600 block">Delivery:</span>
+                        <span className="font-bold text-[#f58c55] capitalize">{paymentStatus.order.deliveryOption}</span>
+                      </div>
+                    )}
+                    {paymentStatus.order.deliveryOption === 'delivery' && paymentStatus.order.deliveryAddress && (
+                      <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg md:col-span-2">
+                        <span className="text-gray-600 block mb-1">Delivery Address:</span>
+                        <span className="font-medium text-gray-800 dark:text-gray-200">{paymentStatus.order.deliveryAddress}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-5 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">

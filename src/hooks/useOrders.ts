@@ -12,6 +12,8 @@ interface Order {
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   createdAt: string;
   updatedAt?: string;
+  deliveryOption?: 'pickup' | 'delivery';
+  deliveryAddress?: string;
 }
 
 interface CreateOrderDto {
@@ -22,6 +24,7 @@ interface CreateOrderDto {
   deliveryFee?: number;
   vatAmount?: number;
   deliveryOption?: 'pickup' | 'delivery';
+  deliveryAddress?: string;
 }
 
 interface UpdateOrderDto {

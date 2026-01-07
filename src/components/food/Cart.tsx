@@ -93,6 +93,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
     name: '',
     email: '',
     phone: '',
+    address: '',
   });
   const [deliveryOption, setDeliveryOption] = useState<'pickup' | 'delivery'>('pickup');
   const { initiatePayment, loading: paymentLoading, error: paymentError } = usePayments();
@@ -122,20 +123,21 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
   // Calculate delivery fee
-  const deliveryFee = deliveryOption === 'delivery' ? 500 : 0;
+  const deliveryFee = deliveryOption === 'delivery' ? 600 : 0;
   
-  // Calculate VAT (7.5% of subtotal + delivery fee)
-  const vatRate = 0.075; // 7.5%
-  const vatAmount = (subtotal + deliveryFee) * vatRate;
-  
-  // Calculate total (subtotal + delivery fee + VAT)
-  const totalWithFees = subtotal + deliveryFee + vatAmount;
+  // Calculate total (subtotal + delivery fee)
+  const totalWithFees = subtotal + deliveryFee;
 
   const handleCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
       setErrorMessage('Please fill in all fields');
+      return;
+    }
+
+    if (deliveryOption === 'delivery' && !customerInfo.address) {
+      setErrorMessage('Please enter your delivery address');
       return;
     }
 
@@ -151,8 +153,8 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
         totalAmount: totalWithFees,
         subtotal: subtotal,
         deliveryFee: deliveryFee,
-        vatAmount: vatAmount,
         deliveryOption: deliveryOption,
+        deliveryAddress: deliveryOption === 'delivery' ? customerInfo.address : undefined,
         status: 'pending' as const,
       };
 
@@ -188,8 +190,8 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
         totalAmount: totalWithFees,
         subtotal: subtotal,
         deliveryFee: deliveryFee,
-        vatAmount: vatAmount,
         deliveryOption: deliveryOption,
+        deliveryAddress: deliveryOption === 'delivery' ? customerInfo.address : undefined,
         status: 'pending',
         tx_ref: paymentResult.transactionId,
         customerInfo,
@@ -383,7 +385,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                           }`}
                         >
                           <FaTruck />
-                          <span>Delivery (+₦500)</span>
+                          <span>Delivery (+₦600)</span>
                         </button>
                       </div>
                     </div>
@@ -408,10 +410,6 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                       <div className="flex justify-between text-gray-600 dark:text-gray-400">
                         <span>Delivery Fee:</span>
                         <span>{deliveryFee > 0 ? `+₦${deliveryFee.toLocaleString()}` : 'Free'}</span>
-                      </div>
-                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                        <span>VAT (7.5%):</span>
-                        <span>+₦{vatAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="border-t border-gray-300 dark:border-gray-700 pt-2 mt-2">
                         <div className="flex justify-between font-bold text-gray-900 dark:text-white">
@@ -517,19 +515,34 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                         />
                       </div>
                       {deliveryOption === 'delivery' && (
-                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                          <p className="text-sm text-blue-700 dark:text-blue-300">
-                            <span className="font-semibold">Note:</span> ₦500 delivery fee is included in your total.
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              <FaTruck className="inline mr-2 text-[#f58c55]" />
+                              Delivery Address
+                            </label>
+                            <textarea
+                              name="address"
+                              value={customerInfo.address}
+                              onChange={(e) => setCustomerInfo(prev => ({ ...prev, address: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] focus:border-[#f58c55] resize-none"
+                              placeholder="Enter your delivery address"
+                              rows={3}
+                              required
+                            />
+                          </div>
+                          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <p className="text-sm text-blue-700 dark:text-blue-300">
+                              <span className="font-semibold">Note:</span> ₦600 delivery fee is included in your total.
                           </p>
-                        </div>
-                      )}
+                        </div>                        </>                      )}
                       <SafeErrorDisplay error={orderError || paymentError} />
                       <div className="flex gap-3 pt-4">
                         <button
                           type="button"
                           onClick={() => {
                             setShowCustomerForm(false);
-                            setCustomerInfo({ name: '', email: '', phone: '' });
+                            setCustomerInfo({ name: '', email: '', phone: '', address: '' });
                           }}
                           className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
                         >

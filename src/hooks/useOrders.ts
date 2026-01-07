@@ -14,6 +14,9 @@ interface Order {
   updatedAt?: string;
   deliveryOption?: 'pickup' | 'delivery';
   deliveryAddress?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
 }
 
 interface CreateOrderDto {
@@ -25,6 +28,9 @@ interface CreateOrderDto {
   vatAmount?: number;
   deliveryOption?: 'pickup' | 'delivery';
   deliveryAddress?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
 }
 
 interface UpdateOrderDto {

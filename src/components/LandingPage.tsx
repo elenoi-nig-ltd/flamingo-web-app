@@ -8,6 +8,7 @@ import SkeletonLoader from '@/components/SkeletonLoader';
 import { usePublicCategories, usePublicProducts } from '@/hooks/usePublic';
 import { useRealEstates } from '@/hooks/useRealEstates';
 import { useHomeItemCategories } from '@/hooks/useHomeItemCategories';
+import { useMarquee } from '@/hooks/useMarquee';
 import axios from 'axios';
 import { BASEURL } from '@/config/api/contants';
 
@@ -89,15 +90,52 @@ interface RealEstate {
 
 // === DISCOUNT MARQUEE ===
 const DiscountMarquee = () => {
-  const text = "*Welcome to 2026*";
+  const { activeMarquees, loading } = useMarquee();
+  
+  // Default text using current long date
+  const defaultText = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
+  // Get all active marquee texts or use default
+  const marqueeTexts = activeMarquees.length > 0 
+    ? activeMarquees.map(m => m.text)
+    : [defaultText];
+  
+  // Don't show loading state, just show default text if still loading
   return (
-    <div className="bg-gradient-to-r from-orange-500 to-amber-500 mt-20 via-orange-600 to-red-700 text-white overflow-hidden py-3 shadow-md">
-      <div className="flex">
-        <div className="animate-marquee-inline flex whitespace-nowrap">
-          <span className="mx-8 text-lg font-bold tracking-wide">{text}</span>
-          <span className="mx-8 text-lg font-bold tracking-wide">{text}</span>
-          <span className="mx-8 text-lg font-bold tracking-wide">{text}</span>
-          <span className="mx-8 text-lg font-bold tracking-wide">{text}</span>
+    <div className="relative bg-gradient-to-r from-orange-500 via-red-500 to-amber-600 mt-20 text-white overflow-hidden py-4 shadow-lg border-y-2 border-yellow-300">
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]"></div>
+      </div>
+      
+      <div className="relative flex">
+        <div className="animate-marquee-inline flex whitespace-nowrap items-center">
+          {marqueeTexts.map((text, index) => (
+            <React.Fragment key={index}>
+              <span className="mx-6 text-lg md:text-xl font-bold tracking-wide drop-shadow-lg">
+                ✨ {text} ✨
+              </span>
+              {index < marqueeTexts.length - 1 && (
+                <span className="mx-4 text-yellow-300 text-xl font-extrabold">||</span>
+              )}
+            </React.Fragment>
+          ))}
+          {/* Duplicate for seamless loop */}
+          {marqueeTexts.map((text, index) => (
+            <React.Fragment key={`dup-${index}`}>
+              <span className="mx-6 text-lg md:text-xl font-bold tracking-wide drop-shadow-lg">
+                ✨ {text} ✨
+              </span>
+              {index < marqueeTexts.length - 1 && (
+                <span className="mx-4 text-yellow-300 text-xl font-extrabold">||</span>
+              )}
+            </React.Fragment>
+          ))}
         </div>
       </div>
     </div>

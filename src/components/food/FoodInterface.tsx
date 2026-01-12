@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { FaSearch, FaBars, FaTimes, FaShoppingCart } from 'react-icons/fa';
 import FoodSidebar from './FoodSidebar';
 import ProductGrid from './ProductGrid';
@@ -22,7 +22,7 @@ interface Product {
   description: string;
   price: number;
   images: string[];
-  category: string;
+  category: string | { _id: string; name: string; description: string }; // Can be ID or populated object
   inStock: boolean;
 }
 
@@ -34,6 +34,7 @@ interface Category {
 
 const FoodInterface: React.FC<FoodInterfaceProps> = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(searchParams.get('category'));
   const [selectedCategoryName, setSelectedCategoryName] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
@@ -153,6 +154,13 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
     setSelectedCategoryName(categoryName);
     setSelectedCategoryId(categoryId || null);
     
+    // Navigate to food page with category filter
+    if (categoryId) {
+      router.push(`/food?category=${categoryId}`);
+    } else {
+      router.push('/food');
+    }
+    
     // Close sidebar on mobile after selection
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
@@ -162,7 +170,7 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
   const handleAddToCart = (product: { id: string; name: string; image: string; price: number }) => {
     addToCart(product);
     setToast({
-      message: `${product.name} added to the order!`,
+      message: 'Food ordered',
       type: 'success',
       isVisible: true
     });

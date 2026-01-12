@@ -13,10 +13,33 @@ interface ProductGridProps {
   onAddToCart: (product: { id: string; name: string; image: string; price: number }) => void;
 }
 
+/* ---------- Card-level toast (appears inside the card) ---------- */
+const CardToast: React.FC<{ message: string; onClose: () => void }> = ({
+  message,
+  onClose,
+}) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 2000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      className="absolute inset-x-0 bottom-0 bg-green-600 text-white text-xs py-1 px-2 rounded-t-md text-center"
+    >
+      {message}
+    </motion.div>
+  );
+};
+/* ---------------------------------------------------------------- */
+
 interface FoodProduct {
   _id: string;
   name: string;
-  category: string;
+  category: string | { _id: string; name: string; description: string }; // Can be ID or populated object
   images: string[];
   price: number;
   description: string;
@@ -32,6 +55,10 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 }) => {
   const { categories } = useCategories();
   const [filteredProducts, setFilteredProducts] = useState<FoodProduct[]>([]);
+  
+  /* ---- Per-card toast state (mobile + web) ---- */
+  const [cardToast, setCardToast] = useState<{ id: string; message: string } | null>(null);
+  /* -------------------------------------------- */
 
   // Filter products based on category and search query
   useEffect(() => {
@@ -39,13 +66,23 @@ const ProductGrid: React.FC<ProductGridProps> = ({
 
     // Apply category filtering
     if (selectedCategoryId && selectedCategoryId !== 'All') {
-      // Filter by category ID
-      filtered = filtered.filter(product => product.category === selectedCategoryId);
+      // Filter by category ID - handle both populated and unpopulated category
+      filtered = filtered.filter(product => {
+        const categoryId = typeof product.category === 'string' 
+          ? product.category 
+          : product.category._id;
+        return categoryId === selectedCategoryId;
+      });
     } else if (selectedCategory && selectedCategory !== 'All') {
       // Fallback: filter by category name if ID not available
       const category = categories.find(cat => cat.name === selectedCategory);
       if (category) {
-        filtered = filtered.filter(product => product.category === category._id);
+        filtered = filtered.filter(product => {
+          const categoryId = typeof product.category === 'string' 
+            ? product.category 
+            : product.category._id;
+          return categoryId === category._id;
+        });
       }
     }
 
@@ -110,16 +147,34 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     );
   }
 
+  const handleAddToCart = (e: React.MouseEvent, product: FoodProduct) => {
+    e.stopPropagation();
+
+    // Global toast (desktop)
+    onAddToCart({
+      id: product._id,
+      name: product.name,
+      image: product.images && product.images.length > 0 ? product.images[0] : '/assets/images/placeholder-food.jpg',
+      price: product.price
+    });
+
+    // Card-level toast (mobile + web)
+    setCardToast({ id: product._id, message: 'Food added to orders' });
+    setTimeout(() => setCardToast(null), 2200);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
       {filteredProducts.map((product) => {
-        const productCategory = categories.find(cat => cat._id === product.category);
-        const categoryName = productCategory ? productCategory.name : 'Unknown Category';
+        // Handle both populated category object and category ID string
+        const categoryName = typeof product.category === 'string'
+          ? categories.find(cat => cat._id === product.category)?.name || 'Uncategorized'
+          : product.category?.name || 'Uncategorized';
 
         return (
           <motion.div
             key={product._id}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 relative"
             whileHover={{ y: -5 }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -150,12 +205,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                   ₦{product.price.toLocaleString()}
                 </span>
                 <motion.button
-                  onClick={() => onAddToCart({
-                    id: product._id,
-                    name: product.name,
-                    image: product.images && product.images.length > 0 ? product.images[0] : '/assets/images/placeholder-food.jpg',
-                    price: product.price
-                  })}
+                  onClick={(e) => handleAddToCart(e, product)}
                   className="bg-[#f58c55] hover:bg-[#f47a45] text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -164,6 +214,17 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                   <span>Order</span>
                 </motion.button>
               </div>
+
+              {/* ---------- Card toast (mobile + web) ---------- */}
+              <div className="relative h-6 mt-2">
+                {cardToast?.id === product._id && (
+                  <CardToast
+                    message={cardToast.message}
+                    onClose={() => setCardToast(null)}
+                  />
+                )}
+              </div>
+              {/* ------------------------------------------------ */}
             </div>
           </motion.div>
         );

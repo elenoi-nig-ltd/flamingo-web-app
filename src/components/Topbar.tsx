@@ -13,27 +13,23 @@ import {
 } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
 import { useSidebar } from './admin/SidebarContext';
 import { TopbarSkeleton } from './ui/SkeletonLoader';
+import { useRouter } from 'next/navigation';
 
 const Topbar = () => {
   const { user, logout, loading } = useAuth();
   const { toggleSidebar } = useSidebar();
+  const { unreadNotifications, unreadCount, markAsRead } = useNotifications();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications] = useState([
-    { id: 1, message: 'New order received', time: '2 min ago', unread: true },
-    { id: 2, message: 'Product inventory low', time: '1 hour ago', unread: true },
-    { id: 3, message: 'User registration pending', time: '3 hours ago', unread: false },
-    { id: 4, message: 'Payment processed successfully', time: '5 hours ago', unread: false },
-  ]);
   
   const profileDropdownRef = useRef<HTMLDivElement>(null);
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
-  
-  const unreadCount = notifications.filter(n => n.unread).length;
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -53,6 +49,38 @@ const Topbar = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Searching for:', searchQuery);
+  };
+
+  const handleNotificationClick = async (notification: any) => {
+    if (!notification.isRead) {
+      try {
+        await markAsRead(notification._id);
+      } catch (error) {
+        console.error('Failed to mark as read:', error);
+      }
+    }
+    setShowNotifications(false);
+    router.push('/admin/dashboard/notifications');
+  };
+
+  const handleViewAllNotifications = () => {
+    setShowNotifications(false);
+    router.push('/admin/dashboard/notifications');
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} min ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
   };
 
   const getInitials = (name: string) => {
@@ -124,20 +152,15 @@ const Topbar = () => {
             </motion.div>
           </form>
 
-          {/* Mobile Search Button */}
-          <button className="p-2 text-[#f58c55] dark:text-[#f7a16b] hover:bg-gradient-to-r hover:from-[#f58c55]/10 hover:to-[#f47a45]/10 dark:hover:from-[#f7a16b]/10 dark:hover:to-[#f58c55]/10 rounded-xl transition-all duration-300 sm:hidden">
-            <FaSearch className="text-lg" />
-          </button>
-
-          {/* Notifications */}
+          {/* Notifications - Fixed z-index issues */}
           <div className="relative" ref={notificationDropdownRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}
               className="relative p-2 text-[#f58c55] dark:text-[#f7a16b] hover:bg-gradient-to-r hover:from-[#f58c55]/10 hover:to-[#f47a45]/10 dark:hover:from-[#f7a16b]/10 dark:hover:to-[#f58c55]/10 rounded-xl transition-all duration-300"
             >
-              <FaBell className="text-lg" />
+              <FaBell className="text-xl" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 dark:bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {unreadCount}
                 </span>
               )}
@@ -149,36 +172,49 @@ const Topbar = () => {
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
-                  className="absolute right-0 mt-2 w-80 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 z-60" // Increased z-index and opacity
+                  className="absolute right-0 mt-2 w-80 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 z-60"
                 >
                   <div className="p-4 border-b border-gray-200/50 dark:border-gray-700/50">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <p className="text-xs text-[#f58c55] dark:text-[#f7a16b] mt-1">{unreadCount} new</p>
+                    )}
                   </div>
                   <div className="max-h-64 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={`p-4 border-b border-gray-200/50 dark:border-gray-700/50 hover:bg-gradient-to-r hover:from-[#f58c55]/5 hover:to-[#f47a45]/5 dark:hover:from-[#f7a16b]/5 dark:hover:to-[#f58c55]/5 cursor-pointer transition-all duration-300 ${
-                          notification.unread ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''
-                        }`}
-                      >
-                        <div className="flex items-start space-x-3">
-                          <div className={`w-2 h-2 rounded-full mt-2 ${
-                            notification.unread ? 'bg-blue-500 dark:bg-blue-400' : 'bg-gray-300 dark:bg-gray-600'
-                          }`} />
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-800 dark:text-gray-200">{notification.message}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{notification.time}</p>
+                    {unreadNotifications.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <FaBell className="mx-auto text-4xl text-gray-300 dark:text-gray-600 mb-2" />
+                        <p className="text-sm text-gray-500 dark:text-gray-400">No new notifications</p>
+                      </div>
+                    ) : (
+                      unreadNotifications.slice(0, 5).map((notification) => (
+                        <div
+                          key={notification._id}
+                          onClick={() => handleNotificationClick(notification)}
+                          className="p-4 border-b border-gray-200/50 dark:border-gray-700/50 hover:bg-gradient-to-r hover:from-[#f58c55]/5 hover:to-[#f47a45]/5 dark:hover:from-[#f7a16b]/5 dark:hover:to-[#f58c55]/5 cursor-pointer transition-all duration-300 bg-blue-50/50 dark:bg-blue-900/20"
+                        >
+                          <div className="flex items-start space-x-3">
+                            <div className="w-2 h-2 rounded-full mt-2 bg-blue-500 dark:bg-blue-400" />
+                            <div className="flex-1">
+                              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{notification.title}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">{notification.message}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{formatTimeAgo(notification.createdAt)}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
-                  <div className="p-3 border-t border-gray-200/50 dark:border-gray-700/50">
-                    <button className="w-full text-sm text-center text-[#f58c55] dark:text-[#f7a16b] hover:text-[#f47a45] dark:hover:text-[#f58c55] font-medium">
-                      View all notifications
-                    </button>
-                  </div>
+                  {unreadNotifications.length > 0 && (
+                    <div className="p-3 border-t border-gray-200/50 dark:border-gray-700/50">
+                      <button 
+                        onClick={handleViewAllNotifications}
+                        className="w-full text-sm text-center text-[#f58c55] dark:text-[#f7a16b] hover:text-[#f47a45] dark:hover:text-[#f58c55] font-medium"
+                      >
+                        View all notifications
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

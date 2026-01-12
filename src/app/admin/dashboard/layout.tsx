@@ -3,6 +3,9 @@
 import { useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import Sidebar from '@/components/admin/Sidebar';
+import { SidebarProvider } from '@/components/admin/SidebarContext';
+import NotificationBell from '@/components/admin/NotificationBell';
 
 export default function AdminDashboardLayout({
   children,
@@ -86,5 +89,25 @@ export default function AdminDashboardLayout({
   }
 
   // Render children if user is authenticated and authorized
-  return <>{children}</>;
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-gray-50">
+        <Sidebar />
+        <div className="flex-1 flex flex-col">
+          {/* Header with NotificationBell */}
+          <div className="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800">Admin Dashboard</h2>
+              <p className="text-sm text-gray-600">Welcome back, {user.name || user.email}</p>
+            </div>
+            <NotificationBell />
+          </div>
+          {/* Main Content */}
+          <div className="flex-1 overflow-auto">
+            {children}
+          </div>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
 }

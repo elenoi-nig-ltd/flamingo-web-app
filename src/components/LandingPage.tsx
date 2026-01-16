@@ -654,7 +654,7 @@ export default function LandingPage() {
                     ))}
                     <div
                       className="w-full max-w-[208px] h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer"
-                      onClick={() => handleCardClick('/post-ads')}
+                      onClick={() => handleCardClick('/')}
                     >
                       <PlusCircle className="text-[#f47a45] dark:text-[#f7a16b] w-20 h-20" />
                       <span className="text-gray-800 dark:text-gray-200 text-lg font-semibold px-4">

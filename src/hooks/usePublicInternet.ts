@@ -76,7 +76,7 @@ export const usePublicInternet = () => {
   const [paymentResponse, setPaymentResponse] = useState<PaymentResponse | null>(null);
 
   /* ---------- Core API calls ---------- */
-  const fetchPlans = async (query: QueryDto = { page: 1, limit: 10 }) => {
+  const fetchPlans = async (query: QueryDto = { page: 1, limit: 1000 }) => {
     setLoading(true);
     setError(null);
     try {
@@ -125,6 +125,8 @@ export const usePublicInternet = () => {
         : [];
 
       setPlans(validPlans);
+      // Note: We don't update locations here since they're already set from fetchPlans()
+      // This ensures all locations remain available in the UI
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred');
       setPlans([]);

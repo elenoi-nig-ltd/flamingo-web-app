@@ -175,7 +175,8 @@ export const PropertyDetails = () => {
         <div className="mb-8">
           <div className="relative h-96 w-full mb-4 rounded-lg overflow-hidden">
             <Image
-              src={propertyDetails.images[activeImage] || '/placeholder.jpg'}
+              src={'/placeholder.jpg'}
+              // src={propertyDetails.images[activeImage] || '/placeholder.jpg'}
               alt={propertyDetails.title}
               fill
               className="object-cover"

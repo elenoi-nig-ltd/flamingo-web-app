@@ -182,7 +182,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({
           >
             <div className="relative">
               <img
-                src={product.images && product.images.length > 0 ? product.images[0] : '/assets/images/placeholder-food.jpg'}
+                // src={product.images && product.images.length > 0 ? product.images[0] : '/assets/images/placeholder-food.jpg'}
                 alt={product.name}
                 className="w-full h-48 object-cover"
                 loading="lazy"

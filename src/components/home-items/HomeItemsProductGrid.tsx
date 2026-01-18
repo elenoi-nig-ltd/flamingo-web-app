@@ -189,7 +189,7 @@ const HomeItemsProductGrid = ({
             {/* Image */}
             <div className="relative">
               <img
-                src={images[curImgIdx]}
+                // src={images[curImgIdx]}
                 alt={product.name}
                 className="w-full h-48 object-cover"
                 loading="lazy"

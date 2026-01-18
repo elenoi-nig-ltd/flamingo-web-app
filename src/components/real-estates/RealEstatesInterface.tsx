@@ -98,7 +98,7 @@ const RealEstates = () => {
     setBathrooms,
     sortBy,
     setSortBy,
-  } = useRealEstates();
+  } = useRealEstates({ fetchMode: 'public', enableFilters: true });
 
   // Show disclaimer modal on component mount
   useEffect(() => {

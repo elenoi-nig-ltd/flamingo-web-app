@@ -207,26 +207,26 @@ export default function LandingPage() {
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const categoryIconMap: Record<string, string> = {
-    'Furnitures': '/assets/images/categories/furniture.pngm',
-    'Furniture': '/assets/images/categories/furniture.pngm',
-    'Beddings': '/assets/images/categories/beddings.pngm',
-    'Bedding': '/assets/images/categories/beddings.pngm',
-    'Utensils': '/assets/images/categories/utensils.pngm',
-    'Snacks': '/assets/images/categories/snacks.pngm',
-    'Snack': '/assets/images/categories/snacks.pngm',
-    'Drinks': '/assets/images/categories/drinks.pngm',
-    'Drink': '/assets/images/categories/drinks.pngm',
-    'Beverages': '/assets/images/categories/drinks.pngm',
-    'Mattress': '/assets/images/categories/mattress.pngm',
-    'Mattresses': '/assets/images/categories/mattress.pngm',
-    'Vehicles': '/assets/images/categories/vehicles.pngm',
-    'Vehicle': '/assets/images/categories/vehicles.pngm',
-    'Content Creation': '/assets/images/categories/content.pngm',
-    'Content': '/assets/images/categories/content.pngm',
-    'Food': '/assets/images/categories/food.pngm',
-    'Foods': '/assets/images/categories/food.pngm',
-    'Office Chairs': '/assets/images/categories/office.pngm',
-    'Office': '/assets/images/categories/office.pngm',
+    'Furnitures': '/assets/images/categories/furniture.png',
+    'Furniture': '/assets/images/categories/furniture.png',
+    'Beddings': '/assets/images/categories/beddings.png',
+    'Bedding': '/assets/images/categories/beddings.png',
+    'Utensils': '/assets/images/categories/utensils.png',
+    'Snacks': '/assets/images/categories/snacks.png',
+    'Snack': '/assets/images/categories/snacks.png',
+    'Drinks': '/assets/images/categories/drinks.png',
+    'Drink': '/assets/images/categories/drinks.png',
+    'Beverages': '/assets/images/categories/drinks.png',
+    'Mattress': '/assets/images/categories/mattress.png',
+    'Mattresses': '/assets/images/categories/mattress.png',
+    'Vehicles': '/assets/images/categories/vehicles.png',
+    'Vehicle': '/assets/images/categories/vehicles.png',
+    'Content Creation': '/assets/images/categories/content.png',
+    'Content': '/assets/images/categories/content.png',
+    'Food': '/assets/images/categories/food.png',
+    'Foods': '/assets/images/categories/food.png',
+    'Office Chairs': '/assets/images/categories/office.png',
+    'Office': '/assets/images/categories/office.png',
   };
 
   /* --------------------------------------------------------------
@@ -304,10 +304,10 @@ export default function LandingPage() {
     return null;
   };
   const cards = [
-    { icon: '/assets/images/card/food-order.pngm', label: 'Order Food', route: '/food' },
-    { icon: '/assets/images/card/household.pngm', label: 'Household Items', route: '/home-items' },
-    { icon: '/assets/images/card/properties.pngm', label: 'Properties', route: '/real-estates' },
-    { icon: '/assets/images/card/internet.pngm', label: 'Internet', route: '/internet' },
+    { icon: '/assets/images/card/food-order.png', label: 'Order Food', route: '/food' },
+    { icon: '/assets/images/card/household.png', label: 'Household Items', route: '/home-items' },
+    { icon: '/assets/images/card/properties.png', label: 'Properties', route: '/real-estates' },
+    { icon: '/assets/images/card/internet.png', label: 'Internet', route: '/internet' },
   ];
   const handleCardClick = (route: string) => router.push(route);
   const handleCategoryClick = (categoryId: string) => router.push(`/food?category=${categoryId}`);
@@ -735,7 +735,7 @@ export default function LandingPage() {
                           onClick={() => handleRealEstateClick(id, title)}
                         >
                           <div className="w-full h-48 relative bg-gray-100 dark:bg-gray-700">
-                            {/* <Image src={mainImage} alt={title} fill className="object-cover" onError={(e) => { e.currentTarget.src = '/assets/images/placeholder.png'; }} /> */}
+                            <Image src={mainImage} alt={title} fill className="object-cover" onError={(e) => { e.currentTarget.src = '/assets/images/placeholder.png'; }} />
                             <div className="absolute top-3 left-3 bg-[#f47a45] text-white px-3 py-1 rounded-full text-sm font-semibold">
                               ₦{price.toLocaleString()}
                             </div>

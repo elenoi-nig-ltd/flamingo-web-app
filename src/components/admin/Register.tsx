@@ -348,7 +348,7 @@ export default function AdminRegister() {
                   className="appearance-none block w-full px-4 py-3 bg-white/90 dark:bg-gray-800/80 backdrop-blur-sm border border-white/30 dark:border-gray-600/50 rounded-xl text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#f58c55]/50 focus:border-[#f58c55]/40 dark:focus:border-[#f7a16b]/30 transition-all duration-300 text-sm sm:text-base pr-10"
                 >
                   <option value="staff">Staff</option>
-                  <option value="admin">Admin</option>
+                  {/* <option value="admin">Admin</option> */}
                 </select>
                 <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                   <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

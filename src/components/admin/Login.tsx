@@ -123,7 +123,7 @@ export default function AdminLogin() {
             </div>
 
             {/* Register Link - Mobile */}
-            <div className="text-center text-sm text-white/80 dark:text-gray-300 pt-4">
+            {/* <div className="text-center text-sm text-white/80 dark:text-gray-300 pt-4">
               Don&apos;t have an account?{' '}
               <Link 
                 href="/admin/register" 
@@ -131,7 +131,7 @@ export default function AdminLogin() {
               >
                 Register here
               </Link>
-            </div>
+            </div> */}
           </form>
         </div>
       </div>

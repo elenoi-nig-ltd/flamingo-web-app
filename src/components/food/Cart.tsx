@@ -104,7 +104,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
 
   // Delivery locations with prices
   const deliveryLocations = [
-    { value: 'gidan-kwano', label: 'Gidan Kwano', price: 600 },
+    { value: 'gidan-kwano', label: 'Gidan Kwano/Dama', price: 600 },
     { value: 'gidan-mangoro', label: 'Gidan Mangoro', price: 800 },
     { value: 'albishiri', label: 'Albishiri/Kpakungu axis', price: 1200 },
     { value: 'bosso', label: 'Bosso', price: 2000 },

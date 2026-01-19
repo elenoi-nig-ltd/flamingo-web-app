@@ -98,8 +98,18 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
     address: '',
   });
   const [deliveryOption, setDeliveryOption] = useState<'pickup' | 'delivery'>('pickup');
+  const [deliveryLocation, setDeliveryLocation] = useState<string>('gidan-kwano');
   const [isDownloading, setIsDownloading] = useState(false);
   const cartContainerRef = useRef<HTMLDivElement>(null);
+
+  // Delivery locations with prices
+  const deliveryLocations = [
+    { value: 'gidan-kwano', label: 'Gidan Kwano', price: 600 },
+    { value: 'gidan-mangoro', label: 'Gidan Mangoro', price: 800 },
+    { value: 'albishiri', label: 'Albishiri/Kpakungu axis', price: 1200 },
+    { value: 'bosso', label: 'Bosso', price: 2000 },
+    { value: 'minna-town', label: 'Minna (Town)', price: 2000 },
+  ];
   const { initiatePayment, loading: paymentLoading, error: paymentError } = usePayments();
   const { createOrder, loading: orderLoading, error: orderError } = useOrders();
   const { user } = useAuth();
@@ -126,8 +136,10 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
   // Calculate subtotal (sum of all items)
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   
-  // Calculate delivery fee
-  const deliveryFee = deliveryOption === 'delivery' ? 600 : 0;
+  // Calculate delivery fee based on selected location
+  const deliveryFee = deliveryOption === 'delivery' 
+    ? deliveryLocations.find(loc => loc.value === deliveryLocation)?.price || 600
+    : 0;
   
   // Calculate total (subtotal + delivery fee)
   const totalWithFees = subtotal + deliveryFee;
@@ -158,6 +170,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
         subtotal: subtotal,
         deliveryFee: deliveryFee,
         deliveryOption: deliveryOption,
+        deliveryLocation: deliveryOption === 'delivery' ? deliveryLocations.find(loc => loc.value === deliveryLocation)?.label : undefined,
         deliveryAddress: deliveryOption === 'delivery' ? customerInfo.address : undefined,
         customerName: customerInfo.name,
         customerEmail: customerInfo.email,
@@ -198,6 +211,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
         subtotal: subtotal,
         deliveryFee: deliveryFee,
         deliveryOption: deliveryOption,
+        deliveryLocation: deliveryOption === 'delivery' ? deliveryLocations.find(loc => loc.value === deliveryLocation)?.label : undefined,
         deliveryAddress: deliveryOption === 'delivery' ? customerInfo.address : undefined,
         status: 'pending',
         tx_ref: paymentResult.transactionId,
@@ -625,9 +639,34 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                           }`}
                         >
                           <FaTruck />
-                          <span>Delivery (+₦600)</span>
+                          <span>Delivery</span>
                         </button>
                       </div>
+                      
+                      {/* Location Dropdown - Only shown when delivery is selected */}
+                      {deliveryOption === 'delivery' && (
+                        <div className="mt-3">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Select Delivery Location
+                          </label>
+                          <select
+                            value={deliveryLocation}
+                            onChange={(e) => setDeliveryLocation(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] focus:border-[#f58c55]"
+                          >
+                            {deliveryLocations.map((location) => (
+                              <option key={location.value} value={location.value}>
+                                {location.label} - ₦{location.price.toLocaleString()}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                            <p className="text-xs text-amber-700 dark:text-amber-300">
+                              💡 <span className="font-semibold">Tip:</span> Please select the location closest to your delivery address for accurate pricing.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex justify-between items-center mb-4">
@@ -789,6 +828,22 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                       </div>
                       {deliveryOption === 'delivery' && (
                         <>
+                          <div className="p-3 bg-[#f58c55]/10 dark:bg-[#f58c55]/20 rounded-lg border border-[#f58c55]/30">
+                            <div className="flex items-start space-x-2">
+                              <span className="text-[#f58c55] text-lg mt-0.5">📍</span>
+                              <div>
+                                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
+                                  Confirm Your Delivery Location
+                                </p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300">
+                                  <span className="font-semibold">{deliveryLocations.find(loc => loc.value === deliveryLocation)?.label}</span> - ₦{deliveryFee.toLocaleString()}
+                                </p>
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                  Make sure this location is close to your address below.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                               <FaTruck className="inline mr-2 text-[#f58c55]" />
@@ -806,7 +861,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                           </div>
                           <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                             <p className="text-sm text-blue-700 dark:text-blue-300">
-                              <span className="font-semibold">Note:</span> ₦600 delivery fee is included in your total.
+                              <span className="font-semibold">Note:</span> ₦{deliveryFee.toLocaleString()} delivery fee to {deliveryLocations.find(loc => loc.value === deliveryLocation)?.label} is included in your total.
                             </p>
                           </div>
                         </>

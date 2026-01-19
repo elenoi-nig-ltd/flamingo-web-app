@@ -18,17 +18,6 @@ const NotFound = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Floating animation for background elements
-  const floatingAnimation = {
-    y: [0, -20, 0],
-    rotate: [0, 5, 0],
-    transition: {
-      duration: 3,
-      repeat: Infinity,
-      ease: "easeInOut"
-    }
-  };
-
   // Eye following mouse
   const eyeX = (mousePosition.x - (typeof window !== 'undefined' ? window.innerWidth : 0) / 2) / 50;
   const eyeY = (mousePosition.y - (typeof window !== 'undefined' ? window.innerHeight : 0) / 2) / 50;
@@ -37,20 +26,40 @@ const NotFound = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#f58c55]/10 via-white to-purple-100 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900 overflow-hidden relative flex items-center justify-center px-4 py-8">
       {/* Animated Background Shapes */}
       <motion.div
-        animate={floatingAnimation}
+        animate={{
+          y: [0, -20, 0],
+          rotate: [0, 5, 0]
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
         className="absolute top-10 left-10 w-20 h-20 md:w-32 md:h-32 bg-[#f58c55]/20 dark:bg-[#f58c55]/10 rounded-full blur-3xl"
       />
       <motion.div
         animate={{
-          ...floatingAnimation,
-          transition: { ...floatingAnimation.transition, delay: 0.5 }
+          y: [0, -20, 0],
+          rotate: [0, 5, 0]
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 0.5
         }}
         className="absolute bottom-20 right-20 w-24 h-24 md:w-40 md:h-40 bg-purple-300/30 dark:bg-purple-600/20 rounded-full blur-3xl"
       />
       <motion.div
         animate={{
-          ...floatingAnimation,
-          transition: { ...floatingAnimation.transition, delay: 1 }
+          y: [0, -20, 0],
+          rotate: [0, 5, 0]
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 1
         }}
         className="absolute top-1/2 right-10 w-16 h-16 md:w-28 md:h-28 bg-blue-300/30 dark:bg-blue-600/20 rounded-full blur-2xl"
       />

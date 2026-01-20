@@ -68,7 +68,7 @@ const Header = () => {
       { name: 'Events', href: '#' },
       { name: 'Consultation', href: '#' },
       { name: 'Packages', href: '#' },
-      // { name: 'Admin Login', href: '/admin/login' },
+  
     ],
   };
 

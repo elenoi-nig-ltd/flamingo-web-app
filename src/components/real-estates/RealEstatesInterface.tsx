@@ -342,25 +342,57 @@ const RealEstates = () => {
               {realEstates.map((estate) => (
                 <div 
                   key={estate.id} 
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-105"
-                  onClick={() => handlePropertyClick(estate.id)}
+                  className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden transition-transform duration-200 hover:scale-105"
                 >
-                  <Image
-                    src={estate.images[0] || '/placeholder.jpg'}
-                    alt={estate.title}
-                    width={300}
-                    height={200}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">₦{estate.price.toLocaleString()} /year</h3>
-                    <p className="text-gray-600 dark:text-gray-400">{estate.title}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
-                      {estate.bedrooms} rooms • {estate.bathrooms} bathroom • {estate.area} sq ft
-                    </p>
-                    <div className="flex justify-end mt-2">
-                      <span className="text-orange-500 dark:text-orange-400">♥</span>
+                  <div 
+                    className="cursor-pointer"
+                    onClick={() => handlePropertyClick(estate.id)}
+                  >
+                    <div className="relative">
+                      <Image
+                        src={estate.images[0] || '/placeholder.jpg'}
+                        alt={estate.title}
+                        width={300}
+                        height={200}
+                        className="w-full h-48 object-cover"
+                      />
+                      {/* Availability Badge */}
+                      <div className="absolute top-2 right-2">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-lg">
+                          Available
+                        </span>
+                      </div>
                     </div>
+                    <div className="p-4">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">₦{estate.price.toLocaleString()} /year</h3>
+                      <p className="text-gray-600 dark:text-gray-400">{estate.title}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500">
+                        {estate.bedrooms} rooms • {estate.bathrooms} bathroom • {estate.area} sq ft
+                      </p>
+                    </div>
+                  </div>
+                  <div className="px-4 pb-4 flex items-center justify-between">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePropertyClick(estate.id);
+                      }}
+                      className="text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 font-semibold text-sm flex items-center transition"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
+                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+                      </svg>
+                      Book Now
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Toggle favorite (you can implement this)
+                      }}
+                    >
+                      <span className="text-orange-500 dark:text-orange-400">♥</span>
+                    </button>
                   </div>
                 </div>
               ))}

@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useRealEstates } from '@/hooks/useRealEstates';
+import { useBookings } from '@/hooks/useBookings';
 import Header from '@/components/Header';
+import BookingForm from './BookingForm';
 
 const DisclaimerModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
@@ -70,12 +72,15 @@ export const PropertyDetails = () => {
   const router = useRouter();
   const id = params.id as string;
   const { propertyDetails, detailsLoading, detailsError, fetchPropertyDetails } = useRealEstates();
+  const { checkAvailability, availability, loading: bookingLoading } = useBookings();
   const [activeImage, setActiveImage] = useState(0);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
+  const [showBookingForm, setShowBookingForm] = useState(false);
 
   useEffect(() => {
     if (id) {
       fetchPropertyDetails(id);
+      checkAvailability(id);
     }
   }, [id, fetchPropertyDetails]);
 
@@ -270,22 +275,59 @@ export const PropertyDetails = () => {
                 ₦{propertyDetails.price.toLocaleString()} /year
               </h3>
               
-              {/* <button className="w-full bg-green-700 dark:bg-green-600 text-white py-3 rounded-lg font-semibold mb-4 hover:bg-green-800 dark:hover:bg-green-700 transition">
-                Contact Agent
+              {/* Availability Badge */}
+              <div className="mb-4">
+                {bookingLoading ? (
+                  <div className="animate-pulse h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                ) : availability ? (
+                  availability.available ? (
+                    <div className="flex items-center justify-center bg-green-100 dark:bg-green-900/30 border border-green-300 dark:border-green-700 rounded-lg py-2">
+                      <svg className="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-green-700 dark:text-green-300 font-semibold">Available for Booking</span>
+                    </div>
+                  ) : (
+                    <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-3">
+                      <div className="flex items-center mb-2">
+                        <svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-red-700 dark:text-red-300 font-semibold">Currently Booked</span>
+                      </div>
+                      {availability.booking && (
+                        <p className="text-sm text-red-600 dark:text-red-400">
+                          Expires: {new Date(availability.booking.expiryDate).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  )
+                ) : null}
+              </div>
+              
+              {/* Book Now Button */}
+              <button 
+                onClick={() => setShowBookingForm(true)}
+                disabled={!availability?.available || bookingLoading}
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg font-semibold mb-3 hover:from-orange-600 hover:to-amber-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+              >
+                {availability?.available ? '📋 Book Now' : '🔒 Currently Unavailable'}
               </button>
               
-              <button className="w-full border border-green-700 dark:border-green-600 text-green-700 dark:text-green-400 py-3 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition">
-                Schedule Tour
+              <button 
+                onClick={() => window.location.href = `mailto:${propertyDetails.contactInfo?.email || 'contact@flourishrealestate.com'}`}
+                className="w-full border-2 border-green-600 dark:border-green-500 text-green-700 dark:text-green-400 py-3 rounded-lg font-semibold hover:bg-green-50 dark:hover:bg-green-900/30 transition mb-3"
+              >
+                📧 Contact Agent
               </button>
               
               {propertyDetails.contactInfo && (
                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Contact Information</h4>
-                  <p className="text-gray-600 dark:text-gray-300">{propertyDetails.contactInfo.name}</p>
-                  <p className="text-gray-600 dark:text-gray-300">{propertyDetails.contactInfo.phone}</p>
-                  <p className="text-gray-600 dark:text-gray-300">{propertyDetails.contactInfo.email}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">📞 {propertyDetails.contactInfo.phone}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm">✉️ {propertyDetails.contactInfo.email}</p>
                 </div>
-              )} */}
+              )}
               
               <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Share this property</h4>
@@ -311,6 +353,30 @@ export const PropertyDetails = () => {
           </div>
         </div>
       </div>
+      
+      {/* Booking Form Modal */}
+      {showBookingForm && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="relative max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setShowBookingForm(false)}
+              className="absolute top-4 right-4 z-10 bg-white dark:bg-gray-800 rounded-full p-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              <svg className="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <BookingForm
+              propertyId={id}
+              onSuccess={(booking) => {
+                setShowBookingForm(false);
+                router.push(`/bookings/confirmation?reference=${booking.bookingReference}`);
+              }}
+              onCancel={() => setShowBookingForm(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

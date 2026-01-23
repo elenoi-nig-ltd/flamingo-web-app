@@ -158,3 +158,11 @@ const generateCloudinarySignature = async (publicId: string, timestamp: number):
   // For client-side, you'd typically make an API call to your backend
   throw new CloudinaryError('Signature generation should be handled server-side for security');
 };
+
+/**
+ * Alias for uploadImageToCloudinary - Uploads a single image to Cloudinary
+ * @param file - The image file to upload
+ * @param options - Additional upload options
+ * @returns Promise with Cloudinary upload response
+ */
+export const uploadToCloudinary = uploadImageToCloudinary;

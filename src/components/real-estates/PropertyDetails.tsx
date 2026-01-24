@@ -7,6 +7,7 @@ import { useRealEstates } from '@/hooks/useRealEstates';
 import { useBookings } from '@/hooks/useBookings';
 import Header from '@/components/Header';
 import BookingForm from './BookingForm';
+import { motion } from 'framer-motion';
 
 const DisclaimerModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
@@ -76,6 +77,7 @@ export const PropertyDetails = () => {
   const [activeImage, setActiveImage] = useState(0);
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [proceeding, setProceeding] = useState<boolean>(false);
 
   useEffect(() => {
     if (id) {
@@ -158,7 +160,7 @@ export const PropertyDetails = () => {
         <div className="flex justify-between items-center mb-6">
           <button 
             onClick={() => router.push('/real-estates')}
-            className="text-green-700 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 flex items-center transition"
+            className="text-[#f47a45] dark:text-[#f7a16b] hover:text-[#f58c55] dark:hover:text-[#f7a16b] flex items-center transition"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -270,7 +272,7 @@ export const PropertyDetails = () => {
           </div>
           
           <div className="md:col-span-1">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow sticky top-6 border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow sticky top-6 border border-[#f0e6d0] dark:border-gray-700">
               <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
                 ₦{propertyDetails.price.toLocaleString()} /year
               </h3>
@@ -307,9 +309,10 @@ export const PropertyDetails = () => {
               
               {/* Book Now Button */}
               <button 
-                onClick={() => setShowBookingForm(true)}
+                onClick={() => { setProceeding(true); setTimeout(() => { setProceeding(false); setShowBookingForm(true); }, 900); }}
                 disabled={!availability?.available || bookingLoading}
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg font-semibold mb-3 hover:from-orange-600 hover:to-amber-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="w-full text-white py-2 md:py-3 font-semibold mb-3 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg text-sm md:text-base hover:opacity-90"
+                style={{ backgroundColor: '#f58c55' }}
               >
                 {availability?.available ? '📋 Book Now' : '🔒 Currently Unavailable'}
               </button>
@@ -329,7 +332,7 @@ export const PropertyDetails = () => {
                 </div>
               )}
               
-              <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-6 pt-6 border-t border-[#f0e6d0] dark:border-gray-700">
                 <h4 className="font-semibold text-gray-700 dark:text-gray-200 mb-2">Share this property</h4>
                 <div className="flex space-x-3">
                   <button className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition">
@@ -375,6 +378,18 @@ export const PropertyDetails = () => {
               onCancel={() => setShowBookingForm(false)}
             />
           </div>
+        </div>
+      )}
+
+      {/* Proceeding Modal */}
+      {proceeding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }} className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-[#f0e6d0] dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 animate-pulse"></div>
+              <p className="text-gray-800 dark:text-gray-200 font-semibold">Proceeding to book this apartment...</p>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

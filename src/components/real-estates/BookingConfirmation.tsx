@@ -6,6 +6,8 @@ import { FaCheckCircle, FaDownload, FaPrint, FaHome, FaCalendar, FaClock, FaExcl
 import { useRouter } from 'next/navigation';
 import { Booking } from '@/hooks/useBookings';
 import { useReactToPrint } from 'react-to-print';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface BookingConfirmationProps {
   booking: Booking;
@@ -15,17 +17,63 @@ interface BookingConfirmationProps {
 const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, propertyDetails }) => {
   const router = useRouter();
   const printRef = useRef<HTMLDivElement>(null);
+  const autoDownloaded = useRef(false);
 
   const handlePrint = useReactToPrint({
+    // Newer react-to-print expects contentRef; keep content for backward compat
     content: () => printRef.current,
+    contentRef: printRef,
     documentTitle: `Booking-${booking.bookingReference}`,
+    removeAfterPrint: true,
   });
 
-  const handleDownload = () => {
-    // For download as PDF, we can use the print dialog and save as PDF
-    // Or use a library like jsPDF for more control
+  const handleDownloadPdf = async () => {
+    if (!printRef.current) {
+      console.warn('There is nothing to print');
+      return;
+    }
+
+    const element = printRef.current;
+    const canvas = await html2canvas(element, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'pt', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let heightLeft = pdfHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - pdfHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(`Booking-${booking.bookingReference}.pdf`);
+  };
+
+  const triggerPrint = () => {
+    if (!printRef.current) {
+      console.warn('There is nothing to print');
+      return;
+    }
     handlePrint();
   };
+
+  const handleDownload = () => {
+    handleDownloadPdf();
+  };
+
+  useEffect(() => {
+    if (booking && printRef.current && !autoDownloaded.current) {
+      autoDownloaded.current = true;
+      handleDownloadPdf();
+    }
+  }, [booking]);
 
   const expiryDate = new Date(booking.expiryDate);
   const daysRemaining = Math.ceil((expiryDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
@@ -82,22 +130,22 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, prop
           {/* Action Buttons */}
           <div className="flex flex-wrap justify-center gap-4 mt-6">
             <button
-              onClick={handlePrint}
-              className="flex items-center px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              onClick={triggerPrint}
+              className="flex items-center px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-colors"
             >
               <FaPrint className="mr-2" />
               Print Booking Form
             </button>
             <button
               onClick={handleDownload}
-              className="flex items-center px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              className="flex items-center px-6 py-3 bg-[#f47a45] text-white rounded-lg hover:bg-[#f58c55] transition-colors"
             >
               <FaDownload className="mr-2" />
               Download as PDF
             </button>
             <button
               onClick={() => router.push('/real-estates')}
-              className="flex items-center px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              className="flex items-center px-6 py-3 border-2 border-[#f47a45] text-[#f47a45] rounded-lg hover:bg-[#f47a45] hover:text-white transition-colors"
             >
               <FaHome className="mr-2" />
               Back to Properties

@@ -23,12 +23,20 @@ const BookingConfirmationPage = () => {
 
   const loadBooking = async (ref: string) => {
     const bookingData = await getBookingByReference(ref);
-    if (bookingData) {
-      setBooking(bookingData);
-      
-      // Fetch property details
-      if (bookingData.propertyId) {
-        await fetchPropertyDetails(bookingData.propertyId);
+    if (!bookingData) return;
+
+    setBooking(bookingData);
+
+    // Some responses embed property as an object; normalize to the id string to avoid [object Object] requests
+    const propertyId = typeof bookingData.propertyId === 'string'
+      ? bookingData.propertyId
+      : (bookingData as any)?.propertyId?._id || (bookingData as any)?.propertyId?.id || '';
+
+    if (propertyId) {
+      try {
+        await fetchPropertyDetails(propertyId);
+      } catch (err) {
+        console.error('Failed to fetch property details for booking', err);
       }
     }
   };

@@ -63,6 +63,7 @@ export interface CreateBookingData {
   parentEmail?: string;
   parentAddress?: string;
   verificationPhoto: File | string;
+  idDocumentImage?: File | string;
   notes?: string;
 }
 
@@ -87,6 +88,7 @@ export const useBookings = () => {
     try {
       // Upload verification photo if it's a File
       let verificationPhotoUrl = bookingData.verificationPhoto;
+      let idDocumentImageUrl = bookingData.idDocumentImage;
       
       if (bookingData.verificationPhoto instanceof File) {
         try {
@@ -104,6 +106,23 @@ export const useBookings = () => {
         }
       }
 
+      // Upload ID document image if provided and it's a File
+      if (bookingData.idDocumentImage instanceof File) {
+        try {
+          const uploadResponse: CloudinaryUploadResponse = await uploadToCloudinary(
+            bookingData.idDocumentImage,
+            {
+              folder: 'bookings/id-documents',
+              uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+            }
+          );
+          idDocumentImageUrl = uploadResponse.secure_url;
+        } catch (uploadError) {
+          console.error('ID document upload failed:', uploadError);
+          throw new Error('Failed to upload ID document image. Please try again.');
+        }
+      }
+
       const token = user ? localStorage.getItem('token') : null;
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
@@ -116,6 +135,7 @@ export const useBookings = () => {
       const payload = {
         ...bookingData,
         verificationPhoto: verificationPhotoUrl,
+        idDocumentImage: idDocumentImageUrl,
       };
 
       const response = await fetch(`${BASEURL}/real-estates/bookings`, {
@@ -127,7 +147,11 @@ export const useBookings = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to create booking: ${response.statusText}`);
+        const serverMessage = typeof errorData?.message === 'object'
+          ? JSON.stringify(errorData.message)
+          : errorData?.message;
+        const fallbackMessage = errorData?.error || errorData?.errors || `Failed to create booking: ${response.status} ${response.statusText}`;
+        throw new Error(serverMessage || fallbackMessage);
       }
 
       const data = await response.json();

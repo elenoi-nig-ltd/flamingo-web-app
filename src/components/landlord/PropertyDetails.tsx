@@ -137,7 +137,8 @@ const PropertyDetails = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full font-semibold shadow-lg flex items-center"
+                  className="px-6 py-3 text-white font-semibold shadow-lg flex items-center hover:opacity-90"
+                  style={{ backgroundColor: '#f58c55' }}
                   onClick={handleBookNowClick}
                 >
                   <FaCalendar className="mr-2" />

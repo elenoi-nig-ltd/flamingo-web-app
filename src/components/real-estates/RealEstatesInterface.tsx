@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useRealEstates } from '@/hooks/useRealEstates';
 import Header from '../Header';
+import { motion } from 'framer-motion';
 
 enum PropertyType {
   APARTMENT = 'apartment',
@@ -131,6 +132,15 @@ const RealEstates = () => {
     router.push(`/real-estates/${id}`);
   };
 
+  const [proceeding, setProceeding] = useState<{ open: boolean; id?: string } | null>(null);
+  const handleProceedToBook = (id: string) => {
+    setProceeding({ open: true, id });
+    setTimeout(() => {
+      setProceeding({ open: false });
+      router.push(`/real-estates/${id}/book`);
+    }, 900);
+  };
+
   const propertyTypeOptions = [
     { value: '', label: 'All' },
     { value: PropertyType.APARTMENT, label: 'Apartment' },
@@ -217,13 +227,23 @@ const RealEstates = () => {
   if (error) return <div className="text-center py-10 text-orange-500 dark:text-orange-400">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 font-sans">
+    <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 font-sans">
       <Header />
       {/* <DisclaimerModal isOpen={showDisclaimer} onClose={handleCloseDisclaimer} /> */}
       
-      <div className="container mx-auto px-6 py-10">
+      <div className="container mx-auto px-6 py-10 max-w-7xl">
+        {proceeding?.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }} className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-[#f0e6d0] dark:border-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 animate-pulse"></div>
+                <p className="text-gray-800 dark:text-gray-200 font-semibold">Proceeding to book this apartment...</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold text-gray-700 dark:text-gray-300">Flourish Real Estate</h1>
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200" style={{ fontFamily: 'Parisienne, cursive' }}>Properties</h1>
           <button
             onClick={() => setShowDisclaimer(true)}
             className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 underline"
@@ -233,10 +253,10 @@ const RealEstates = () => {
         </div>
         
         <div className="flex flex-col md:flex-row gap-6">
-          <div className="w-full md:w-1/4 bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+          <div className="w-full md:w-1/4 bg-[#f5f3eb] dark:bg-gray-800 p-6 rounded-lg shadow border border-[#f0e6d0] dark:border-gray-700">
             <div className="space-y-6">
               <div>
-                <button className="w-full py-2 rounded mb-2 bg-gradient-to-r from-green-600 to-green-700 text-white hover:from-green-700 hover:to-green-800 transition-all duration-200">
+                <button className="w-full py-2 rounded mb-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 transition-all duration-200">
                   Buy
                 </button>
                 <button className="w-full py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
@@ -254,7 +274,7 @@ const RealEstates = () => {
                     onChange={handlePriceChange}
                     placeholder="Min Price"
                     min="0"
-                    className="w-1/2 p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-1/2 p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f7a16b] focus:border-[#f7a16b]"
                   />
                   <input
                     type="number"
@@ -263,7 +283,7 @@ const RealEstates = () => {
                     onChange={handlePriceChange}
                     placeholder="Max Price"
                     min="0"
-                    className="w-1/2 p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                    className="w-1/2 p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f7a16b] focus:border-[#f7a16b]"
                   />
                 </div>
               </div>
@@ -278,7 +298,7 @@ const RealEstates = () => {
                         value={option.value}
                         checked={propertyType === option.value}
                         onChange={handleFilterChange}
-                        className="mr-2 text-orange-500 focus:ring-orange-500"
+                        className="mr-2 text-[#f58c55] focus:ring-[#f58c55]"
                       />
                       <span className="text-gray-700 dark:text-gray-300">{option.label}</span>
                     </label>
@@ -291,7 +311,7 @@ const RealEstates = () => {
                   name="bedrooms"
                   value={bedrooms}
                   onChange={handleFilterChange}
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f7a16b] focus:border-[#f7a16b]"
                 >
                   <option value="">Any</option>
                   <option value="1">1</option>
@@ -328,11 +348,11 @@ const RealEstates = () => {
 
           <div className="w-full md:w-3/4">
             <div className="flex justify-between items-center mb-6">
-              <span className="text-gray-600 dark:text-gray-400">Properties</span>
+              <span className="text-gray-700 dark:text-gray-300 font-medium">Properties</span>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                className="p-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f7a16b] focus:border-[#f7a16b]"
               >
                 <option value="price">Sort by Price</option>
                 <option value="area">Sort by Area</option>
@@ -342,57 +362,43 @@ const RealEstates = () => {
               {realEstates.map((estate) => (
                 <div 
                   key={estate.id} 
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden transition-transform duration-200 hover:scale-105"
+                  className="bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-[#f0e6d0] dark:border-gray-700"
                 >
                   <div 
                     className="cursor-pointer"
                     onClick={() => handlePropertyClick(estate.id)}
                   >
-                    <div className="relative">
+                    <div className="relative w-full h-48 bg-gray-100 dark:bg-gray-700">
                       <Image
-                        src={estate.images[0] || '/placeholder.jpg'}
+                        src={estate.images[0] || '/assets/images/placeholder.png'}
                         alt={estate.title}
-                        width={300}
-                        height={200}
-                        className="w-full h-48 object-cover"
+                        fill
+                        className="object-cover"
                       />
-                      {/* Availability Badge */}
-                      <div className="absolute top-2 right-2">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-500 text-white shadow-lg">
-                          Available
-                        </span>
+                      {/* Price Badge */}
+                      <div className="absolute top-3 left-3 bg-[#f47a45] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                        ₦{estate.price.toLocaleString()}
                       </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">₦{estate.price.toLocaleString()} /year</h3>
-                      <p className="text-gray-600 dark:text-gray-400">{estate.title}</p>
-                      <p className="text-sm text-gray-500 dark:text-gray-500">
-                        {estate.bedrooms} rooms • {estate.bathrooms} bathroom • {estate.area} sq ft
-                      </p>
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-1 line-clamp-2">{estate.title}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{estate.area} sq ft • {estate.bedrooms} beds • {estate.bathrooms} baths</p>
+                      <div className="mt-3 flex gap-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handlePropertyClick(estate.id); }}
+                          className="flex-1 px-3 py-2 text-sm font-semibold border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                        >
+                          View Details
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleProceedToBook(estate.id); }}
+                          className="flex-1 px-3 py-2 text-xs md:text-sm font-semibold text-white transition hover:opacity-90 shadow"
+                          style={{ backgroundColor: '#f58c55' }}
+                        >
+                          📋 Book Now
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="px-4 pb-4 flex items-center justify-between">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handlePropertyClick(estate.id);
-                      }}
-                      className="text-orange-500 hover:text-orange-600 dark:text-orange-400 dark:hover:text-orange-300 font-semibold text-sm flex items-center transition"
-                    >
-                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-                        <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
-                      </svg>
-                      Book Now
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Toggle favorite (you can implement this)
-                      }}
-                    >
-                      <span className="text-orange-500 dark:text-orange-400">♥</span>
-                    </button>
                   </div>
                 </div>
               ))}

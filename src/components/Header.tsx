@@ -171,7 +171,7 @@ const Dropdown = ({
   gradient?: boolean;
   loading?: boolean;
 }) => (
-  <div className={`group relative ${gradient ? 'bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300' : ''}`}>
+  <div className={`group relative ${gradient ? 'rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300' : ''}`} style={gradient ? { backgroundColor: '#f58c55' } : {}}>
     <a
       href={href || '#'}
       className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
@@ -223,7 +223,7 @@ const MobileDropdown = ({
 }) => {
   const [open, setOpen] = useState(false);
   return (
-    <div className={`px-4 ${gradient ? 'bg-gradient-to-r from-orange-500 to-amber-500 rounded-lg py-2 mx-2 shadow-md' : ''}`}>
+    <div className={`px-4 ${gradient ? 'rounded-lg py-2 mx-2 shadow-md' : ''}`} style={gradient ? { backgroundColor: '#f58c55' } : {}}>
       <button
         onClick={() => setOpen(!open)}
         className={`w-full flex justify-between items-center font-medium py-2 transition-colors duration-200 ${

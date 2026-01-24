@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { PlusCircle, ChevronRight, Search, X } from 'lucide-react';
 import Head from 'next/head';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import { usePublicCategories, usePublicProducts } from '@/hooks/usePublic';
 import { useRealEstates } from '@/hooks/useRealEstates';
@@ -197,6 +198,7 @@ export default function LandingPage() {
   const { categories: homeItemCategories, loading: homeItemCategoriesLoading } = useHomeItemCategories();
   // NEW: Home items
   const { homeItems, loading: homeItemsLoading } = useHomeItems();
+  const [proceeding, setProceeding] = useState<{ open: boolean; route?: string } | null>(null);
   const [dynamicCategories, setDynamicCategories] = useState<Category[]>([]);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
@@ -409,6 +411,17 @@ export default function LandingPage() {
       </Head>
 
       <DiscountMarquee />
+
+      {proceeding?.open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 200 }} className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-[#f0e6d0] dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-500 to-amber-500 animate-pulse"></div>
+              <p className="text-gray-800 dark:text-gray-200 font-semibold">Proceeding to book this apartment...</p>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* GLOBAL FIX: Prevent any horizontal scroll / drag on mobile */}
       <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden">
@@ -748,6 +761,22 @@ export default function LandingPage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
                               <span className="line-clamp-1">{address}</span>
+                            </div>
+                            {/* Actions: View Details + Book Now */}
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleRealEstateClick(id, title); }}
+                                className="flex-1 px-3 py-2 text-xs md:text-sm font-semibold border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                              >
+                                View Details
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setProceeding({ open: true, route: `/real-estates/${id}/book` }); setTimeout(() => { setProceeding({ open: false, route: undefined }); router.push(`/real-estates/${id}/book`); }, 900); }}
+                                className="flex-1 px-3 py-2 text-xs md:text-sm font-semibold text-white transition hover:opacity-90 shadow"
+                                style={{ backgroundColor: '#f58c55' }}
+                              >
+                                Book Now
+                              </button>
                             </div>
                             {(estate.bedrooms || estate.bathrooms) && (
                               <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">

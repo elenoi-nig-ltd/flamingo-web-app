@@ -20,11 +20,8 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, prop
   const autoDownloaded = useRef(false);
 
   const handlePrint = useReactToPrint({
-    // Newer react-to-print expects contentRef; keep content for backward compat
-    content: () => printRef.current,
     contentRef: printRef,
     documentTitle: `Booking-${booking.bookingReference}`,
-    removeAfterPrint: true,
   });
 
   const handleDownloadPdf = async () => {

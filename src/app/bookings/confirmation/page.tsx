@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useBookings, Booking } from '@/hooks/useBookings';
 import { useRealEstates } from '@/hooks/useRealEstates';
 import BookingConfirmation from '@/components/real-estates/BookingConfirmation';
 import Header from '@/components/Header';
 
-const BookingConfirmationPage = () => {
+const BookingConfirmationContent = () => {
   const searchParams = useSearchParams();
   const reference = searchParams.get('reference');
   
@@ -85,6 +85,26 @@ const BookingConfirmationPage = () => {
       <Header />
       <BookingConfirmation booking={booking} propertyDetails={propertyDetails} />
     </div>
+  );
+};
+
+const BookingConfirmationPage = () => {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+          <Header />
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-orange-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">Loading booking details...</p>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <BookingConfirmationContent />
+    </Suspense>
   );
 };
 

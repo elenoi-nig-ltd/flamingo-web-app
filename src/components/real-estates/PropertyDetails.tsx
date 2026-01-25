@@ -314,7 +314,7 @@ export const PropertyDetails = () => {
                 className="w-full text-white py-2 md:py-3 font-semibold mb-3 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg text-sm md:text-base hover:opacity-90"
                 style={{ backgroundColor: '#f58c55' }}
               >
-                {availability?.available ? '📋 Book Now' : '🔒 Currently Unavailable'}
+                {availability?.available ? '📋 Book Now' : 'Booked'}
               </button>
               
               <button 

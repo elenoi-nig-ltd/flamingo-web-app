@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, ChevronRight, Search, X } from 'lucide-react';
+import { PlusCircle, ChevronRight, Search, X, Home, Bed, Bath, Square } from 'lucide-react';
 import Head from 'next/head';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
@@ -86,14 +86,17 @@ interface RealEstate {
   image?: string[];
   bedrooms?: number;
   bathrooms?: number;
+  area?: number;
   description?: string;
+  availability?: boolean;
+  isBooked?: boolean;
+  bookingStatus?: string;
 }
 
 // === DISCOUNT MARQUEE ===
 const DiscountMarquee = () => {
   const { activeMarquees, loading } = useMarquee();
   
-  // Default text using current long date
   const defaultText = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
@@ -101,15 +104,12 @@ const DiscountMarquee = () => {
     day: 'numeric' 
   });
   
-  // Get all active marquee texts or use default
   const marqueeTexts = activeMarquees.length > 0 
     ? activeMarquees.map(m => m.text)
     : [defaultText];
   
-  // Don't show loading state, just show default text if still loading
   return (
     <div className="relative bg-gradient-to-r from-orange-500 via-red-500 to-amber-600 mt-20 text-white overflow-hidden py-4 shadow-lg border-y-2 border-yellow-300">
-      {/* Animated background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute inset-0 bg-[repeating-linear-gradient(45deg,transparent,transparent_10px,rgba(255,255,255,0.1)_10px,rgba(255,255,255,0.1)_20px)]"></div>
       </div>
@@ -126,7 +126,6 @@ const DiscountMarquee = () => {
               )}
             </React.Fragment>
           ))}
-          {/* Duplicate for seamless loop */}
           {marqueeTexts.map((text, index) => (
             <React.Fragment key={`dup-${index}`}>
               <span className="mx-6 text-lg md:text-xl font-bold tracking-wide drop-shadow-lg">
@@ -191,23 +190,28 @@ const RotatingWords = () => {
 
 export default function LandingPage() {
   const router = useRouter();
-  // Existing hooks
   const { fetchCategories, loading: categoriesLoading } = usePublicCategories();
   const { getProductsByCategory, fetchProducts } = usePublicProducts();
-  const { realEstates, loading: realEstatesLoading, error: realEstatesError } = useRealEstates({ fetchMode: 'public' });
+  const { 
+    realEstates, 
+    loading: realEstatesLoading, 
+    error: realEstatesError,
+    bookedPropertiesCount,
+    availablePropertiesCount 
+  } = useRealEstates({ fetchMode: 'public' });
   const { categories: homeItemCategories, loading: homeItemCategoriesLoading } = useHomeItemCategories();
-  // NEW: Home items
   const { homeItems, loading: homeItemsLoading } = useHomeItems();
+  
   const [proceeding, setProceeding] = useState<{ open: boolean; route?: string } | null>(null);
   const [dynamicCategories, setDynamicCategories] = useState<Category[]>([]);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [categoryProducts, setCategoryProducts] = useState<Record<string, Product[]>>({});
   const [loadingProducts, setLoadingProducts] = useState<Record<string, boolean>>({});
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  
   const categoryIconMap: Record<string, string> = {
     'Furnitures': '/assets/images/categories/furniture.png',
     'Furniture': '/assets/images/categories/furniture.png',
@@ -243,6 +247,7 @@ export default function LandingPage() {
     };
     loadCategories();
   }, []);
+
   useEffect(() => {
     const loadAllProducts = async () => {
       try {
@@ -254,7 +259,7 @@ export default function LandingPage() {
   }, []);
 
   /* --------------------------------------------------------------
-     CATEGORY HOVER LOGIC (unchanged)
+     CATEGORY HOVER LOGIC
      -------------------------------------------------------------- */
   const handleCategoryHover = async (categoryId: string) => {
     setHoveredCategory(categoryId);
@@ -284,9 +289,11 @@ export default function LandingPage() {
       setLoadingProducts(prev => ({ ...prev, [categoryId]: false }));
     }
   };
+
   const getProductCategoryId = (product: Product): string => {
     return typeof product.category === 'string' ? product.category : product.category._id;
   };
+
   const getCategoryIcon = (categoryName: string): string => {
     if (categoryIconMap[categoryName]) return categoryIconMap[categoryName];
     const normalizedName = categoryName.toLowerCase();
@@ -295,6 +302,7 @@ export default function LandingPage() {
     }
     return '/assets/images/categories/furniture.png';
   };
+
   const getCategoryIconForHomeItems = (categoryName: string): string | null => {
     if (categoryIconMap[categoryName]) return categoryIconMap[categoryName];
     const normalizedName = categoryName.toLowerCase();
@@ -305,12 +313,14 @@ export default function LandingPage() {
     }
     return null;
   };
+
   const cards = [
     { icon: '/assets/images/card/food-order.png', label: 'Order Food', route: '/food' },
     { icon: '/assets/images/card/household.png', label: 'Household Items', route: '/home-items' },
     { icon: '/assets/images/card/properties.png', label: 'Properties', route: '/real-estates' },
     { icon: '/assets/images/card/internet.png', label: 'Internet', route: '/internet' },
   ];
+
   const handleCardClick = (route: string) => router.push(route);
   const handleCategoryClick = (categoryId: string) => router.push(`/food?category=${categoryId}`);
   const handleProductClick = (productId: string, productName: string) => {
@@ -319,13 +329,12 @@ export default function LandingPage() {
   };
   const handleRealEstateClick = (realEstateId: string, title: string) => router.push(`/real-estates/${realEstateId}`);
   const handleHomeItemCategoryClick = (categoryId: string) => router.push(`/home-items?category=${categoryId}`);
-  // NEW: Home item & property navigation
   const handleHomeItemClick = (itemId: string) => {
     router.push(`/home-items/${itemId}`);
   };
 
   /* --------------------------------------------------------------
-     SEARCH INDEX – now includes Home Items + Properties
+     SEARCH INDEX – includes Home Items + Properties
      -------------------------------------------------------------- */
   const searchableItems = useMemo(() => {
     const items: {
@@ -335,11 +344,14 @@ export default function LandingPage() {
       price?: number;
       image?: string;
       subtitle?: string;
+      isBooked?: boolean;
     }[] = [];
+    
     // Categories
     dynamicCategories.forEach(cat => {
       items.push({ id: cat._id, name: cat.name, type: 'category' });
     });
+    
     // Products
     allProducts.forEach(p => {
       items.push({
@@ -350,6 +362,7 @@ export default function LandingPage() {
         image: p.images?.[0],
       });
     });
+    
     // Home Items
     homeItems.forEach(item => {
       items.push({
@@ -360,14 +373,15 @@ export default function LandingPage() {
         image: item.images?.[0],
       });
     });
+    
     // Properties (Real Estates)
     realEstates.forEach(estate => {
-      const id = estate.id ;
+      const id = estate.id;
       if (!id) return;
       const title = estate.title || 'Untitled Property';
       const address = estate.address || '';
       const price = estate.price || 0;
-      const image = (estate.images?.[0] ) || '/assets/images/placeholder.png';
+      const image = (estate.images?.[0]) || '/assets/images/placeholder.png';
       items.push({
         id,
         name: title,
@@ -375,8 +389,10 @@ export default function LandingPage() {
         price,
         image,
         subtitle: address,
+        isBooked: estate.isBooked,
       });
     });
+    
     return items;
   }, [dynamicCategories, allProducts, homeItems, realEstates]);
 
@@ -406,7 +422,6 @@ export default function LandingPage() {
     <>
       <Head>
         <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet" />
-        {/* Critical viewport fix for mobile */}
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Head>
 
@@ -423,7 +438,6 @@ export default function LandingPage() {
         </div>
       )}
 
-      {/* GLOBAL FIX: Prevent any horizontal scroll / drag on mobile */}
       <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden">
         {/* WELCOME SECTION */}
         <section className="w-full bg-gradient-to-r from-[#f89b64] dark:from-gray-800 to-[#f47a45] dark:to-gray-700 text-white dark:text-gray-200 text-center py-12 md:py-16 rounded-b-[50px] shadow-lg dark:shadow-gray-900 transition-all duration-300">
@@ -507,9 +521,16 @@ export default function LandingPage() {
                               </div>
                             )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
-                                {item.name}
-                              </p>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                  {item.name}
+                                </p>
+                                {item.isBooked && (
+                                  <span className="px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-semibold rounded whitespace-nowrap">
+                                    BOOKED
+                                  </span>
+                                )}
+                              </div>
                               {item.subtitle && (
                                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                                   {item.subtitle}
@@ -544,7 +565,7 @@ export default function LandingPage() {
         </section>
 
         {/* MAIN CONTENT */}
-        <div className="container  mx-auto px-4 md:px-6 lg:px-8 pt-10 max-w-7xl">
+        <div className="container mx-auto px-4 md:px-6 lg:px-8 pt-10 max-w-7xl">
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar */}
             <aside className="hidden lg:block w-1/4 bg-[#f58c55] dark:bg-gray-800 text-white p-6 rounded-tl-[40px] rounded-bl-[40px] shadow-lg transition-colors duration-300 relative">
@@ -717,13 +738,30 @@ export default function LandingPage() {
                 </div>
               </aside>
 
-              {/* Properties */}
+              {/* PROPERTIES SECTION WITH BOOKED STATUS */}
               <section className="py-8">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200" style={{ fontFamily: 'Parisienne, cursive' }}>
-                    Properties
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+                  <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200" style={{ fontFamily: 'Parisienne, cursive' }}>
+                    Available Properties
                   </h2>
+                  {realEstates.length > 0 && (
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span className="text-gray-700 dark:text-gray-300 font-medium">
+                          {availablePropertiesCount} Available
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <span className="text-gray-700 dark:text-gray-300 font-medium">
+                          {bookedPropertiesCount} Booked
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
+                
                 {realEstatesLoading ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {Array.from({ length: 8 }).map((_, i) => (
@@ -731,71 +769,201 @@ export default function LandingPage() {
                     ))}
                   </div>
                 ) : realEstatesError ? (
-                  <p className="text-center text-red-500">Network error. Try again later.</p>
+                  <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="w-20 h-20 mx-auto mb-4 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+                      <X className="w-10 h-10 text-red-500" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Network Error</h3>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Unable to load properties. Please try again later.</p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="px-6 py-2 bg-[#f47a45] hover:bg-[#f58c55] text-white rounded-lg font-semibold transition-colors"
+                    >
+                      Retry
+                    </button>
+                  </div>
                 ) : realEstates && realEstates.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {(realEstates as RealEstate[]).slice(0, 8).map((estate) => {
                       const id = estate.id || estate._id || `estate-${Math.random()}`;
-                      const title = estate.title || 'Untitled';
+                      const title = estate.title || 'Untitled Property';
                       const price = estate.price || estate.amount || 0;
-                      const address = estate.address || estate.location || 'No address';
+                      const address = estate.address || estate.location || 'No address specified';
                       const images = estate.images || estate.image || [];
                       const mainImage = images[0] || '/assets/images/placeholder.png';
+                      const isBooked = estate.isBooked === true;
+                      
                       return (
                         <div
                           key={id}
-                          className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer"
-                          onClick={() => handleRealEstateClick(id, title)}
+                          className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border relative ${
+                            isBooked 
+                              ? 'border-red-300 dark:border-red-700 opacity-95 cursor-default' 
+                              : 'border-gray-200 dark:border-gray-700 cursor-pointer hover:scale-[1.02]'
+                          }`}
+                          onClick={() => !isBooked && handleRealEstateClick(id, title)}
                         >
+                          {/* BOOKED OVERLAY BADGE */}
+                          {isBooked && (
+                            <div className="absolute top-0 left-0 right-0 z-10">
+                              <div className="bg-gradient-to-r from-red-600 to-red-700 text-white text-center py-2 px-4">
+                                <div className="flex items-center justify-center gap-2">
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="font-bold text-sm">BOOKED</span>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* PROPERTY IMAGE */}
                           <div className="w-full h-48 relative bg-gray-100 dark:bg-gray-700">
-                            <Image src={mainImage} alt={title} fill className="object-cover" onError={(e) => { e.currentTarget.src = '/assets/images/placeholder.png'; }} />
-                            <div className="absolute top-3 left-3 bg-[#f47a45] text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            <Image 
+                              src={mainImage} 
+                              alt={title} 
+                              fill 
+                              className={`object-cover ${isBooked ? 'opacity-80' : ''}`} 
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                              onError={(e) => { 
+                                const target = e.target as HTMLImageElement;
+                                target.src = '/assets/images/placeholder.png'; 
+                              }} 
+                            />
+                            
+                            {/* PRICE TAG */}
+                            <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
+                              isBooked 
+                                ? 'bg-gray-700 dark:bg-gray-800 text-gray-300' 
+                                : 'bg-[#f47a45] text-white'
+                            }`}>
                               ₦{price.toLocaleString()}
                             </div>
+                            
+                            {/* BOOKED STATUS OVERLAY ON IMAGE */}
+                            {isBooked && (
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end justify-center pb-6">
+                                <div className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg">
+                                  <p className="font-bold">Property Booked</p>
+                                  <p className="text-xs mt-1">Not accepting new bookings</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
+                          
+                          {/* PROPERTY DETAILS */}
                           <div className="p-4">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2 line-clamp-2">{title}</h3>
-                            <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mb-2">
-                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
-                              <span className="line-clamp-1">{address}</span>
+                            {/* TITLE WITH STATUS */}
+                            <div className="mb-3">
+                              <div className="flex items-start justify-between gap-2">
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 line-clamp-2 flex-1">
+                                  {title}
+                                </h3>
+                                {isBooked ? (
+                                  <div className="flex-shrink-0">
+                                    <div className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full border border-red-200 dark:border-red-800">
+                                      BOOKED
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex-shrink-0">
+                                    <div className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-800">
+                                      AVAILABLE
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* ADDRESS */}
+                              <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm mt-2">
+                                <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span className="line-clamp-1">{address}</span>
+                              </div>
                             </div>
-                            {/* Actions: View Details + Book Now */}
-                            <div className="mt-3 flex gap-2">
+                            
+                            {/* PROPERTY FEATURES */}
+                            <div className="flex items-center justify-between text-sm text-gray-700 dark:text-gray-300 mb-4">
+                              <div className="flex items-center gap-4">
+                                {estate.bedrooms && estate.bedrooms > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <Bed className="w-4 h-4 text-[#f47a45]" />
+                                    <span>{estate.bedrooms}</span>
+                                  </div>
+                                )}
+                                {estate.bathrooms && estate.bathrooms > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <Bath className="w-4 h-4 text-[#f47a45]" />
+                                    <span>{estate.bathrooms}</span>
+                                  </div>
+                                )}
+                                {estate.area && estate.area > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <Square className="w-4 h-4 text-[#f47a45]" />
+                                    <span>{estate.area.toLocaleString()} sqft</span>
+                                  </div>
+                                )}
+                              </div>
+                              {estate.propertyType && (
+                                <span className="text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                                  {estate.propertyType}
+                                </span>
+                              )}
+                            </div>
+                            
+                            {/* ACTION BUTTONS */}
+                            <div className="mt-4 flex gap-2">
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleRealEstateClick(id, title); }}
-                                className="flex-1 px-3 py-2 text-xs md:text-sm font-semibold border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  handleRealEstateClick(id, title); 
+                                }}
+                                className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition ${
+                                  isBooked 
+                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-default' 
+                                    : 'bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                                }`}
+                                disabled={isBooked}
                               >
-                                View Details
+                                {isBooked ? 'View Only' : 'View Details'}
                               </button>
                               <button
-                                onClick={(e) => { e.stopPropagation(); setProceeding({ open: true, route: `/real-estates/${id}/book` }); setTimeout(() => { setProceeding({ open: false, route: undefined }); router.push(`/real-estates/${id}/book`); }, 900); }}
-                                className="flex-1 px-3 py-2 text-xs md:text-sm font-semibold text-white transition hover:opacity-90 shadow"
-                                style={{ backgroundColor: '#f58c55' }}
+                                onClick={(e) => { 
+                                  e.stopPropagation(); 
+                                  if (!isBooked) {
+                                    setProceeding({ open: true, route: `/real-estates/${id}/book` }); 
+                                    setTimeout(() => { 
+                                      setProceeding({ open: false, route: undefined }); 
+                                      router.push(`/real-estates/${id}/book`); 
+                                    }, 900); 
+                                  }
+                                }}
+                                disabled={isBooked}
+                                className={`flex-1 px-4 py-2 text-sm font-semibold rounded-lg transition ${
+                                  isBooked 
+                                    ? 'bg-gray-400 dark:bg-gray-600 text-white cursor-default' 
+                                    : 'bg-[#f58c55] hover:bg-[#f47a45] text-white hover:shadow-md'
+                                }`}
                               >
-                                Book Now
+                                {isBooked ? 'Already Booked' : 'Book Now'}
                               </button>
                             </div>
-                            {(estate.bedrooms || estate.bathrooms) && (
-                              <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
-                                {estate.bedrooms && (
-                                  <span className="flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                    </svg>
-                                    {estate.bedrooms} bed{estate.bedrooms !== 1 ? 's' : ''}
+                            
+                            {/* BOOKING STATUS INFO */}
+                            {isBooked && estate.bookingStatus && (
+                              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center text-xs text-red-500 dark:text-red-400">
+                                  <svg className="w-3 h-3 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="font-medium">
+                                    {estate.bookingStatus === 'confirmed' ? 'Booking confirmed - Property occupied' : 
+                                     estate.bookingStatus === 'pending' ? 'Booking pending approval' : 
+                                     'Property currently unavailable'}
                                   </span>
-                                )}
-                                {estate.bathrooms && (
-                                  <span className="flex items-center">
-                                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    {estate.bathrooms} bath{estate.bathrooms !== 1 ? 's' : ''}
-                                  </span>
-                                )}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -805,13 +973,34 @@ export default function LandingPage() {
                   </div>
                 ) : (
                   <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <div className="w-24 h-24 mx-auto mb-4 relative">
+                      <Image 
+                        src="/assets/images/no-properties.png" 
+                        alt="No properties" 
+                        fill 
+                        className="object-contain opacity-50" 
+                        sizes="96px"
+                      />
+                    </div>
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">No Properties Available</h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Check back later</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">Check back later for new listings or browse our other services</p>
                     <button
                       onClick={() => handleCardClick('/real-estates')}
-                      className="px-6 py-2 bg-[#f47a45] hover:bg-[#f58c55] text-white rounded-lg font-semibold transition-colors"
+                      className="px-6 py-2 bg-[#f47a45] hover:bg-[#f58c55] text-white rounded-lg font-semibold transition-colors shadow hover:shadow-md"
                     >
                       Browse All Properties
+                    </button>
+                  </div>
+                )}
+                
+                {/* VIEW ALL PROPERTIES BUTTON */}
+                {realEstates.length > 0 && (
+                  <div className="mt-8 text-center">
+                    <button
+                      onClick={() => handleCardClick('/real-estates')}
+                      className="px-8 py-3 bg-gradient-to-r from-[#f89b64] to-[#f47a45] text-white rounded-xl font-semibold transition-all hover:scale-105 hover:shadow-lg"
+                    >
+                      View All Properties ({realEstates.length})
                     </button>
                   </div>
                 )}
@@ -821,14 +1010,17 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* GLOBAL STYLES – ONLY FIXES ADDED */}
+      {/* GLOBAL STYLES */}
       <style jsx global>{`
         html, body, #__next {
           overflow-x: hidden !important;
           width: 100% !important;
           position: relative !important;
         }
-        * { -webkit-overflow-scrolling: touch; }
+        * { 
+          -webkit-overflow-scrolling: touch; 
+          box-sizing: border-box;
+        }
         .animate-marquee-inline {
           animation: marquee-inline 25s linear infinite;
         }
@@ -836,8 +1028,45 @@ export default function LandingPage() {
           0% { transform: translateX(0%); }
           100% { transform: translateX(-50%); }
         }
-        .line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; }
-        .line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+        .line-clamp-1 { 
+          overflow: hidden; 
+          display: -webkit-box; 
+          -webkit-box-orient: vertical; 
+          -webkit-line-clamp: 1; 
+        }
+        .line-clamp-2 { 
+          overflow: hidden; 
+          display: -webkit-box; 
+          -webkit-box-orient: vertical; 
+          -webkit-line-clamp: 2; 
+        }
+        
+        /* Custom scrollbar for dropdown */
+        .overflow-y-auto::-webkit-scrollbar {
+          width: 6px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 3px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: #f47a45;
+          border-radius: 3px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: #f58c55;
+        }
+        
+        /* Dark mode scrollbar */
+        .dark .overflow-y-auto::-webkit-scrollbar-track {
+          background: #374151;
+        }
+        .dark .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: #f7a16b;
+        }
+        .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: #f89b64;
+        }
       `}</style>
     </>
   );

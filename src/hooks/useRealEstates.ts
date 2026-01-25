@@ -23,6 +23,10 @@ interface RealEstate {
   };
   landlordId: string;
   verified: boolean;
+  availability?: boolean;
+  isBooked?: boolean;
+  bookingStatus?: string;
+  booking?: any;
 }
 
 interface CreateRealEstatePayload {
@@ -34,7 +38,7 @@ interface CreateRealEstatePayload {
   bedrooms: number;
   bathrooms: number;
   area: number;
-  images: File[] | string[]; // Allow both File[] and string[]
+  images: File[] | string[];
 }
 interface UpdateRealEstatePayload {
   title?: string;
@@ -77,27 +81,45 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
 
   // Transform backend data to frontend format
   const transformRealEstateData = useCallback((data: any[]): RealEstate[] => {
-    return data.map(estate => ({
-      id: estate._id || estate.id || '',
-      title: estate.title || '',
-      description: estate.description || '',
-      price: estate.price || 0,
-      address: estate.address || '',
-      propertyType: estate.propertyType || '',
-      bedrooms: estate.bedrooms || 0,
-      bathrooms: estate.bathrooms || 0,
-      area: estate.area || 0,
-      images: estate.images || [],
-      yearBuilt: estate.yearBuilt,
-      amenities: estate.amenities || [],
-      contactInfo: estate.contactInfo || {
-        name: user?.name || 'Property Owner',
-        phone: '+1 (555) 123-4567',
-        email: user?.email || 'contact@flourishrealestate.com'
-      },
-      landlordId: estate.landlordId || '',
-      verified: estate.verified || false,
-    }));
+    return data.map(estate => {
+      // Enhanced booking detection logic
+      const isBooked = 
+        estate.bookingStatus === 'confirmed' || 
+        estate.bookingStatus === 'booked' ||
+        estate.isBooked === true ||
+        estate.booked === true ||
+        estate.status === 'occupied' ||
+        (estate.booking && Object.keys(estate.booking).length > 0) ||
+        estate.availability === false;
+
+      const availability = !isBooked;
+
+      return {
+        id: estate._id || estate.id || '',
+        title: estate.title || '',
+        description: estate.description || '',
+        price: estate.price || 0,
+        address: estate.address || '',
+        propertyType: estate.propertyType || '',
+        bedrooms: estate.bedrooms || 0,
+        bathrooms: estate.bathrooms || 0,
+        area: estate.area || 0,
+        images: estate.images || [],
+        yearBuilt: estate.yearBuilt,
+        amenities: estate.amenities || [],
+        contactInfo: estate.contactInfo || {
+          name: user?.name || 'Property Owner',
+          phone: '+1 (555) 123-4567',
+          email: user?.email || 'contact@flourishrealestate.com'
+        },
+        landlordId: estate.landlordId || '',
+        verified: estate.verified || false,
+        availability,
+        isBooked,
+        bookingStatus: estate.bookingStatus || estate.status || (isBooked ? 'booked' : 'available'),
+        booking: estate.booking || undefined,
+      };
+    });
   }, [user]);
 
   // Apply filters and sorting
@@ -206,6 +228,19 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
       }
 
       const data: any[] = await response.json();
+      
+      // Log booking status for debugging
+      const bookedProperties = data.filter(p => p.isBooked === true);
+      console.log(`[useRealEstates] API returned ${data.length} properties, ${bookedProperties.length} marked as booked`);
+      if (bookedProperties.length > 0) {
+        console.log('[useRealEstates] Booked properties:', bookedProperties.map(p => ({
+          id: p._id,
+          title: p.title,
+          isBooked: p.isBooked,
+          bookingStatus: p.bookingStatus
+        })));
+      }
+      
       const transformedData = transformRealEstateData(data);
       const filteredData = applyFiltersAndSorting(transformedData);
 
@@ -297,87 +332,88 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
     }
   }, [transformRealEstateData]);
 
-// Create real estate
-const createRealEstate = async (payload: CreateRealEstatePayload) => {
-  if (!user || (user.role !== 'landlord' && user.role !=='admin')) {
-    setCreateError('Only landlords can create real estate listings');
-    return false;
-  }
-
-  setCreateLoading(true);
-  setCreateError(null);
-
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Authentication token not found');
+  // Create real estate
+  const createRealEstate = async (payload: CreateRealEstatePayload) => {
+    if (!user || (user.role !== 'landlord' && user.role !=='admin')) {
+      setCreateError('Only landlords can create real estate listings');
+      return false;
     }
 
-    // Handle images - check if they are Files or URLs
-    let imageUrls: string[] = [];
-    if (payload.images && payload.images.length > 0) {
-      if (typeof payload.images[0] === 'string') {
-        // If images are already URLs (string[]), use them directly
-        imageUrls = payload.images as string[];
-      } else {
-        // If images are Files, upload to Cloudinary
-        try {
-          const uploadResponses: CloudinaryUploadResponse[] = await uploadMultipleImagesToCloudinary(
-            payload.images as File[],
-            {
-              folder: 'real-estates',
-              uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
-            }
-          );
-          imageUrls = uploadResponses.map(response => response.secure_url);
-        } catch (uploadError) {
-          console.error('Image upload failed:', uploadError);
-          // Continue without images rather than failing completely
+    setCreateLoading(true);
+    setCreateError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
+      // Handle images - check if they are Files or URLs
+      let imageUrls: string[] = [];
+      if (payload.images && payload.images.length > 0) {
+        if (typeof payload.images[0] === 'string') {
+          // If images are already URLs (string[]), use them directly
+          imageUrls = payload.images as string[];
+        } else {
+          // If images are Files, upload to Cloudinary
+          try {
+            const uploadResponses: CloudinaryUploadResponse[] = await uploadMultipleImagesToCloudinary(
+              payload.images as File[],
+              {
+                folder: 'real-estates',
+                uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
+              }
+            );
+            imageUrls = uploadResponses.map(response => response.secure_url);
+          } catch (uploadError) {
+            console.error('Image upload failed:', uploadError);
+            // Continue without images rather than failing completely
+          }
         }
       }
+
+      const backendPayload = {
+        title: payload.title,
+        description: payload.description,
+        price: payload.price,
+        address: payload.address,
+        propertyType: payload.propertyType,
+        bedrooms: payload.bedrooms,
+        bathrooms: payload.bathrooms,
+        area: payload.area,
+        images: imageUrls,
+      };
+
+      const response = await fetch(`${BASEURL}/real-estates`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify(backendPayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to create real estate: ${response.statusText}`);
+      }
+
+      const newEstate = await response.json();
+      const transformedEstate = transformRealEstateData([newEstate])[0];
+
+      setRealEstates(prev => [...prev, transformedEstate]);
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create property';
+      setCreateError(errorMessage);
+      console.error('Error creating real estate:', err);
+      return false;
+    } finally {
+      setCreateLoading(false);
     }
+  };
 
-    const backendPayload = {
-      title: payload.title,
-      description: payload.description,
-      price: payload.price,
-      address: payload.address,
-      propertyType: payload.propertyType,
-      bedrooms: payload.bedrooms,
-      bathrooms: payload.bathrooms,
-      area: payload.area,
-      images: imageUrls,
-    };
-
-    const response = await fetch(`${BASEURL}/real-estates`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      credentials: 'include',
-      body: JSON.stringify(backendPayload),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Failed to create real estate: ${response.statusText}`);
-    }
-
-    const newEstate = await response.json();
-    const transformedEstate = transformRealEstateData([newEstate])[0];
-
-    setRealEstates(prev => [...prev, transformedEstate]);
-    return true;
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : 'Failed to create property';
-    setCreateError(errorMessage);
-    console.error('Error creating real estate:', err);
-    return false;
-  } finally {
-    setCreateLoading(false);
-  }
-};
   // Update real estate
   const updateRealEstate = async (id: string, payload: UpdateRealEstatePayload) => {
     if  (!user || (user.role !== 'landlord' && user.role !=='admin'))  {
@@ -572,5 +608,7 @@ const createRealEstate = async (payload: CreateRealEstatePayload) => {
     verifiedPropertiesCount: realEstates.filter(estate => estate.verified).length,
     pendingPropertiesCount: realEstates.filter(estate => !estate.verified).length,
     totalPropertiesCount: realEstates.length,
+    bookedPropertiesCount: realEstates.filter(estate => estate.isBooked).length,
+    availablePropertiesCount: realEstates.filter(estate => !estate.isBooked).length,
   };
 };

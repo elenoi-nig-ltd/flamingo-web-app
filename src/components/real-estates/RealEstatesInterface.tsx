@@ -392,10 +392,11 @@ const RealEstates = () => {
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); handleProceedToBook(estate.id); }}
-                          className="flex-1 px-3 py-2 text-xs md:text-sm font-semibold text-white transition hover:opacity-90 shadow"
+                          disabled={estate.isBooked === true || estate.availability === false || estate.bookingStatus === 'booked'}
+                          className="flex-1 px-3 py-2 text-xs md:text-sm font-semibold text-white transition hover:opacity-90 shadow disabled:opacity-50 disabled:cursor-not-allowed"
                           style={{ backgroundColor: '#f58c55' }}
                         >
-                          📋 Book Now
+                          {estate.isBooked === true || estate.availability === false || estate.bookingStatus === 'booked' ? 'Booked' : '📋 Book Now'}
                         </button>
                       </div>
                     </div>

@@ -10,6 +10,9 @@ import { usePublicCategories, usePublicProducts } from '@/hooks/usePublic';
 import { useRealEstates } from '@/hooks/useRealEstates';
 import { useHomeItemCategories } from '@/hooks/useHomeItemCategories';
 import { useMarquee } from '@/hooks/useMarquee';
+import ActiveAds from '@/components/advertisements/ActiveAds';
+import DistributedAds from '@/components/advertisements/DistributedAds';
+import AdsFeatureAnnouncement from '@/components/advertisements/AdsFeatureAnnouncement';
 import axios from 'axios';
 import { BASEURL } from '@/config/api/contants';
 
@@ -426,6 +429,8 @@ export default function LandingPage() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Head>
 
+      <AdsFeatureAnnouncement />
+
       <DiscountMarquee />
 
       {proceeding?.open && (
@@ -571,6 +576,11 @@ export default function LandingPage() {
             {/* Sidebar */}
             <aside className="hidden lg:block w-1/4 bg-[#f58c55] dark:bg-gray-800 text-white p-6 rounded-tl-[40px] rounded-bl-[40px] shadow-lg transition-colors duration-300 relative">
               <h2 className="text-3xl font-bold mb-6" style={{ fontFamily: 'Parisienne, cursive' }}>Categories</h2>
+              
+              {/* Ad beside sidebar (Ad #2) */}
+              <div className="mb-6">
+                <DistributedAds location="landing_page_hero" position={1} />
+              </div>
               <div className="space-y-3">
                 {categoriesLoading ? (
                   Array.from({ length: 8 }).map((_, i) => (
@@ -688,16 +698,33 @@ export default function LandingPage() {
                       </div>
                     ))}
                     <div
-                      className="w-full max-w-[208px] h-52 bg-[#f5f3eb] dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border border-[#f0e6d0] dark:border-gray-600 cursor-pointer"
-                      onClick={() => handleCardClick('/')}
+                      className="w-full max-w-[208px] h-52 bg-gradient-to-br from-[#f58c55] to-[#ff6b35] rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 hover:scale-105 flex flex-col items-center justify-center gap-5 border-2 border-white cursor-pointer"
+                      onClick={() => handleCardClick('/create-ad')}
                     >
-                      <PlusCircle className="text-[#f47a45] dark:text-[#f7a16b] w-20 h-20" />
-                      <span className="text-gray-800 dark:text-gray-200 text-lg font-semibold px-4">
-                        Post Ads
+                      <PlusCircle className="text-white w-20 h-20 animate-pulse" />
+                      <span className="text-white text-lg font-bold px-4 text-center">
+                        Post Your Ad
+                      </span>
+                      <span className="text-white/90 text-xs px-4 text-center">
+                        Promote your brand
                       </span>
                     </div>
                   </>
                 )}
+              </section>
+
+              {/* FEATURED ADVERTISEMENT SECTION */}
+              <section className="py-8">
+                <h2 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200 mb-6" style={{ fontFamily: 'Parisienne, cursive' }}>
+                  Featured Partners
+                </h2>
+                {/* Primary ad carousel (shows first ad if multiple, or rotates if single) */}
+                <ActiveAds location="landing_page_hero" />
+              </section>
+
+              {/* Additional Ad #3 - Strategic placement after featured */}
+              <section className="py-4">
+                <DistributedAds location="landing_page_hero" position={2} />
               </section>
 
               {/* Mobile Categories */}
@@ -736,6 +763,11 @@ export default function LandingPage() {
                       <p className="text-gray-600 dark:text-gray-400">No categories available</p>
                     </div>
                   )}
+                </div>
+
+                {/* Mobile Ad placement */}
+                <div className="mt-6">
+                  <DistributedAds location="landing_page_hero" position={4} />
                 </div>
               </aside>
 
@@ -1005,6 +1037,11 @@ export default function LandingPage() {
                     </button>
                   </div>
                 )}
+              </section>
+
+              {/* Additional Ad #4 - After properties */}
+              <section className="py-4">
+                <DistributedAds location="landing_page_hero" position={3} />
               </section>
             </main>
           </div>

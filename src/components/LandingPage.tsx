@@ -91,6 +91,7 @@ interface RealEstate {
   availability?: boolean;
   isBooked?: boolean;
   bookingStatus?: string;
+  propertyType?: string;
 }
 
 // === DISCOUNT MARQUEE ===
@@ -458,7 +459,7 @@ export default function LandingPage() {
               ) : (
                 <>
                   <select className="px-5 py-3 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f7a16b] dark:focus:ring-orange-400 w-full md:w-48 font-medium transition border border-gray-300 dark:border-gray-600">
-                    <option>All Nigeria...</option>
+                    <option>Minna</option>
                   </select>
                   {/* LIVE SEARCH BAR */}
                   <div className="relative w-full md:w-72" ref={searchInputRef}>

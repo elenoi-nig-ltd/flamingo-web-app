@@ -2,10 +2,10 @@
 
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { FaCheckCircle, FaDownload, FaHome, FaExclamationTriangle } from 'react-icons/fa';
+import { FaCheckCircle, FaDownload, FaHome, FaExclamationTriangle, FaPrint } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { Booking } from '@/hooks/useBookings';
-import html2canvas from 'html2canvas';
+import { toPng } from 'html-to-image';
 
 interface BookingConfirmationProps {
   booking: Booking;
@@ -17,6 +17,10 @@ const BookingConfirmation: React.FC<BookingConfirmationProps> = ({ booking, prop
   const printRef = useRef<HTMLDivElement>(null);
   const downloadInitiated = useRef(false);
 
+const handlePrint = () => {
+  window.print();
+};
+
 const handleDownloadAsImage = async () => {
   if (!printRef.current) {
     console.warn('There is nothing to download');
@@ -24,101 +28,48 @@ const handleDownloadAsImage = async () => {
   }
 
   try {
-    const element = printRef.current;
-    
-    // Create a clone of the element to avoid affecting the original
-    const clone = element.cloneNode(true) as HTMLElement;
-    
-    // Remove any unsupported CSS color functions
-    const styleSheets = document.styleSheets;
-    clone.style.cssText += ';background-color: white !important; color: black !important;';
-    
-    // Temporarily hide the clone
-    clone.style.position = 'fixed';
-    clone.style.left = '-9999px';
-    clone.style.top = '0';
-    document.body.appendChild(clone);
-
-    const canvas = await html2canvas(clone, {
-      scale: 2,
-      useCORS: true,
+    // Use html-to-image for better CSS support
+    const dataUrl = await toPng(printRef.current, {
+      cacheBust: true,
+      pixelRatio: 2,
       backgroundColor: '#ffffff',
-      logging: true,
-      onclone: (clonedDoc, element) => {
-        // Clean up any problematic CSS
-        const styles = clonedDoc.querySelectorAll('style');
-        styles.forEach(style => {
-          style.textContent = style.textContent
-            ?.replace(/lab\([^)]+\)/g, 'rgb(0, 0, 0)')
-            ?.replace(/lch\([^)]+\)/g, 'rgb(0, 0, 0)')
-            ?.replace(/oklab\([^)]+\)/g, 'rgb(0, 0, 0)')
-            ?.replace(/color-mix\([^)]+\)/g, 'rgb(0, 0, 0)');
-        });
-
-        // Force all elements to use simple colors
-        const allElements = clonedDoc.querySelectorAll('*');
-        allElements.forEach(el => {
-          const computedStyle = window.getComputedStyle(el);
-          const bgColor = computedStyle.backgroundColor;
-          const color = computedStyle.color;
-          
-          // Replace any complex color functions
-          if (bgColor.includes('lab(') || bgColor.includes('lch(') || bgColor.includes('oklab(')) {
-            (el as HTMLElement).style.backgroundColor = '#ffffff';
-          }
-          if (color.includes('lab(') || color.includes('lch(') || color.includes('oklab(')) {
-            (el as HTMLElement).style.color = '#000000';
-          }
-        });
+      style: {
+        margin: '0',
+        padding: '0',
       },
     });
 
-    // Clean up
-    document.body.removeChild(clone);
-
-    const imgData = canvas.toDataURL('image/png');
+    // Download the image
     const link = document.createElement('a');
-    link.href = imgData;
     link.download = `Booking-${booking.bookingReference}.png`;
+    link.href = dataUrl;
     link.click();
+    
+    console.log('Download successful!');
     
   } catch (error) {
     console.error('Error generating image download:', error);
     
-    // Fallback: Try with simpler configuration
+    // Fallback: Try again with simpler options
     try {
       console.log('Attempting fallback download...');
-      const element = printRef.current;
-      const canvas = await html2canvas(element, {
-        scale: 1,
-        useCORS: true,
+      const dataUrl = await toPng(printRef.current, {
+        cacheBust: false,
+        pixelRatio: 1,
         backgroundColor: '#ffffff',
-        ignoreElements: (element) => {
-          // Ignore elements that might cause issues
-          return element.tagName === 'SVG' || 
-                 element.tagName === 'PATH' || 
-                 element.classList.contains('no-capture');
-        },
-        onclone: (clonedDoc) => {
-          // Remove problematic styles
-          const allElements = clonedDoc.querySelectorAll('*');
-          allElements.forEach(el => {
-            const elem = el as HTMLElement;
-            elem.style.color = '';
-            elem.style.backgroundColor = '';
-            elem.style.backgroundImage = '';
-          });
-        }
       });
       
-      const imgData = canvas.toDataURL('image/png');
       const link = document.createElement('a');
-      link.href = imgData;
-      link.download = `Booking-${booking.bookingReference}-fallback.png`;
+      link.download = `Booking-${booking.bookingReference}.png`;
+      link.href = dataUrl;
       link.click();
+      
     } catch (fallbackError) {
       console.error('Fallback also failed:', fallbackError);
-      alert('Failed to download booking form. Please try printing the page instead.');
+      // Use print as final fallback
+      if (confirm('Failed to download booking form. Would you like to print it instead?')) {
+        handlePrint();
+      }
     }
   }
 };
@@ -205,6 +156,13 @@ const handleDownloadAsImage = async () => {
               Download Booking Form (Image)
             </button>
             <button
+              onClick={handlePrint}
+              className="flex items-center px-6 py-3 bg-[#f58c55] text-white rounded-lg hover:bg-[#e67a42] transition-colors shadow-md"
+            >
+              <FaPrint className="mr-2" />
+              Print Booking Form
+            </button>
+            <button
               onClick={() => router.push('/real-estates')}
               className="flex items-center px-6 py-3 border-2 border-[#f47a45] text-[#f47a45] rounded-lg hover:bg-[#f47a45] hover:text-white transition-colors"
             >
@@ -216,7 +174,8 @@ const handleDownloadAsImage = async () => {
 
         {/* Printable Booking Form (This is what gets rendered as image) */}
         <div 
-          ref={printRef} 
+          ref={printRef}
+          className="print-content"
           style={{
             maxWidth: '794px',
             margin: '0 auto',
@@ -421,7 +380,7 @@ const handleDownloadAsImage = async () => {
             
             <ol className="list-decimal list-inside space-y-2 text-black mb-6">
               <li>Print or save this booking form for your records</li>
-              <li>Visit our office at: <strong>123 Business Avenue, City Center</strong></li>
+              <li>Visit our office at: <strong>Elenoi Head Office, No. 4 KFF Street, After Central Mosque, Gidan Kwano</strong></li>
               <li>Bring this booking form and your original ID for verification</li>
               <li>Complete the payment before the expiry date</li>
               <li>Receive your tenancy agreement and property keys</li>
@@ -429,15 +388,15 @@ const handleDownloadAsImage = async () => {
 
             <div className="p-4 bg-blue-50 border border-blue-300 rounded">
               <p className="text-sm text-blue-900">
-                <strong>Contact Us:</strong> For any questions, please contact us at <strong>+234 123 456 7890</strong> or{' '}
-                <strong>info@flourishrealestate.com</strong>. Quote your booking reference: <strong>{booking.bookingReference}</strong>
+                <strong>Contact Us:</strong> For any questions, please contact us at <strong>+234 802 696 8067</strong> or{' '}
+                <strong>flamingotechteam@gmail.com</strong>. Quote your booking reference: <strong>{booking.bookingReference}</strong>
               </p>
             </div>
           </div>
 
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-400 text-center text-sm text-gray-600">
-            <p>This is an official booking confirmation from Flourish Real Estate</p>
+            <p>This is an official booking confirmation from Elenoi Nig. Ltd</p>
             <p className="mt-2">Generated: {new Date().toLocaleString()}</p>
             <p className="mt-1">Page 1 of 1</p>
           </div>

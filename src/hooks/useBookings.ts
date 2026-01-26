@@ -132,11 +132,20 @@ export const useBookings = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const payload = {
+      // Build payload and exclude empty parent fields
+      const payload: any = {
         ...bookingData,
         verificationPhoto: verificationPhotoUrl,
         idDocumentImage: idDocumentImageUrl,
       };
+
+      // Remove parent fields if they are empty/undefined (user didn't provide parent details)
+      if (!payload.parentName?.trim()) {
+        delete payload.parentName;
+        delete payload.parentPhone;
+        delete payload.parentEmail;
+        delete payload.parentAddress;
+      }
 
       const response = await fetch(`${BASEURL}/real-estates/bookings`, {
         method: 'POST',

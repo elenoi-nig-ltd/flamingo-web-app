@@ -2,7 +2,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { FaUser, FaBox, FaSignOutAlt, FaShoppingCart, FaChartBar , FaWarehouse, FaCreditCard, FaHome, FaNetworkWired, FaBullhorn, FaEnvelope, FaTags, FaBell } from 'react-icons/fa';
+import { FaUser, FaBox, FaSignOutAlt, FaShoppingCart, FaChartBar , FaWarehouse, FaCreditCard, FaHome, FaNetworkWired, FaBullhorn, FaEnvelope, FaTags, FaBell, FaCalendarCheck } from 'react-icons/fa';
 import { FaCog } from 'react-icons/fa';
 import { ImSpoonKnife } from 'react-icons/im';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +25,7 @@ export default function Sidebar() {
     { name: 'Inventory', icon: <FaWarehouse />, path: '/admin/dashboard/inventory', active: true },
     { name: 'Payments', icon: <FaCreditCard />, path: '/admin/payments', active: false },
     { name: 'Real Estate', icon: <FaHome />, path: '/admin/dashboard/real-estates', active: true },
+    { name: 'Bookings', icon: <FaCalendarCheck />, path: '/admin/dashboard/bookings', active: true },
     { name: 'Internet Packages', icon: <FaNetworkWired />, path: '/admin/dashboard/internet', active: true },
     { name: 'Notifications', icon: <FaBell />, path: '/admin/dashboard/notifications', active: true },
     { name: 'Marquee Messages', icon: <FaBullhorn />, path: '/admin/dashboard/marquee', active: true },

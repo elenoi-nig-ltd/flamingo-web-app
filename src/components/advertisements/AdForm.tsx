@@ -202,12 +202,18 @@ export default function AdForm() {
               ✅ Your ad will be reviewed by our admin team
             </p>
             <p className="text-sm text-gray-700 dark:text-gray-300">
-              📧 Payment instructions will be sent to your email
+              🕒 Once approved, you can pay via Paystack to activate your ad
             </p>
             <p className="text-sm text-gray-700 dark:text-gray-300">
               🚀 Once payment is confirmed, your ad will go live
             </p>
           </div>
+          <button
+            onClick={() => (window.location.href = '/my-ads')}
+            className="mt-4 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-6 py-2 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+          >
+            Go to My Ads
+          </button>
           <button
             onClick={() => window.location.reload()}
             className="mt-6 bg-[#f58c55] text-white px-8 py-3 rounded-lg hover:bg-[#e67e4a] transition-colors"

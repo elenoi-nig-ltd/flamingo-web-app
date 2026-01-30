@@ -14,6 +14,9 @@ interface RealEstate {
   bathrooms: number;
   area: number;
   images: string[];
+  totalRooms?: number;
+  roomsBooked?: number;
+  roomsAvailable?: number;
   yearBuilt?: number;
   amenities?: string[];
   contactInfo?: {
@@ -39,6 +42,7 @@ interface CreateRealEstatePayload {
   bathrooms: number;
   area: number;
   images: File[] | string[];
+  totalRooms?: number;
 }
 interface UpdateRealEstatePayload {
   title?: string;
@@ -50,6 +54,7 @@ interface UpdateRealEstatePayload {
   bathrooms?: number;
   area?: number;
   images?: File[] | string[];
+  totalRooms?: number;
 }
 
 interface UseRealEstatesOptions {
@@ -82,17 +87,25 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
   // Transform backend data to frontend format
   const transformRealEstateData = useCallback((data: any[]): RealEstate[] => {
     return data.map(estate => {
-      // Enhanced booking detection logic
-      const isBooked = 
-        estate.bookingStatus === 'confirmed' || 
-        estate.bookingStatus === 'booked' ||
-        estate.isBooked === true ||
-        estate.booked === true ||
-        estate.status === 'occupied' ||
-        (estate.booking && Object.keys(estate.booking).length > 0) ||
-        estate.availability === false;
+      const totalRooms = typeof estate.totalRooms === 'number' ? estate.totalRooms : undefined;
+      const roomsBooked = typeof estate.roomsBooked === 'number' ? estate.roomsBooked : undefined;
+      const roomsAvailable = typeof estate.roomsAvailable === 'number' ? estate.roomsAvailable : undefined;
+      const isLodge = (estate.propertyType || '').toLowerCase() === 'lodge';
 
-      const availability = !isBooked;
+      // Enhanced booking detection logic
+      const isBooked = isLodge && typeof roomsAvailable === 'number'
+        ? roomsAvailable <= 0
+        : estate.bookingStatus === 'confirmed' || 
+          estate.bookingStatus === 'booked' ||
+          estate.isBooked === true ||
+          estate.booked === true ||
+          estate.status === 'occupied' ||
+          (estate.booking && Object.keys(estate.booking).length > 0) ||
+          estate.availability === false;
+
+      const availability = isLodge && typeof roomsAvailable === 'number'
+        ? roomsAvailable > 0
+        : !isBooked;
 
       return {
         id: estate._id || estate.id || '',
@@ -105,6 +118,9 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
         bathrooms: estate.bathrooms || 0,
         area: estate.area || 0,
         images: estate.images || [],
+        totalRooms,
+        roomsBooked,
+        roomsAvailable,
         yearBuilt: estate.yearBuilt,
         amenities: estate.amenities || [],
         contactInfo: estate.contactInfo || {
@@ -381,6 +397,7 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
         bedrooms: payload.bedrooms,
         bathrooms: payload.bathrooms,
         area: payload.area,
+        totalRooms: payload.totalRooms,
         images: imageUrls,
       };
 

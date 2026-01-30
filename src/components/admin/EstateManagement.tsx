@@ -20,6 +20,9 @@ interface RealEstate {
   bathrooms: number;
   area: number;
   images: string[];
+  totalRooms?: number;
+  roomsBooked?: number;
+  roomsAvailable?: number;
 }
 
 const EstateManagement = () => {
@@ -51,6 +54,7 @@ const EstateManagement = () => {
     bedrooms: '',
     bathrooms: '',
     area: '',
+    totalRooms: '',
     images: [] as File[],
   });
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -146,6 +150,7 @@ const EstateManagement = () => {
       bedrooms: estate.bedrooms.toString(),
       bathrooms: estate.bathrooms.toString(),
       area: estate.area.toString(),
+      totalRooms: estate.totalRooms?.toString() || '',
       images: [],
     });
     setImagePreviews(estate.images);
@@ -165,6 +170,7 @@ const EstateManagement = () => {
       bedrooms: '',
       bathrooms: '',
       area: '',
+      totalRooms: '',
       images: [],
     });
     setImagePreviews([]);
@@ -187,6 +193,7 @@ const EstateManagement = () => {
     const bedrooms = parseInt(formData.bedrooms) || 0;
     const bathrooms = parseInt(formData.bathrooms) || 0;
     const area = parseInt(formData.area) || 0;
+    const totalRooms = formData.propertyType === 'lodge' ? parseInt(formData.totalRooms) || 0 : undefined;
 
     if (isNaN(price) || price <= 0) {
       setUploadError('Price must be a valid number greater than 0');
@@ -194,6 +201,10 @@ const EstateManagement = () => {
     }
     if (isNaN(area) || area <= 0) {
       setUploadError('Area must be a valid number greater than 0');
+      return;
+    }
+    if (formData.propertyType === 'lodge' && (!totalRooms || totalRooms < 1)) {
+      setUploadError('Total rooms must be at least 1 for lodges');
       return;
     }
 
@@ -229,6 +240,7 @@ const EstateManagement = () => {
       bedrooms,
       bathrooms,
       area,
+      totalRooms: formData.propertyType === 'lodge' ? totalRooms : undefined,
       images: imageUrls,
     };
 
@@ -260,6 +272,7 @@ const EstateManagement = () => {
         bedrooms: '',
         bathrooms: '',
         area: '',
+        totalRooms: '',
         images: [],
       });
       setImagePreviews([]);
@@ -399,6 +412,20 @@ const EstateManagement = () => {
                 <option value="land" className="text-gray-900 dark:text-gray-200">Land</option>
               </select>
             </div>
+            {formData.propertyType === 'lodge' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Total Rooms Available</label>
+                <input
+                  type="number"
+                  name="totalRooms"
+                  value={formData.totalRooms}
+                  onChange={handleInputChange}
+                  className="w-full p-3 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#f58c55]/50 dark:focus:ring-[#f7a16b]/50 transition-all duration-300 text-gray-900 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 border-gray-200/50 dark:border-gray-600/50"
+                  min="1"
+                  required
+                />
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Bedrooms</label>
               <input
@@ -585,6 +612,11 @@ const EstateManagement = () => {
                   <p className="text-gray-600 dark:text-gray-300">
                     Bedrooms: {estate.bedrooms} • Bathrooms: {estate.bathrooms} • Area: {estate.area} sq ft
                   </p>
+                  {estate.propertyType === 'lodge' && (
+                    <p className="text-gray-600 dark:text-gray-300">
+                      Rooms: {estate.roomsBooked ?? 0} booked • {estate.roomsAvailable ?? 0} available • {estate.totalRooms ?? 0} total
+                    </p>
+                  )}
                   <div className="flex space-x-2 mt-4">
                     <motion.button
                       onClick={() => handleEdit(estate)}

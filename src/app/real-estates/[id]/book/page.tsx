@@ -53,6 +53,11 @@ const BookPropertyPage = () => {
             <p className="text-gray-600 dark:text-gray-400 mb-6">
               This property is currently booked. Please check back later or browse other available properties.
             </p>
+            {availability?.propertyType === 'lodge' && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                Rooms: {availability.roomsBooked ?? 0} booked • {availability.roomsAvailable ?? 0} available • {availability.totalRooms ?? 0} total
+              </p>
+            )}
             <button
               onClick={() => router.push('/real-estates')}
               className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition"

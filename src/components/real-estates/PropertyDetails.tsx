@@ -242,6 +242,13 @@ export const PropertyDetails = () => {
                   <span className="font-semibold">Area:</span> {propertyDetails.area} sq ft
                 </p>
               </div>
+              {propertyDetails.propertyType === 'lodge' && (
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                  <p className="text-gray-600 dark:text-gray-300">
+                    <span className="font-semibold">Rooms:</span> {propertyDetails.roomsBooked ?? 0} booked • {propertyDetails.roomsAvailable ?? 0} available • {propertyDetails.totalRooms ?? 0} total
+                  </p>
+                </div>
+              )}
               {propertyDetails.yearBuilt && (
                 <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
                   <p className="text-gray-600 dark:text-gray-300">

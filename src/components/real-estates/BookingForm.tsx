@@ -219,6 +219,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ propertyId, onSuccess, onCanc
             This property is currently booked by another user. The booking expires on{' '}
             {availability.booking?.expiryDate && new Date(availability.booking.expiryDate).toLocaleDateString()}.
           </p>
+          {availability.propertyType === 'lodge' && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              Rooms: {availability.roomsBooked ?? 0} booked • {availability.roomsAvailable ?? 0} available • {availability.totalRooms ?? 0} total
+            </p>
+          )}
           <button
             onClick={() => router.back()}
             className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
@@ -237,6 +242,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ propertyId, onSuccess, onCanc
       transition={{ duration: 0.5 }}
       className="max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg"
     >
+      {propertyDetails?.propertyType === 'lodge' && availability && (
+        <div className="mb-6 rounded-lg border border-orange-200/60 dark:border-orange-700/40 bg-orange-50/60 dark:bg-orange-900/20 px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+          Rooms available: {availability.roomsAvailable ?? 0} • Rooms booked: {availability.roomsBooked ?? 0} • Total rooms: {availability.totalRooms ?? 0}
+        </div>
+      )}
       {/* Step Indicator */}
       <div className="mb-8 px-4 py-5 rounded-xl border dark:border-gray-600" style={{ backgroundColor: 'rgba(245, 140, 85, 0.05)', borderColor: 'rgba(245, 140, 85, 0.2)' }}>
         <div className="flex items-start justify-between">

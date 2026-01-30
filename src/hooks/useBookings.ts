@@ -70,6 +70,10 @@ export interface CreateBookingData {
 export interface PropertyAvailability {
   available: boolean;
   booking?: Booking;
+  roomsBooked?: number;
+  roomsAvailable?: number;
+  totalRooms?: number;
+  propertyType?: string;
 }
 
 export const useBookings = () => {

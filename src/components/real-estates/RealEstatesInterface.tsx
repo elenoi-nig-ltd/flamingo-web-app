@@ -383,6 +383,11 @@ const RealEstates = () => {
                     <div className="p-4">
                       <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-1 line-clamp-2">{estate.title}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{estate.area} sq ft • {estate.bedrooms} beds • {estate.bathrooms} baths</p>
+                      {estate.propertyType === 'lodge' && (
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                          Rooms: {estate.roomsBooked ?? 0} booked • {estate.roomsAvailable ?? 0} available • {estate.totalRooms ?? 0} total
+                        </p>
+                      )}
                       <div className="mt-3 flex gap-2">
                         <button
                           onClick={(e) => { e.stopPropagation(); handlePropertyClick(estate.id); }}

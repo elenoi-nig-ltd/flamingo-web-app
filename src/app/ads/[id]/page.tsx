@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { BASEURL } from '@/config/api/contants';
@@ -115,6 +115,7 @@ export default function AdDetailsPage() {
   }
 
   return (
+    <Suspense>
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Back Button */}
@@ -263,5 +264,6 @@ export default function AdDetailsPage() {
         </motion.div>
       </div>
     </div>
+    </Suspense>
   );
 }

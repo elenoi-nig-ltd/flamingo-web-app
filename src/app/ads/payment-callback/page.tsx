@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import axios from 'axios';
 import { BASEURL } from '@/config/api/contants';
 
-export default function AdPaymentCallbackPage() {
+
+function AdPaymentCallbackPageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -56,5 +57,13 @@ export default function AdPaymentCallbackPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function AdPaymentCallbackPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900"><p className="text-gray-600 dark:text-gray-300">Loading...</p></div>}>
+      <AdPaymentCallbackPageInner />
+    </Suspense>
   );
 }

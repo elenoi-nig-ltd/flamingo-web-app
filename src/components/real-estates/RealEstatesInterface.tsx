@@ -385,7 +385,7 @@ const RealEstates = () => {
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{estate.area} sq ft • {estate.bedrooms} beds • {estate.bathrooms} baths</p>
                       {estate.propertyType === 'lodge' && (
                         <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          Rooms: {estate.roomsBooked ?? 0} booked • {estate.roomsAvailable ?? 0} available • {estate.totalRooms ?? 0} total
+                          {/* Room numbers display removed as requested */}
                         </p>
                       )}
                       <div className="mt-3 flex gap-2">

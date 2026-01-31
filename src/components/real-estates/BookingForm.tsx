@@ -346,15 +346,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ propertyId, onSuccess, onCanc
             <span className="font-semibold">{propertyDetails?.title || 'JJK Lodge'}</span> - 
             <span className="text-orange-500 font-bold ml-2">₦{propertyDetails?.price?.toLocaleString() || '350,000'}</span>
           </p>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {availability?.propertyType === 'lodge' && (
-              <p>
-                Rooms available: {availability.roomsAvailable ?? 0} • 
-                Rooms booked: {availability.roomsBooked ?? 0} • 
-                Total rooms: {availability.totalRooms ?? 0}
-              </p>
-            )}
-          </div>
+          {/* Room numbers display removed as requested */}
         </div>
         <p className="mt-4 text-gray-600 dark:text-gray-400">
           Please fill in your details to reserve this property. You have 7 days to complete payment.

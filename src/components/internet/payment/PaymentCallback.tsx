@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
 import {
   CheckCircle,
-  XCircle,
+  XCircle, 
   AlertCircle,
   Download,
   ArrowLeft,

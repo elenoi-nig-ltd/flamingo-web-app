@@ -589,6 +589,15 @@ const handlePurchase = async (planId: string) => {
               <MdCheckCircle className="text-6xl mx-auto mb-4 text-green-500" />
               <h3 className="text-2xl font-bold mb-4">Payment Successful!</h3>
               <p className="text-lg font-mono">Voucher Code: <strong>{paymentStatus.voucherCode}</strong></p>
+              <div className="mt-4 text-base text-gray-700 dark:text-gray-200">
+                <p>
+                  <strong>Where to find your voucher code:</strong><br />
+                  - The code is displayed above.<br />
+                  - You will also receive your voucher code via <span className="font-semibold text-[#f58c55]">SMS</span> and <span className="font-semibold text-green-600">WhatsApp</span> to the phone number you provided.<br />
+                  - If you do not see the message immediately, please check your SMS inbox and WhatsApp chats.<br />
+                  - If you still do not receive your code, contact support for assistance.
+                </p>
+              </div>
               <div className="flex gap-4 justify-center mt-6">
                 <motion.button
                   whileHover={{ scale: 1.05 }}

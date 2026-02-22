@@ -367,15 +367,15 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
         onOrderSuccess={handleOrderSuccess}
       />
 
-            {/* Success test button */}
-      {process.env.NODE_ENV === 'development' && (
+      {/* Success test button */}
+      {/* {process.env.NODE_ENV === 'development' && (
         <button
           onClick={handleOrderSuccess}
           className="fixed bottom-4 left-4 bg-blue-500 text-white px-4 py-2 rounded text-sm z-40"
         >
           Test Free Water Alert
         </button>
-      )}
+      )} */}
       
       {/* Toast Notifications */}
       <Toast

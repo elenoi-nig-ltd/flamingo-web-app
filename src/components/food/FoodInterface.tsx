@@ -241,6 +241,14 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
     return () => document.removeEventListener('keydown', handleKeyPress);
   }, [isCartOpen, isSidebarOpen]);
 
+  const handleOrderSuccess = () => {
+    setToast({
+      message: '🎉 Congratulations! You\'ve received a free bottle of water with your order!',
+      type: 'success',
+      isVisible: true
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
       {/* Header */}
@@ -356,7 +364,18 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
         onRemoveItem={handleRemoveFromCart}
         onUpdateQuantity={handleUpdateQuantity}
         onClearCart={clearCart}
+        onOrderSuccess={handleOrderSuccess}
       />
+
+            {/* Success test button */}
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          onClick={handleOrderSuccess}
+          className="fixed bottom-4 left-4 bg-blue-500 text-white px-4 py-2 rounded text-sm z-40"
+        >
+          Test Free Water Alert
+        </button>
+      )}
       
       {/* Toast Notifications */}
       <Toast

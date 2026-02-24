@@ -24,6 +24,7 @@ interface CartProps {
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemoveItem: (id: string) => void;
   onClearCart?: () => void;
+  onOrderSuccess?: () => void;
   orderType?: 'food' | 'home-items';
 }
 
@@ -87,7 +88,7 @@ const ErrorModal = ({ message, onClose }: { message: string; onClose: () => void
   </div>
 );
 
-const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveItem, onClearCart, orderType = 'food' }: CartProps) => {
+const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveItem, onClearCart, onOrderSuccess, orderType = 'food' }: CartProps) => {
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -202,6 +203,11 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
       }
 
       console.log('Payment initiated successfully:', paymentResult);
+
+      // Trigger the success callback to show free water alert
+      if (onOrderSuccess) {
+        onOrderSuccess();
+      }
 
       // Store order data in both sessionStorage AND localStorage as backup
       const pendingOrder = {

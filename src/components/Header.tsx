@@ -74,7 +74,7 @@ const Header = () => {
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm py-4 px-6 z-[9999] isolate transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm py-4 px-6 z-[9998] isolate transition-all duration-300 ${
         scrolled ? 'shadow-lg py-3' : ''
       }`}
     >

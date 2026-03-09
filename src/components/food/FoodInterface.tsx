@@ -5,12 +5,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { FaSearch, FaBars, FaTimes, FaShoppingCart } from 'react-icons/fa';
 import FoodSidebar from './FoodSidebar';
 import ProductGrid from './ProductGrid';
-import Cart from './Cart';
 import { useCart } from '@/hooks/useCart';
 import Toast from '@/components/ui/Toast';
 import Header from '../Header';
 import axios from 'axios';
 import { BASEURL } from '@/config/api/contants';
+import Link from 'next/link';
 
 interface FoodInterfaceProps {
   // Add any props if needed
@@ -39,7 +39,6 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
   const [selectedCategoryName, setSelectedCategoryName] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,13 +55,8 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
   });
   
   const {
-    cartItems,
     addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
     totalItems,
-    totalPrice
   } = useCart();
 
   // Update selectedCategoryId when searchParams change
@@ -168,44 +162,16 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
   };
 
   const handleAddToCart = (product: { id: string; name: string; image: string; price: number }) => {
-    addToCart(product);
+    addToCart({ ...product, category: 'food' });
     setToast({
-      message: 'Food ordered',
+      message: 'Food added to cart',
       type: 'success',
       isVisible: true
     });
   };
 
-  const handleRemoveFromCart = (productId: string) => {
-    const item = cartItems.find(item => item.id === productId);
-    removeFromCart(productId);
-    if (item) {
-      setToast({
-        message: `${item.name} removed from the order`,
-        type: 'info',
-        isVisible: true
-      });
-    }
-  };
-
-  const handleUpdateQuantity = (productId: string, quantity: number) => {
-    const item = cartItems.find(item => item.id === productId);
-    updateQuantity(productId, quantity);
-    if (item && quantity > 0) {
-      setToast({
-        message: `${item.name} quantity updated to ${quantity}`,
-        type: 'info',
-        isVisible: true
-      });
-    }
-  };
-
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const toggleCart = () => {
-    setIsCartOpen(!isCartOpen);
   };
 
   // Keyboard shortcuts
@@ -220,34 +186,17 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
         }
       }
       
-      // Escape to close cart/sidebar
+      // Escape to close sidebar
       if (event.key === 'Escape') {
-        if (isCartOpen) {
-          setIsCartOpen(false);
-        }
         if (isSidebarOpen) {
           setIsSidebarOpen(false);
         }
-      }
-      
-      // Ctrl/Cmd + B to toggle cart
-      if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
-        event.preventDefault();
-        setIsCartOpen(!isCartOpen);
       }
     };
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [isCartOpen, isSidebarOpen]);
-
-  const handleOrderSuccess = () => {
-    setToast({
-      message: '🎉 Congratulations! You\'ve received a free bottle of water with your order!',
-      type: 'success',
-      isVisible: true
-    });
-  };
+  }, [isSidebarOpen]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -310,19 +259,19 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
                 </div>
               </div>
 
-              {/* Cart Button */}
-              <button
-                onClick={toggleCart}
-                className="relative flex items-center px-4 py-2 rounded-md bg-[#f58c55] text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
+              {/* Cart Button - Now links to /cart */}
+              <Link
+                href="/cart"
+                className="relative flex items-center px-4 py-2 rounded-md bg-[#f58c55] text-white hover:bg-[#f47a45] focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
               >
                 <FaShoppingCart size={16} className="mr-2" />
-                <span>Orders</span>
+                <span>Cart</span>
                 {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center shadow-md">
                     {totalItems}
                   </span>
                 )}
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -354,28 +303,6 @@ const FoodInterface: React.FC<FoodInterfaceProps> = () => {
           </div>
         </div>
       </div>
-
-      {/* Cart Sidebar */}
-      <Cart
-        isOpen={isCartOpen}
-        items={cartItems}
-        totalPrice={totalPrice}
-        onClose={() => setIsCartOpen(false)}
-        onRemoveItem={handleRemoveFromCart}
-        onUpdateQuantity={handleUpdateQuantity}
-        onClearCart={clearCart}
-        onOrderSuccess={handleOrderSuccess}
-      />
-
-      {/* Success test button */}
-      {/* {process.env.NODE_ENV === 'development' && (
-        <button
-          onClick={handleOrderSuccess}
-          className="fixed bottom-4 left-4 bg-blue-500 text-white px-4 py-2 rounded text-sm z-40"
-        >
-          Test Free Water Alert
-        </button>
-      )} */}
       
       {/* Toast Notifications */}
       <Toast

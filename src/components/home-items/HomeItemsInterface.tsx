@@ -5,10 +5,10 @@ import { useSearchParams } from 'next/navigation';
 import { FaSearch, FaBars, FaTimes, FaShoppingCart } from 'react-icons/fa';
 import HomeItemsSidebar from './HomeItemsSidebar';
 import HomeItemsProductGrid from './HomeItemsProductGrid';
-import Cart from '../food/Cart';
 import { useCart } from '@/hooks/useCart';
 import Toast from '@/components/ui/Toast';
 import Header from '../Header';
+import Link from 'next/link';
 
 interface HomeItemsInterfaceProps {
   // Add any props if needed
@@ -22,7 +22,6 @@ const HomeItemsInterface: React.FC<HomeItemsInterfaceProps> = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
     type: 'success' | 'error' | 'info';
@@ -34,13 +33,8 @@ const HomeItemsInterface: React.FC<HomeItemsInterfaceProps> = () => {
   });
   
   const {
-    cartItems,
     addToCart,
-    removeFromCart,
-    updateQuantity,
-    clearCart,
     totalItems,
-    totalPrice
   } = useCart();
 
   // Update selected category when URL parameter changes
@@ -60,7 +54,7 @@ const HomeItemsInterface: React.FC<HomeItemsInterfaceProps> = () => {
   };
 
   const handleAddToCart = (product: { id: string; name: string; image: string; price: number }) => {
-    addToCart(product);
+    addToCart({ ...product, category: 'home-items' });
     setToast({
       message: `${product.name} added to cart!`,
       type: 'success',
@@ -68,36 +62,8 @@ const HomeItemsInterface: React.FC<HomeItemsInterfaceProps> = () => {
     });
   };
 
-  const handleRemoveFromCart = (productId: string) => {
-    const item = cartItems.find(item => item.id === productId);
-    removeFromCart(productId);
-    if (item) {
-      setToast({
-        message: `${item.name} removed from cart`,
-        type: 'info',
-        isVisible: true
-      });
-    }
-  };
-
-  const handleUpdateQuantity = (productId: string, quantity: number) => {
-    const item = cartItems.find(item => item.id === productId);
-    updateQuantity(productId, quantity);
-    if (item && quantity > 0) {
-      setToast({
-        message: `${item.name} quantity updated to ${quantity}`,
-        type: 'info',
-        isVisible: true
-      });
-    }
-  };
-
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const toggleCart = () => {
-    setIsCartOpen(!isCartOpen);
   };
 
   // Keyboard shortcuts
@@ -112,26 +78,17 @@ const HomeItemsInterface: React.FC<HomeItemsInterfaceProps> = () => {
         }
       }
       
-      // Escape to close cart/sidebar
+      // Escape to close sidebar
       if (event.key === 'Escape') {
-        if (isCartOpen) {
-          setIsCartOpen(false);
-        }
         if (isSidebarOpen) {
           setIsSidebarOpen(false);
         }
-      }
-      
-      // Ctrl/Cmd + B to toggle cart
-      if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
-        event.preventDefault();
-        setIsCartOpen(!isCartOpen);
       }
     };
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [isCartOpen, isSidebarOpen]);
+  }, [isSidebarOpen]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -193,19 +150,19 @@ const HomeItemsInterface: React.FC<HomeItemsInterfaceProps> = () => {
                 </div>
               </div>
 
-              {/* Cart Button - Right */}
-              <button
-                onClick={toggleCart}
-                className="relative flex items-center px-4 py-2 rounded-md bg-[#f58c55] text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-[#f58c55] focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
+              {/* Cart Button - Now links to /cart */}
+              <Link
+                href="/cart"
+                className="relative flex items-center px-4 py-2 rounded-md bg-[#f58c55] text-white hover:bg-[#f47a45] focus:outline-none focus:ring-2 focus:ring-[#f58c55] focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
               >
                 <FaShoppingCart size={16} className="mr-2" />
                 <span>Cart</span>
                 {totalItems > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center">
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center shadow-md">
                     {totalItems}
                   </span>
                 )}
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -220,17 +177,6 @@ const HomeItemsInterface: React.FC<HomeItemsInterfaceProps> = () => {
           </div>
         </div>
       </div>
-
-      {/* Cart Sidebar */}
-      <Cart
-        isOpen={isCartOpen}
-        items={cartItems}
-        totalPrice={totalPrice}
-        onClose={() => setIsCartOpen(false)}
-        onRemoveItem={handleRemoveFromCart}
-        onUpdateQuantity={handleUpdateQuantity}
-        onClearCart={clearCart}
-      />
       
       {/* Toast Notifications */}
       <Toast

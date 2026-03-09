@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { FaChevronDown } from 'react-icons/fa';
+import { FaChevronDown, FaShoppingCart } from 'react-icons/fa';
 import Image from 'next/image';
 import { usePublicCategories } from '@/hooks/usePublic';
 import { useHomeItemCategories } from '@/hooks/useHomeItemCategories';
+import { useCart } from '@/hooks/useCart';
+import Link from 'next/link';
 
 interface Category {
   _id: string;
@@ -20,6 +22,7 @@ const Header = () => {
   const { fetchCategories, loading: foodLoading, error: foodError } = usePublicCategories();
   const { categories: homeItemCategories, loading: homeItemsLoading, error: homeItemsError } = useHomeItemCategories();
   const [foodCategories, setFoodCategories] = useState<Category[]>([]);
+  const { totalItems } = useCart();
 
   // Handle scroll effect
   useEffect(() => {
@@ -101,27 +104,47 @@ const Header = () => {
           <Dropdown title="Internet" items={menuItems.internet} />
           <Dropdown title="Real Estates" items={menuItems.realEstates} />
           <Dropdown title="Explore Flamingo" items={menuItems.signupPlanning} dark gradient />
+          
+          {/* Cart Icon Desktop */}
+          <Link href="/cart" className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-[#f58c55] transition-colors">
+            <FaShoppingCart size={22} />
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-lg border-2 border-white dark:border-gray-900">
+                {totalItems}
+              </span>
+            )}
+          </Link>
         </nav>
 
-        {/* Mobile Toggle */}
-        <button
-          className="md:hidden text-gray-700 dark:text-gray-300 hover:text-pink-500 transition-colors duration-200"
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6 transform transition-transform duration-200"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            {mobileMenuOpen ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        {/* Mobile Toggle & Cart */}
+        <div className="flex items-center space-x-4 md:hidden">
+          <Link href="/cart" className="relative p-2 text-gray-700 dark:text-gray-300 hover:text-orange-500 transition-colors">
+            <FaShoppingCart size={20} />
+            {totalItems > 0 && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-bold rounded-full h-4 w-4 flex items-center justify-center border-2 border-white dark:border-gray-900">
+                {totalItems}
+              </span>
             )}
+          </Link>
+          <button
+            className="text-gray-700 dark:text-gray-300 hover:text-pink-500 transition-colors duration-200"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 transform transition-transform duration-200"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              {mobileMenuOpen ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              )}
             </svg>
           </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}

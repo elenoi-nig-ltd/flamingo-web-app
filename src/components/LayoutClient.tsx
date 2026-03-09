@@ -8,6 +8,7 @@ import Sidebar from './admin/Sidebar';
 import Topbar from './Topbar';
 import WhatsAppButton from '@/components/ui/WhatsAppButton'; 
 import { SidebarProvider, useSidebar } from './admin/SidebarContext';
+import { CartProvider } from '@/contexts/CartContext';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -81,8 +82,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <LayoutContent>{children}</LayoutContent>
-    </SidebarProvider>
+    <CartProvider>
+      <SidebarProvider>
+        <LayoutContent>{children}</LayoutContent>
+      </SidebarProvider>
+    </CartProvider>
   );
 }

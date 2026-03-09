@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTrash, FaMinus, FaPlus, FaUser, FaPhone, FaEnvelope, FaTimes, FaStore, FaTruck, FaDownload } from 'react-icons/fa';
+import { FaTrash, FaMinus, FaPlus, FaUser, FaPhone, FaEnvelope, FaTimes, FaStore, FaTruck, FaDownload, FaShoppingBasket, FaCreditCard, FaReceipt } from 'react-icons/fa';
 import { usePayments } from '@/hooks/usePayments';
 import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/hooks/useAuth';
 import { toPng } from 'html-to-image';
+import DistributedAds from '@/components/advertisements/DistributedAds';
 
 interface CartItem {
   id: string;
@@ -537,52 +538,70 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
             className="fixed right-0 top-0 h-screen w-full max-w-md bg-white dark:bg-gray-900 text-gray-900 dark:text-white z-50 shadow-2xl flex flex-col"
             data-cart-container
           >
-            <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-bold">Your Cart</h2>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <FaTimes size={20} />
-              </button>
+            <div className="shrink-0 flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center space-x-2">
+                <FaShoppingBasket className="text-[#f58c55] text-xl" />
+                <h2 className="text-xl font-bold">Your Cart</h2>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={clearCart}
+                  className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 rounded-lg transition-colors"
+                  title="Clear Cart"
+                >
+                  <FaTrash className="text-sm" />
+                </button>
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <FaTimes size={20} />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 flex flex-col min-h-0">
               {items.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center p-6">
+                <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
                   <div className="text-center">
-                    <div className="w-24 h-24 mx-auto mb-4 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                      <svg className="w-12 h-12 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m6 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                      </svg>
+                    <div className="w-24 h-24 mx-auto mb-4 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
+                      <FaShoppingBasket className="w-12 h-12 text-gray-400" />
                     </div>
-                    <p className="text-gray-600 dark:text-gray-400 text-lg mb-2">Your cart is empty</p>
-                    <p className="text-gray-500 dark:text-gray-500 text-sm mb-4">Add some delicious food to get started!</p>
+                    <p className="text-gray-600 dark:text-gray-400 text-lg mb-2 font-medium">Your cart is empty</p>
+                    <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">Add some delicious food to get started!</p>
                     <button
                       onClick={onClose}
-                      className="bg-[#f58c55] hover:bg-[#f47a45] text-white px-6 py-2 rounded-lg transition-all duration-300"
+                      className="bg-[#f58c55] hover:bg-[#f47a45] text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 shadow-lg shadow-[#f58c55]/20"
                     >
                       Browse Menu
                     </button>
                   </div>
+                  
+                  {/* Ad in empty state */}
+                  <div className="w-full max-w-sm mt-8">
+                    <DistributedAds location="checkout_page" position={0} />
+                  </div>
                 </div>
               ) : (
                 <>
-                  <div className="flex-1 overflow-y-auto">
+                  <div className="flex-1 overflow-y-auto custom-scrollbar">
                     <div className="p-6 space-y-4">
-                      {/* Cart Items Display */}
-                      <div className="mb-4">
-                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Items in Cart</h3>
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Items in Cart</h3>
+                        <span className="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-full text-gray-600 dark:text-gray-400 font-medium">
+                          {items.length} {items.length === 1 ? 'Item' : 'Items'}
+                        </span>
                       </div>
+                      
                       {items.map((item) => (
                         <motion.div
                           key={item.id}
-                          initial={{ opacity: 0, y: 20 }}
+                          initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="flex items-center space-x-4 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50"
+                          className="flex items-center space-x-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-700/50"
                           data-cart-item
                         >
-                          <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                          <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 shadow-sm">
                             <img
                               src={item.image}
                               alt={item.name}
@@ -591,309 +610,243 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                             />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-gray-900 dark:text-white mb-1 truncate">{item.name}</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">₦{item.price.toLocaleString()}</p>
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-0.5 truncate">{item.name}</h3>
+                            <p className="text-sm font-semibold text-[#f58c55]">₦{item.price.toLocaleString()}</p>
                           </div>
-                          <div className="bg-[#f58c55]/10 dark:bg-[#f58c55]/20 rounded-lg p-2 flex items-center space-x-2 flex-shrink-0">
+                          <div className="bg-white dark:bg-gray-800 rounded-xl p-1.5 flex items-center space-x-3 shadow-sm border border-gray-100 dark:border-gray-700">
                             <button
                               onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                              className="w-6 h-6 flex items-center justify-center transition-colors text-[#f58c55] dark:text-[#f7a16b] hover:text-[#f47a45]"
+                              className="w-7 h-7 flex items-center justify-center transition-colors text-gray-500 hover:text-[#f58c55] hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg"
                             >
-                              <FaMinus className="text-xs" />
+                              <FaMinus className="text-[10px]" />
                             </button>
-                            <span className="font-semibold text-gray-900 dark:text-white min-w-[20px] text-center">
+                            <span className="font-bold text-gray-900 dark:text-white min-w-4.5 text-center text-sm">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                              className="w-6 h-6 flex items-center justify-center transition-colors text-[#f58c55] dark:text-[#f7a16b] hover:text-[#f47a45]"
+                              className="w-7 h-7 flex items-center justify-center transition-colors text-gray-500 hover:text-[#f58c55] hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg"
                             >
-                              <FaPlus className="text-xs" />
+                              <FaPlus className="text-[10px]" />
                             </button>
-                          </div>
-                          <div className="text-right flex-shrink-0 ml-2">
-                            <p className="font-bold text-gray-900 dark:text-white text-sm">₦{(item.price * item.quantity).toLocaleString()}</p>
                           </div>
                         </motion.div>
                       ))}
+
+                      {/* Ad in scrollable area */}
+                      <div className="py-4">
+                        <DistributedAds location="checkout_page" position={0} className="rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700" />
+                      </div>
                     </div>
                   </div>
-                  <div className="flex-shrink-0 p-6 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+
+                  <div className="shrink-0 p-6 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-[0_-10px_40px_rgba(0,0,0,0.02)]">
                     {/* Delivery/Pickup Selection */}
-                    <div className="mb-4">
-                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Select Delivery Option</h3>
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Service Mode</h3>
+                        <span className="text-xs text-[#f58c55] font-bold">
+                          {deliveryOption === 'delivery' ? 'Home Delivery' : 'Store Pickup'}
+                        </span>
+                      </div>
                       <div className="grid grid-cols-2 gap-3">
                         <button
                           type="button"
                           onClick={() => setDeliveryOption('pickup')}
-                          className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-lg border transition-all duration-300 ${
+                          className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border transition-all duration-300 font-bold text-sm ${
                             deliveryOption === 'pickup'
-                              ? 'bg-[#f58c55] border-[#f58c55] text-white'
-                              : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                              ? 'bg-[#f58c55] border-[#f58c55] text-white shadow-lg shadow-[#f58c55]/20'
+                              : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                           }`}
                         >
-                          <FaStore />
+                          <FaStore className={deliveryOption === 'pickup' ? 'animate-bounce' : ''} />
                           <span>Pickup</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeliveryOption('delivery')}
-                          className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-lg border transition-all duration-300 ${
+                          className={`flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border transition-all duration-300 font-bold text-sm ${
                             deliveryOption === 'delivery'
-                              ? 'bg-[#f58c55] border-[#f58c55] text-white'
-                              : 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                              ? 'bg-[#f58c55] border-[#f58c55] text-white shadow-lg shadow-[#f58c55]/20'
+                              : 'bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                           }`}
                         >
-                          <FaTruck />
+                          <FaTruck className={deliveryOption === 'delivery' ? 'animate-bounce' : ''} />
                           <span>Delivery</span>
                         </button>
                       </div>
                       
-                      {/* Location Dropdown - Only shown when delivery is selected */}
                       {deliveryOption === 'delivery' && (
-                        <div className="mt-3">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Select Delivery Location
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="mt-4 space-y-3"
+                        >
+                          <label className="block text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Delivery Location
                           </label>
                           <select
                             value={deliveryLocation}
                             onChange={(e) => setDeliveryLocation(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] focus:border-[#f58c55]"
+                            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] focus:border-[#f58c55] outline-none transition-all font-medium text-sm"
                           >
                             {deliveryLocations.map((location) => (
                               <option key={location.value} value={location.value}>
-                                {location.label} - ₦{location.price.toLocaleString()}
+                                {location.label} (+₦{location.price.toLocaleString()})
                               </option>
                             ))}
                           </select>
-                          <div className="mt-2 p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-                            <p className="text-xs text-amber-700 dark:text-amber-300">
-                              💡 <span className="font-semibold">Tip:</span> Please select the location closest to your delivery address for accurate pricing.
-                            </p>
-                          </div>
-                        </div>
+                        </motion.div>
                       )}
                     </div>
 
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-gray-600 dark:text-gray-400">Items: {items.length}</span>
-                      <button
-                        onClick={clearCart}
-                        className="flex items-center space-x-2 text-[#f58c55] dark:text-[#f7a16b] hover:text-[#f47a45] transition-colors text-sm"
-                      >
-                        <FaTrash className="text-xs" />
-                        <span>Clear Cart</span>
-                      </button>
-                    </div>
-
-                    {/* Price Breakdown */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                        <span>Subtotal:</span>
-                        <span>₦{subtotal.toLocaleString()}</span>
+                    {/* Order Summary */}
+                    <div className="bg-gray-50 dark:bg-gray-800/40 rounded-2xl p-4 mb-6 border border-gray-100 dark:border-gray-700/50">
+                      <div className="flex items-center space-x-2 mb-3">
+                        <FaReceipt className="text-[#f58c55] text-xs" />
+                        <h3 className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Order Summary</h3>
                       </div>
-                      <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                        <span>Delivery Fee:</span>
-                        <span>{deliveryFee > 0 ? `+₦${deliveryFee.toLocaleString()}` : 'Free'}</span>
-                      </div>
-                      <div className="border-t border-gray-300 dark:border-gray-700 pt-2 mt-2">
-                        <div className="flex justify-between font-bold text-gray-900 dark:text-white">
-                          <span>Total:</span>
-                          <span>₦{totalWithFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          <span>Subtotal</span>
+                          <span>₦{subtotal.toLocaleString()}</span>
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-[#f58c55]/10 dark:bg-[#f58c55]/20 rounded-lg p-4 mb-4">
-                      <div className="text-center">
-                        <p className="text-[#f58c55] dark:text-[#f7a16b] font-bold text-xl">
-                          Total: ₦{totalWithFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                          {deliveryOption === 'pickup' ? 'Pickup at store' : 'Delivery to your address'}
-                        </p>
+                        <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 font-medium">
+                          <span>Delivery Fee</span>
+                          <span>{deliveryFee > 0 ? `₦${deliveryFee.toLocaleString()}` : 'Free'}</span>
+                        </div>
+                        <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                          <span className="font-bold text-gray-900 dark:text-white">Total</span>
+                          <span className="font-extrabold text-[#f58c55] text-lg">₦{totalWithFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
                       </div>
                     </div>
                     
                     <SafeErrorDisplay error={orderError || paymentError} />
                     
-                    {/* Download Cart Summary Button */}
-                    <div className="relative mb-3">
+                    <div className="grid grid-cols-5 gap-3">
                       <button
                         onClick={handleDownloadCartAsImage}
                         disabled={isDownloading || items.length === 0}
-                        className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 flex items-center justify-center space-x-2 ${
-                          isDownloading || items.length === 0
-                            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white hover:shadow-lg'
-                        }`}
-                        title={items.length === 0 ? 'Cart is empty' : 'Download cart summary as image'}
+                        className="col-span-1 flex items-center justify-center p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 hover:bg-purple-100 transition-all disabled:opacity-50"
+                        title="Download Summary"
                       >
-                        {isDownloading ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            <span>Processing...</span>
-                          </>
-                        ) : (
-                          <>
-                            <FaDownload />
-                            <span>Download Cart Summary</span>
-                          </>
-                        )}
+                        {isDownloading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div> : <FaDownload />}
                       </button>
-                      {items.length === 0 && (
-                        <div className="absolute -top-8 left-0 right-0 text-center">
-                          <p className="text-xs text-gray-500 bg-white dark:bg-gray-800 px-2 py-1 rounded">Cart must have items to download</p>
-                        </div>
-                      )}
+                      
+                      <button
+                        onClick={handleCheckout}
+                        disabled={isLoading || orderLoading || paymentLoading || items.length === 0}
+                        className="col-span-4 flex items-center justify-center space-x-3 bg-[#f58c55] hover:bg-[#f47a45] text-white p-4 rounded-xl font-bold transition-all shadow-lg shadow-[#f58c55]/20 disabled:opacity-50 disabled:grayscale"
+                      >
+                        <FaCreditCard className="text-sm" />
+                        <span>{isLoading || orderLoading || paymentLoading ? 'Processing...' : `Checkout • ₦${totalWithFees.toLocaleString(undefined, { minimumFractionDigits: 0 })}`}</span>
+                      </button>
                     </div>
-
-                    <button
-                      onClick={handleCheckout}
-                      disabled={isLoading || orderLoading || paymentLoading || items.length === 0}
-                      className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 ${
-                        isLoading || orderLoading || paymentLoading || items.length === 0
-                          ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed'
-                          : 'bg-[#f58c55] hover:bg-[#f47a45] text-white hover:shadow-lg'
-                      }`}
-                    >
-                      {isLoading || orderLoading || paymentLoading ? 'Processing...' : 'Proceed to Checkout'}
-                    </button>
                   </div>
                 </>
               )}
 
               {showCustomerForm && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-gray-900/50">
+                <div className="fixed inset-0 z-100000 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl p-8 w-full max-w-md border border-gray-100 dark:border-gray-700"
                   >
-                    <div className="text-center mb-6">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                        Customer Information
+                    <div className="text-center mb-8">
+                      <div className="w-16 h-16 bg-[#f58c55]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <FaUser className="text-[#f58c55] text-2xl" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                        Delivery Details
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        Please provide your details to continue with payment
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
+                        Almost there! Just a few details to complete your order.
                       </p>
-                      <div className="mt-2 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                        <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                          {deliveryOption === 'pickup' ? 'Pickup Order' : 'Delivery Order'}
-                        </p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Total: ₦{totalWithFees.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                        </p>
-                      </div>
                     </div>
-                    <form onSubmit={handleCustomerSubmit} className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          <FaUser className="inline mr-2 text-[#f58c55]" />
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={customerInfo.name}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] focus:border-[#f58c55]"
-                          placeholder="Enter your full name"
-                          required
-                        />
+
+                    <form onSubmit={handleCustomerSubmit} className="space-y-5">
+                      <div className="space-y-2">
+                        <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Full Name</label>
+                        <div className="relative">
+                          <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                          <input
+                            type="text"
+                            name="name"
+                            value={customerInfo.name}
+                            onChange={handleInputChange}
+                            className="w-full pl-11 pr-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] outline-none transition-all font-medium"
+                            placeholder="John Doe"
+                            required
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          <FaEnvelope className="inline mr-2 text-[#f58c55]" />
-                          Email Address
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={customerInfo.email}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] focus:border-[#f58c55]"
-                          placeholder="Enter your email"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          <FaPhone className="inline mr-2 text-[#f58c55]" />
-                          Phone Number
-                        </label>
-                        <input
-                          type="tel"
-                          name="phone"
-                          value={customerInfo.phone}
-                          onChange={handleInputChange}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] focus:border-[#f58c55]"
-                          placeholder="Enter your phone number"
-                          required
-                        />
-                      </div>
-                      {deliveryOption === 'delivery' && (
-                        <>
-                          <div className="p-3 bg-[#f58c55]/10 dark:bg-[#f58c55]/20 rounded-lg border border-[#f58c55]/30">
-                            <div className="flex items-start space-x-2">
-                              <span className="text-[#f58c55] text-lg mt-0.5">📍</span>
-                              <div>
-                                <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">
-                                  Confirm Your Delivery Location
-                                </p>
-                                <p className="text-sm text-gray-700 dark:text-gray-300">
-                                  <span className="font-semibold">{deliveryLocations.find(loc => loc.value === deliveryLocation)?.label}</span> - ₦{deliveryFee.toLocaleString()}
-                                </p>
-                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                                  Make sure this location is close to your address below.
-                                </p>
-                              </div>
-                            </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Email</label>
+                          <div className="relative">
+                            <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                            <input
+                              type="email"
+                              name="email"
+                              value={customerInfo.email}
+                              onChange={handleInputChange}
+                              className="w-full pl-11 pr-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] outline-none transition-all font-medium"
+                              placeholder="john@example.com"
+                              required
+                            />
                           </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                              <FaTruck className="inline mr-2 text-[#f58c55]" />
-                              Delivery Address
-                            </label>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Phone</label>
+                          <div className="relative">
+                            <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+                            <input
+                              type="tel"
+                              name="phone"
+                              value={customerInfo.phone}
+                              onChange={handleInputChange}
+                              className="w-full pl-11 pr-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] outline-none transition-all font-medium"
+                              placeholder="08012345678"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {deliveryOption === 'delivery' && (
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest ml-1">Delivery Address</label>
+                          <div className="relative">
+                            <FaTruck className="absolute left-4 top-4 text-gray-400 text-sm" />
                             <textarea
                               name="address"
                               value={customerInfo.address}
                               onChange={(e) => setCustomerInfo(prev => ({ ...prev, address: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] focus:border-[#f58c55] resize-none"
-                              placeholder="Enter your delivery address"
-                              rows={3}
+                              className="w-full pl-11 pr-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] outline-none transition-all font-medium resize-none min-h-25"
+                              placeholder="Your full house address..."
                               required
                             />
                           </div>
-                          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                            <p className="text-sm text-blue-700 dark:text-blue-300">
-                              <span className="font-semibold">Note:</span> ₦{deliveryFee.toLocaleString()} delivery fee to {deliveryLocations.find(loc => loc.value === deliveryLocation)?.label} is included in your total.
-                            </p>
-                          </div>
-                        </>
+                        </div>
                       )}
-                      <SafeErrorDisplay error={orderError || paymentError} />
+
                       <div className="flex gap-3 pt-4">
                         <button
                           type="button"
-                          onClick={() => {
-                            setShowCustomerForm(false);
-                            setCustomerInfo({ name: '', email: '', phone: '', address: '' });
-                          }}
-                          className="flex-1 px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors"
+                          onClick={() => setShowCustomerForm(false)}
+                          className="flex-1 px-4 py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-2xl font-bold hover:bg-gray-200 transition-colors"
                         >
-                          Cancel
+                          Back
                         </button>
                         <button
                           type="submit"
                           disabled={isLoading || orderLoading || paymentLoading}
-                          className={`flex-1 px-4 py-2 rounded-lg transition-all duration-300 ${
-                            isLoading || orderLoading || paymentLoading
-                              ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 dark:text-gray-400 cursor-not-allowed'
-                              : 'bg-[#f58c55] hover:bg-[#f47a45] text-white'
-                          }`}
+                          className="flex-2 bg-[#f58c55] hover:bg-[#f47a45] text-white px-4 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-[#f58c55]/20 disabled:opacity-50"
                         >
-                          {isLoading || orderLoading || paymentLoading ? 'Processing...' : 'Continue to Payment'}
+                          {isLoading || orderLoading || paymentLoading ? 'Processing...' : 'Pay Now'}
                         </button>
                       </div>
                     </form>

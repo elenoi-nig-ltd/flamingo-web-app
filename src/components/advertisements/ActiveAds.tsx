@@ -18,9 +18,9 @@ interface Advertisement {
 }
 
 interface ActiveAdsProps {
-  location: string; // Ad location type
+  location: string; 
   className?: string;
-  viewMode?: 'carousel' | 'grid'; // Display mode
+  viewMode?: 'carousel' | 'grid'; 
 }
 
 export default function ActiveAds({ location, className = '', viewMode = 'grid' }: ActiveAdsProps) {

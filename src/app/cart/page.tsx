@@ -122,12 +122,13 @@ export default function CartPage() {
 
     try {
       const orderData = {
-        items: items.map((item) => ({
-          product: item.id,
-          name: item.name,
-          quantity: item.quantity,
-          isGift: item.isGift
-        })),
+        items: items
+          .filter(item => !item.isGift) // filter out gift items before sending to backend
+          .map((item) => ({
+            product: item.id,
+            name: item.name,
+            quantity: item.quantity,
+          })),
         totalAmount: totalWithFees,
         subtotal: subtotal,
         deliveryFee: deliveryFee,
@@ -493,7 +494,7 @@ export default function CartPage() {
                     onClick={() => setCheckoutStep('info')}
                     className="w-full bg-[#f58c55] hover:bg-[#f47a45] text-white py-4 sm:py-5 rounded-2xl font-extrabold text-base sm:text-lg transition-all shadow-lg shadow-orange-500/30 flex items-center justify-center space-x-2 sm:space-x-3 cursor-pointer"
                   >
-                    <span>Proceed to Delivery</span>
+                    <span>Proceed to Payment</span>
                     <FaCheckCircle className="text-sm sm:text-base" />
                   </button>
                 ) : (

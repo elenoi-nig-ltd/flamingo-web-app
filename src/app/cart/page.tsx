@@ -7,7 +7,7 @@ import {
   FaEnvelope, FaStore, FaTruck, FaDownload, 
   FaShoppingBasket, FaCreditCard, FaReceipt, 
   FaArrowLeft, FaCheckCircle, FaExclamationCircle,
-  FaGift
+  FaGift, FaClock
 } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { usePayments } from '@/hooks/usePayments';
@@ -284,6 +284,18 @@ export default function CartPage() {
                         </div>
                         <div className="hidden sm:block px-4 py-2 bg-white/20 rounded-lg text-xs font-bold backdrop-blur-md border border-white/30">
                           ₦0.00
+                        </div>
+                      </div>
+                    )}
+
+                    {hasFoodItem && (
+                      <div className="mx-4 sm:mx-6 mt-3 p-3.5 sm:p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl sm:rounded-2xl flex items-center space-x-3.5 shadow-sm">
+                        <FaClock className="text-amber-500 shrink-0 text-lg sm:text-xl" />
+                        <div>
+                          <p className="text-amber-800 dark:text-amber-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Ordering hours</p>
+                          <p className="text-amber-700 dark:text-amber-300 text-xs sm:text-sm font-medium">
+                            Online ordering closes at <span className="font-bold">9:30 PM</span> daily. Orders placed after this time will be processed the next morning.
+                          </p>
                         </div>
                       </div>
                     )}

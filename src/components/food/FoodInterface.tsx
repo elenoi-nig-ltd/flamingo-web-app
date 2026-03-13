@@ -13,7 +13,7 @@ import { BASEURL } from '@/config/api/contants';
 import Link from 'next/link';
 
 interface FoodInterfaceProps {
-  // Add any props if needed
+  // Add any props if needed(I thouht about adding a prop for initial category filter, but we can also read that from search params directly in the component)
 }
 
 interface Product {

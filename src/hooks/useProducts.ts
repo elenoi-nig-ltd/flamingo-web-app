@@ -14,6 +14,7 @@ interface Product {
   category: string;
   stock: number;
   images: string[];
+  isAvailable?: boolean;
 }
 
 interface CreateProductDto {
@@ -23,6 +24,7 @@ interface CreateProductDto {
   category: string;
   stock: number;
   images?: string[];
+  isAvailable?: boolean;
 }
 
 interface UpdateProductDto {
@@ -32,6 +34,7 @@ interface UpdateProductDto {
   category?: string;
   stock?: number;
   images?: string[];
+  isAvailable?: boolean;
 }
 
 export const useProducts = () => {

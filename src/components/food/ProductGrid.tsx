@@ -44,6 +44,7 @@ interface FoodProduct {
   price: number;
   description: string;
   inStock?: boolean;
+  isAvailable?: boolean;
 }
 
 const ProductGrid: React.FC<ProductGridProps> = ({
@@ -194,6 +195,13 @@ const ProductGrid: React.FC<ProductGridProps> = ({
               <div className="absolute top-2 right-2 bg-[#f58c55] text-white px-2 py-1 rounded-full text-sm font-semibold">
                 ₦{product.price.toLocaleString()}
               </div>
+              {product.isAvailable === false && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">
+                    Unavailable
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="p-4">
@@ -205,13 +213,18 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                   ₦{product.price.toLocaleString()}
                 </span>
                 <motion.button
-                  onClick={(e) => handleAddToCart(e, product)}
-                  className="bg-[#f58c55] hover:bg-[#f47a45] text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  onClick={(e) => product.isAvailable !== false && handleAddToCart(e, product)}
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+                    product.isAvailable !== false
+                      ? 'bg-[#f58c55] hover:bg-[#f47a45] text-white'
+                      : 'bg-gray-400 cursor-not-allowed text-gray-200'
+                  }`}
+                  whileHover={product.isAvailable !== false ? { scale: 1.05 } : {}}
+                  whileTap={product.isAvailable !== false ? { scale: 0.95 } : {}}
+                  disabled={product.isAvailable === false}
                 >
                   <FaShoppingCart />
-                  <span>Order</span>
+                  <span>{product.isAvailable !== false ? 'Order' : 'Unavailable'}</span>
                 </motion.button>
               </div>
 

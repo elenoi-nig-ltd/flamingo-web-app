@@ -1,13 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FaShoppingCart, FaArrowLeft, FaHeart, FaShare, FaPlus, FaMinus, FaCheckCircle } from 'react-icons/fa';
-import { useParams, useRouter } from 'next/navigation';
-import { useHomeItems } from '@/hooks/useHomeItems';
-import { useCart } from '@/hooks/useCart';
-import Toast from '@/components/ui/Toast';
-import Cart from '@/components/food/Cart'; // Import the Cart component
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import {
+  FaShoppingCart,
+  FaArrowLeft,
+  FaHeart,
+  FaShare,
+  FaPlus,
+  FaMinus,
+  FaCheckCircle,
+} from "react-icons/fa";
+import { useParams, useRouter } from "next/navigation";
+import { useHomeItems } from "@/hooks/useHomeItems";
+import { useCart } from "@/hooks/useCart";
+import Toast from "@/components/ui/Toast";
+import Cart from "@/components/food/Cart"; // Import the Cart component
 
 interface HomeItem {
   _id: string;
@@ -18,6 +26,7 @@ interface HomeItem {
   stock: number;
   images: string[];
   specifications?: Record<string, string>;
+  isAvailable?: boolean;
 }
 
 interface HomeItemDetailProps {
@@ -34,9 +43,9 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
     updateQuantity,
     clearCart,
     totalItems,
-    totalPrice
+    totalPrice,
   } = useCart();
-  
+
   const [product, setProduct] = useState<HomeItem | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -45,42 +54,45 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [toast, setToast] = useState<{
     message: string;
-    type: 'success' | 'error' | 'info';
+    type: "success" | "error" | "info";
     isVisible: boolean;
   }>({
-    message: '',
-    type: 'info',
-    isVisible: false
+    message: "",
+    type: "info",
+    isVisible: false,
   });
 
   // Find current product in cart to show current quantity
-  const cartItem = cartItems.find(item => item.id === productId);
+  const cartItem = cartItems.find((item) => item.id === productId);
 
   useEffect(() => {
     if (products.length > 0 && productId) {
-      const foundProduct = products.find(p => p._id === productId);
+      const foundProduct = products.find((p) => p._id === productId);
       setProduct(foundProduct || null);
     }
   }, [products, productId]);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  const showToast = (
+    message: string,
+    type: "success" | "error" | "info" = "info",
+  ) => {
     setToast({
       message,
       type,
-      isVisible: true
+      isVisible: true,
     });
   };
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart({ 
-        id: product._id, 
-        name: product.name, 
-        image: product.images[0] || '/assets/images/placeholder-home-item.jpg', 
-        price: product.price 
+      addToCart({
+        id: product._id,
+        name: product.name,
+        image: product.images[0] || "/assets/images/placeholder-home-item.jpg",
+        price: product.price,
       });
-      
-      showToast(`${product.name} added to cart!`, 'success');
+
+      showToast(`${product.name} added to cart!`, "success");
       setShowAddedNotification(true);
       setTimeout(() => setShowAddedNotification(false), 3000);
     }
@@ -90,10 +102,10 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
     if (product && newQuantity >= 0) {
       if (newQuantity === 0) {
         removeFromCart(product._id);
-        showToast(`${product.name} removed from cart`, 'info');
+        showToast(`${product.name} removed from cart`, "info");
       } else {
         updateQuantity(product._id, newQuantity);
-        showToast(`${product.name} quantity updated to ${newQuantity}`, 'info');
+        showToast(`${product.name} quantity updated to ${newQuantity}`, "info");
       }
     }
   };
@@ -102,7 +114,7 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
     if (product) {
       const newQuantity = (cartItem?.quantity || 0) + 1;
       if (newQuantity > product.stock) {
-        showToast(`Only ${product.stock} items available in stock`, 'error');
+        showToast(`Only ${product.stock} items available in stock`, "error");
         return;
       }
       handleUpdateQuantity(newQuantity);
@@ -121,11 +133,11 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
 
     // Add to cart first if not already there
     if (!cartItem) {
-      addToCart({ 
-        id: product._id, 
-        name: product.name, 
-        image: product.images[0] || '/assets/images/placeholder-home-item.jpg', 
-        price: product.price 
+      addToCart({
+        id: product._id,
+        name: product.name,
+        image: product.images[0] || "/assets/images/placeholder-home-item.jpg",
+        price: product.price,
       });
     }
 
@@ -146,35 +158,35 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
           url: window.location.href,
         });
       } catch (error) {
-        console.log('Error sharing:', error);
+        console.log("Error sharing:", error);
       }
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
-      showToast('Link copied to clipboard!', 'success');
+      showToast("Link copied to clipboard!", "success");
     }
   };
 
   // Cart handlers
   const handleRemoveFromCart = (productId: string) => {
-    const item = cartItems.find(item => item.id === productId);
+    const item = cartItems.find((item) => item.id === productId);
     removeFromCart(productId);
     if (item) {
-      showToast(`${item.name} removed from cart`, 'info');
+      showToast(`${item.name} removed from cart`, "info");
     }
   };
 
   const handleUpdateCartQuantity = (productId: string, quantity: number) => {
-    const item = cartItems.find(item => item.id === productId);
+    const item = cartItems.find((item) => item.id === productId);
     updateQuantity(productId, quantity);
     if (item && quantity > 0) {
-      showToast(`${item.name} quantity updated to ${quantity}`, 'info');
+      showToast(`${item.name} quantity updated to ${quantity}`, "info");
     }
   };
 
   const handleClearCart = () => {
     clearCart();
-    showToast('Cart cleared', 'info');
+    showToast("Cart cleared", "info");
   };
 
   if (loading) {
@@ -190,7 +202,10 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                 <div className="w-full h-96 bg-gray-300 dark:bg-gray-600 rounded-lg"></div>
                 <div className="flex gap-2">
                   {[...Array(4)].map((_, index) => (
-                    <div key={index} className="w-20 h-20 bg-gray-300 dark:bg-gray-600 rounded"></div>
+                    <div
+                      key={index}
+                      className="w-20 h-20 bg-gray-300 dark:bg-gray-600 rounded"
+                    ></div>
                   ))}
                 </div>
               </div>
@@ -226,16 +241,19 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
             <span>Go Back</span>
           </motion.button>
           <p className="text-red-500 text-lg mb-4">
-            {error ? 'Network error. Please try again later' : 'Product not found'}
+            {error
+              ? "Network error. Please try again later"
+              : "Product not found"}
           </p>
         </div>
       </div>
     );
   }
 
-  const productImages = product.images && product.images.length > 0 
-    ? product.images 
-    : ['/assets/images/placeholder-home-item.jpg'];
+  const productImages =
+    product.images && product.images.length > 0
+      ? product.images
+      : ["/assets/images/placeholder-home-item.jpg"];
 
   const currentCartQuantity = cartItem?.quantity || 0;
   const canAddMore = currentCartQuantity < product.stock;
@@ -311,13 +329,20 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                 className="w-full h-96 object-cover"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
-                  target.src = '/assets/images/placeholder-home-item.jpg';
+                  target.src = "/assets/images/placeholder-home-item.jpg";
                 }}
               />
               {product.stock === 0 && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
                   <span className="bg-red-500 text-white px-6 py-2 rounded-full font-bold text-lg">
                     Out of Stock
+                  </span>
+                </div>
+              )}
+              {product.isAvailable === false && (
+                <div className="absolute inset-0 bg-black/70 flex items-center justify-center rounded-lg">
+                  <span className="bg-red-600 text-white px-6 py-2 rounded-full font-bold text-lg uppercase tracking-wider">
+                    Currently Unavailable
                   </span>
                 </div>
               )}
@@ -331,9 +356,9 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
                     className={`flex-shrink-0 w-20 h-20 rounded-lg border-2 transition-all ${
-                      selectedImageIndex === index 
-                        ? 'border-[#f58c55]' 
-                        : 'border-gray-300 dark:border-gray-600 hover:border-[#f58c55]/50'
+                      selectedImageIndex === index
+                        ? "border-[#f58c55]"
+                        : "border-gray-300 dark:border-gray-600 hover:border-[#f58c55]/50"
                     }`}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -344,7 +369,7 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                       className="w-full h-full object-cover rounded-lg"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
-                        target.src = '/assets/images/placeholder-home-item.jpg';
+                        target.src = "/assets/images/placeholder-home-item.jpg";
                       }}
                     />
                   </motion.button>
@@ -367,27 +392,31 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                   {product.name}
                 </h1>
                 <div className="flex items-center space-x-4 mb-4">
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    product.stock > 0 
-                      ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
-                      : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
-                  }`}>
-                    {product.stock > 0 ? `In Stock (${product.stock} available)` : 'Out of Stock'}
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      product.stock > 0
+                        ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                        : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
+                    }`}
+                  >
+                    {product.stock > 0
+                      ? `In Stock (${product.stock} available)`
+                      : "Out of Stock"}
                   </span>
                   <span className="text-gray-600 dark:text-gray-400 text-sm">
                     Category: {product.category.name}
                   </span>
                 </div>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="flex space-x-2">
                 <motion.button
                   onClick={() => setIsFavorite(!isFavorite)}
                   className={`p-3 rounded-full transition-colors ${
-                    isFavorite 
-                      ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400' 
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    isFavorite
+                      ? "bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -407,7 +436,9 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
 
             {/* Price */}
             <div className="mb-6 bg-gradient-to-r from-[#f89b64]/20 to-[#f47a45]/20 dark:from-gray-800 dark:to-gray-700 p-6 rounded-2xl">
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Price</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Price
+              </p>
               <p className="text-4xl md:text-5xl font-bold text-[#f47a45] dark:text-[#f7a16b]">
                 ₦{product.price.toLocaleString()}
               </p>
@@ -424,21 +455,31 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
             </div>
 
             {/* Specifications */}
-            {product.specifications && Object.keys(product.specifications).length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
-                  Specifications
-                </h3>
-                <div className="space-y-2">
-                  {Object.entries(product.specifications).map(([key, value]) => (
-                    <div key={key} className="flex justify-between border-b border-gray-200 dark:border-gray-600 pb-2">
-                      <span className="text-gray-600 dark:text-gray-400 font-medium">{key}:</span>
-                      <span className="text-gray-800 dark:text-white">{value}</span>
-                    </div>
-                  ))}
+            {product.specifications &&
+              Object.keys(product.specifications).length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">
+                    Specifications
+                  </h3>
+                  <div className="space-y-2">
+                    {Object.entries(product.specifications).map(
+                      ([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex justify-between border-b border-gray-200 dark:border-gray-600 pb-2"
+                        >
+                          <span className="text-gray-600 dark:text-gray-400 font-medium">
+                            {key}:
+                          </span>
+                          <span className="text-gray-800 dark:text-white">
+                            {value}
+                          </span>
+                        </div>
+                      ),
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Cart Controls */}
             <div className="space-y-4">
@@ -447,8 +488,11 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                 <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center gap-2">
                   <FaCheckCircle className="text-blue-600 dark:text-blue-400" />
                   <span className="text-blue-800 dark:text-blue-300 text-sm font-medium">
-                    {currentCartQuantity} item{currentCartQuantity > 1 ? 's' : ''} in cart • 
-                    Total: <strong>₦{(product.price * currentCartQuantity).toLocaleString()}</strong>
+                    {currentCartQuantity} item
+                    {currentCartQuantity > 1 ? "s" : ""} in cart • Total:{" "}
+                    <strong>
+                      ₦{(product.price * currentCartQuantity).toLocaleString()}
+                    </strong>
                   </span>
                 </div>
               )}
@@ -456,7 +500,9 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
               {/* Quantity Controls */}
               {currentCartQuantity > 0 && (
                 <div className="flex items-center space-x-4">
-                  <span className="text-gray-800 dark:text-white font-medium">Quantity in cart:</span>
+                  <span className="text-gray-800 dark:text-white font-medium">
+                    Quantity in cart:
+                  </span>
                   <div className="flex items-center space-x-3">
                     <motion.button
                       onClick={handleDecrement}
@@ -466,11 +512,11 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                     >
                       <FaMinus size={12} />
                     </motion.button>
-                    
+
                     <span className="w-12 text-center text-lg font-semibold text-gray-800 dark:text-white">
                       {currentCartQuantity}
                     </span>
-                    
+
                     <motion.button
                       onClick={handleIncrement}
                       className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -481,7 +527,7 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                       <FaPlus size={12} />
                     </motion.button>
                   </div>
-                  
+
                   {!canAddMore && (
                     <span className="text-sm text-red-500 dark:text-red-400">
                       Max stock reached
@@ -495,27 +541,59 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
                 <div className="flex flex-col sm:flex-row gap-4">
                   {/* Order Button (Add to Cart) */}
                   <motion.button
-                    onClick={currentCartQuantity > 0 ? handleIncrement : handleAddToCart}
-                    disabled={product.stock === 0 || (currentCartQuantity > 0 && !canAddMore)}
+                    onClick={
+                      currentCartQuantity > 0
+                        ? handleIncrement
+                        : handleAddToCart
+                    }
+                    disabled={
+                      product.stock === 0 ||
+                      (currentCartQuantity > 0 && !canAddMore) ||
+                      product.isAvailable === false
+                    }
                     className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold transition-all ${
-                      product.stock === 0 || (currentCartQuantity > 0 && !canAddMore)
-                        ? 'bg-gray-400 dark:bg-gray-600 text-gray-200 cursor-not-allowed'
-                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-2 border-[#f47a45] dark:border-[#f7a16b] hover:bg-[#f47a45]/10 dark:hover:bg-[#f7a16b]/10'
+                      product.stock === 0 ||
+                      (currentCartQuantity > 0 && !canAddMore) ||
+                      product.isAvailable === false
+                        ? "bg-gray-400 dark:bg-gray-600 text-gray-200 cursor-not-allowed"
+                        : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-2 border-[#f47a45] dark:border-[#f7a16b] hover:bg-[#f47a45]/10 dark:hover:bg-[#f7a16b]/10"
                     }`}
-                    whileHover={product.stock > 0 && (currentCartQuantity === 0 || canAddMore) ? { scale: 1.02 } : {}}
-                    whileTap={product.stock > 0 && (currentCartQuantity === 0 || canAddMore) ? { scale: 0.98 } : {}}
+                    whileHover={
+                      product.stock > 0 &&
+                      (currentCartQuantity === 0 || canAddMore) &&
+                      product.isAvailable !== false
+                        ? { scale: 1.02 }
+                        : {}
+                    }
+                    whileTap={
+                      product.stock > 0 &&
+                      (currentCartQuantity === 0 || canAddMore) &&
+                      product.isAvailable !== false
+                        ? { scale: 0.98 }
+                        : {}
+                    }
                   >
                     <FaShoppingCart />
-                    {currentCartQuantity > 0 ? 'Add More' : 'Order'}
+                    {product.isAvailable === false
+                      ? "Unavailable"
+                      : currentCartQuantity > 0
+                        ? "Add More"
+                        : "Order"}
                   </motion.button>
 
                   {/* Pay Button (Open Cart) */}
                   <motion.button
                     onClick={handleBuyNow}
-                    disabled={product.stock === 0}
+                    disabled={
+                      product.stock === 0 || product.isAvailable === false
+                    }
                     className="flex-1 px-6 py-4 bg-gradient-to-r from-[#f89b64] to-[#f47a45] dark:from-[#f7a16b] dark:to-[#f47a45] text-white rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={
+                      product.isAvailable !== false ? { scale: 1.02 } : {}
+                    }
+                    whileTap={
+                      product.isAvailable !== false ? { scale: 0.98 } : {}
+                    }
                   >
                     Pay
                   </motion.button>
@@ -544,17 +622,26 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {products
-              .filter(p => p._id !== product._id && p.category._id === product.category._id)
+              .filter(
+                (p) =>
+                  p._id !== product._id &&
+                  p.category._id === product.category._id,
+              )
               .slice(0, 4)
-              .map(relatedProduct => (
+              .map((relatedProduct) => (
                 <motion.div
                   key={relatedProduct._id}
                   className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                   whileHover={{ y: -5 }}
-                  onClick={() => router.push(`/home-items/${relatedProduct._id}`)}
+                  onClick={() =>
+                    router.push(`/home-items/${relatedProduct._id}`)
+                  }
                 >
                   <img
-                    src={relatedProduct.images[0] || '/assets/images/placeholder-home-item.jpg'}
+                    src={
+                      relatedProduct.images[0] ||
+                      "/assets/images/placeholder-home-item.jpg"
+                    }
                     alt={relatedProduct.name}
                     className="w-full h-48 object-cover"
                   />
@@ -577,7 +664,7 @@ const HomeItemDetail = ({ productId }: HomeItemDetailProps) => {
         message={toast.message}
         type={toast.type}
         isVisible={toast.isVisible}
-        onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
+        onClose={() => setToast((prev) => ({ ...prev, isVisible: false }))}
       />
     </div>
   );

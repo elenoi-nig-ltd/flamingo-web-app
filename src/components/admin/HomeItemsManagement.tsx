@@ -24,6 +24,7 @@ interface HomeItem {
   category: HomeItemCategory;
   stock: number;
   images: string[];
+  isAvailable?: boolean;
 }
 
 interface HomeItemFormData {
@@ -33,6 +34,7 @@ interface HomeItemFormData {
   category: string;
   stock: number;
   images: string[];
+  isAvailable: boolean;
 }
 
 interface HomeItemApiPayload {
@@ -42,6 +44,7 @@ interface HomeItemApiPayload {
   category: string;
   stock: number;
   images: string[];
+  isAvailable: boolean;
 }
 
 interface CategoryFormData {
@@ -78,6 +81,7 @@ const HomeItemManagement = () => {
     category: '',
     stock: 0,
     images: [],
+    isAvailable: true,
   });
   const [categoryFormData, setCategoryFormData] = useState<CategoryFormData>({
     name: '',
@@ -126,8 +130,9 @@ const HomeItemManagement = () => {
   };
 
   const handleHomeItemInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setHomeItemFormData((prev) => ({ ...prev, [name]: name === 'price' || name === 'stock' ? Number(value) : value }));
+    const { name, value, type } = e.target;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setHomeItemFormData((prev) => ({ ...prev, [name]: name === 'price' || name === 'stock' ? Number(value) : val }));
     setHomeItemFormErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
@@ -229,6 +234,7 @@ const HomeItemManagement = () => {
       category: homeItemFormData.category,
       stock: homeItemFormData.stock,
       images: homeItemFormData.images,
+      isAvailable: homeItemFormData.isAvailable,
     };
     console.log('Submitting home item:', JSON.stringify(homeItemData, null, 2));
 
@@ -238,7 +244,7 @@ const HomeItemManagement = () => {
       } else {
         await createHomeItem(homeItemData);
       }
-      setHomeItemFormData({ name: '', description: '', price: 0, category: '', stock: 0, images: [] });
+      setHomeItemFormData({ name: '', description: '', price: 0, category: '', stock: 0, images: [], isAvailable: true });
       setIsEditing(false);
       setCurrentHomeItemId(null);
       setHomeItemFormErrors({});
@@ -285,6 +291,7 @@ const HomeItemManagement = () => {
       category: homeItem.category._id,
       stock: homeItem.stock,
       images: homeItem.images,
+      isAvailable: homeItem.isAvailable ?? true,
     });
     setHomeItemFormErrors({});
   };
@@ -606,6 +613,19 @@ const HomeItemManagement = () => {
               </p>
             )}
           </div>
+          <div className="flex items-center space-x-3 p-3 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50 rounded-xl">
+            <input
+              type="checkbox"
+              id="isAvailable"
+              name="isAvailable"
+              checked={homeItemFormData.isAvailable}
+              onChange={handleHomeItemInputChange}
+              className="w-5 h-5 accent-[#f58c55] focus:ring-[#f58c55] border-gray-300 rounded transition-all duration-300"
+            />
+            <label htmlFor="isAvailable" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+              Available for Sale
+            </label>
+          </div>
           <div className="md:col-span-2">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description
@@ -731,6 +751,7 @@ const HomeItemManagement = () => {
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Category</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Price</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Stock</th>
+                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Status</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Actions</th>
               </tr>
             </thead>
@@ -753,6 +774,15 @@ const HomeItemManagement = () => {
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{homeItem.category?.name || 'Uncategorized'}</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">₦{homeItem.price.toFixed(2)}</td>
                     <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{homeItem.stock}</td>
+                    <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        homeItem.isAvailable !== false
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                      }`}>
+                        {homeItem.isAvailable !== false ? 'Available' : 'Unavailable'}
+                      </span>
+                    </td>
                     <td className="py-3 px-4 flex space-x-3">
                       <motion.button
                         onClick={() => handleEditHomeItem(homeItem)}

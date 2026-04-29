@@ -184,6 +184,13 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 <div className="absolute top-2 right-2 bg-pink-600 text-white px-2 py-1 rounded-full text-sm font-semibold">
                   ₦{(product.price || 0).toLocaleString()}
                 </div>
+                {product.isAvailable === false && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                      Unavailable
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Product Info */}
@@ -221,28 +228,36 @@ const ProductGrid: React.FC<ProductGridProps> = ({
                 {/* Price and Add to Cart */}
                 <div className="flex items-center justify-between">
                   <span className="text-pink-600 font-bold text-lg">₦{(product.price || 0).toLocaleString()}</span>
+                  
                   <button
-                    onClick={() => onAddToCart({
+                    onClick={() => product.isAvailable !== false && onAddToCart({
                       id: product._id,
                       name: product.name,
                       image: product.images?.[0] || '/assets/images/placeholder-food.jpg',
                       price: product.price || 0
                     })}
-                    className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors flex items-center space-x-2"
-                    disabled={!product.stock || product.stock <= 0}
+                    className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
+                      product.isAvailable !== false && product.stock > 0
+                        ? 'bg-pink-600 text-white hover:bg-pink-700'
+                        : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                    }`}
+                    disabled={!product.stock || product.stock <= 0 || product.isAvailable === false}
                   >
                     <FaShoppingCart size={16} />
-                    <span>Add</span>
+                    <span>{product.isAvailable !== false ? 'Add' : 'Unavailable'}</span>
                   </button>
                 </div>
 
                 {/* Stock Status */}
                 {typeof product.stock === 'number' && (
-                  <div className="mt-2 text-xs text-gray-500">
+                  <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
                     {product.stock > 0 ? (
                       <span className="text-green-600">In Stock ({product.stock})</span>
                     ) : (
                       <span className="text-red-600">Out of Stock</span>
+                    )}
+                    {product.isAvailable === false && (
+                      <span className="text-red-500 font-medium">Currently Unavailable</span>
                     )}
                   </div>
                 )}

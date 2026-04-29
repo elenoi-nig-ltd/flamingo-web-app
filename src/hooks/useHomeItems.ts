@@ -16,6 +16,7 @@ interface HomeItem {
   category: Category;
   stock: number;
   images: string[];
+  isAvailable?: boolean;
 }
 
 interface HomeItemApiPayload {
@@ -25,6 +26,7 @@ interface HomeItemApiPayload {
   category: string;
   stock: number;
   images: string[];
+  isAvailable?: boolean;
 }
 
 interface UseHomeItemsReturn {

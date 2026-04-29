@@ -23,6 +23,7 @@ interface Product {
   category: string | Category | null;
   stock: number;
   images: string[];
+  isAvailable?: boolean;
 }
 
 interface ProductFormData {
@@ -32,6 +33,7 @@ interface ProductFormData {
   category: string;
   stock: number;
   images: string[];
+  isAvailable: boolean;
 }
 
 interface FormErrors {
@@ -57,6 +59,7 @@ const ProductManagement = () => {
     category: '',
     stock: 0,
     images: [],
+    isAvailable: true,
   });
   const [imageUploading, setImageUploading] = useState<boolean>(false);
   const [formErrors, setFormErrors] = useState<FormErrors>({});
@@ -86,8 +89,9 @@ const ProductManagement = () => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: name === 'price' || name === 'stock' ? Number(value) : value }));
+    const { name, value, type } = e.target;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setFormData((prev) => ({ ...prev, [name]: name === 'price' || name === 'stock' ? Number(value) : val }));
     setFormErrors((prev) => ({ ...prev, [name]: undefined }));
   };
 
@@ -160,6 +164,7 @@ const ProductManagement = () => {
       category: formData.category,
       stock: formData.stock,
       images: formData.images,
+      isAvailable: formData.isAvailable,
     };
 
     try {
@@ -168,7 +173,7 @@ const ProductManagement = () => {
       } else {
         await createProduct(productData);
       }
-      setFormData({ name: '', description: '', price: 0, category: '', stock: 0, images: [] });
+      setFormData({ name: '', description: '', price: 0, category: '', stock: 0, images: [], isAvailable: true });
       setIsEditing(false);
       setCurrentProductId(null);
       setFormErrors({});
@@ -187,6 +192,7 @@ const ProductManagement = () => {
       category: typeof product.category === 'string' ? product.category : product.category?._id || '',
       stock: product.stock,
       images: product.images,
+      isAvailable: product.isAvailable ?? true,
     });
     setFormErrors({});
   };
@@ -356,6 +362,19 @@ const ProductManagement = () => {
               </p>
             )}
           </div>
+          <div className="flex items-center space-x-3 p-3 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50 rounded-xl">
+            <input
+              type="checkbox"
+              id="isAvailable"
+              name="isAvailable"
+              checked={formData.isAvailable}
+              onChange={handleInputChange}
+              className="w-5 h-5 accent-[#f58c55] focus:ring-[#f58c55] border-gray-300 rounded transition-all duration-300"
+            />
+            <label htmlFor="isAvailable" className="text-sm font-medium text-gray-700 dark:text-gray-300 cursor-pointer">
+              Available for Sale
+            </label>
+          </div>
           <div className="md:col-span-2">
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Description
@@ -472,6 +491,7 @@ const ProductManagement = () => {
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Category</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Price</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Stock</th>
+                <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Status</th>
                 <th className="py-3 px-4 text-left text-gray-800 dark:text-gray-200 font-semibold">Actions</th>
               </tr>
             </thead>
@@ -493,6 +513,15 @@ const ProductManagement = () => {
                   <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{getCategoryName(product.category)}</td>
                   <td className="py-3 px-4 text-gray-700 dark:text-gray-300">₦{product.price.toFixed(2)}</td>
                   <td className="py-3 px-4 text-gray-700 dark:text-gray-300">{product.stock}</td>
+                  <td className="py-3 px-4 text-gray-700 dark:text-gray-300">
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      product.isAvailable !== false
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                        : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                    }`}>
+                      {product.isAvailable !== false ? 'Available' : 'Unavailable'}
+                    </span>
+                  </td>
                   <td className="py-3 px-4 flex space-x-3">
                     <motion.button
                       onClick={() => handleEdit(product)}

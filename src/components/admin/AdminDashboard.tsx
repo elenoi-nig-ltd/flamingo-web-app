@@ -89,6 +89,7 @@ const AdminDashboard = () => {
           <FaShoppingCart className="text-[#f58c55] dark:text-[#f7a16b] text-4xl" />
         </motion.div>
 
+
         <motion.div
           className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between"
           whileHover={{ scale: 1.05, boxShadow: '0 10px 20px rgba(245, 140, 85, 0.2)' }}

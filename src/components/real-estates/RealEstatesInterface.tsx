@@ -384,9 +384,10 @@ const RealEstates = () => {
                       <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-1 line-clamp-2">{estate.title}</h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{estate.area} sq ft • {estate.bedrooms} beds • {estate.bathrooms} baths</p>
                       {estate.propertyType === 'lodge' && (
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          {/* Room numbers display removed as requested */}
-                        </p>
+                        <div className="mt-2 flex items-center text-sm font-medium text-amber-700 dark:text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2.5 py-1 rounded-lg w-fit">
+                          <span className="mr-1.5">🏨</span>
+                          {estate.roomsBooked ?? 0} rooms booked
+                        </div>
                       )}
                       <div className="mt-3 flex gap-2">
                         <button

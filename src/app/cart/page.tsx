@@ -11,7 +11,7 @@ import {
 } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
 import { usePayments } from '@/hooks/usePayments';
-import { useOrders } from '@/hooks/useOrders';
+import { useOrders, DeliveryZone } from '@/hooks/useOrders';
 import { useAuth } from '@/hooks/useAuth';
 import { useCart } from '@/hooks/useCart';
 import { toPng } from 'html-to-image';
@@ -63,7 +63,7 @@ export default function CartPage() {
   const router = useRouter();
   const { displayItems: items, totalPrice, updateQuantity, removeFromCart, clearCart, totalItems, hasFoodItem } = useCart();
   const { initiatePayment, loading: paymentLoading, error: paymentError } = usePayments();
-  const { createOrder, loading: orderLoading, error: orderError } = useOrders();
+  const { createOrder, fetchDeliveryZones, loading: orderLoading, error: orderError } = useOrders();
   const { user } = useAuth();
 
   const [checkoutStep, setCheckoutStep] = useState<'review' | 'info'>('review');
@@ -75,20 +75,24 @@ export default function CartPage() {
     phone: '',
     address: '',
   });
-  const [deliveryOption, setDeliveryOption] = useState<'pickup' | 'delivery'>('pickup');
-  const [deliveryLocation, setDeliveryLocation] = useState<string>('gidan-kwano');
+  const [deliveryOption, setDeliveryOption] = useState<'pickup' | 'delivery'>('delivery');
+  const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
+  const [selectedZoneId, setSelectedZoneId] = useState<string>('gidan_kwano_dama');
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Delivery locations with prices
-  const deliveryLocations = [
-    { value: 'gidan-kwano', label: 'Gidan Kwano/Dama', price: 600 },
-    { value: 'gidan-mangoro', label: 'Gidan Mangoro', price: 800 },
-    { value: 'albishiri', label: 'Albishiri/Kpakungu axis', price: 1200 },
-    { value: 'bosso', label: 'Bosso', price: 2000 },
-    { value: 'minna-town', label: 'Minna (Town)', price: 2000 },
-  ];
+  // Fetch Delivery Zones from backend
+  useEffect(() => {
+    async function loadZones() {
+      const zones = await fetchDeliveryZones();
+      if (zones && zones.length > 0) {
+        setDeliveryZones(zones);
+        setSelectedZoneId(zones[0].id);
+      }
+    }
+    loadZones();
+  }, []);
 
-  // Pre-fill user info if logged in (Excluding phone as requested)
+  // Pre-fill user info if logged in
   useEffect(() => {
     if (user) {
       setCustomerInfo(prev => ({
@@ -99,17 +103,16 @@ export default function CartPage() {
     }
   }, [user]);
 
+  const activeZone = deliveryZones.find(z => z.id === selectedZoneId);
   const subtotal = totalPrice;
-  const deliveryFee = deliveryOption === 'delivery' 
-    ? deliveryLocations.find(loc => loc.value === deliveryLocation)?.price || 600
-    : 0;
+  const deliveryFee = deliveryOption === 'delivery' ? (activeZone?.fee || 0) : 0;
   const totalWithFees = subtotal + deliveryFee;
 
   const handleCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
-      setErrorMessage('Please fill in all fields');
+      setErrorMessage('Please fill in all customer details');
       return;
     }
 
@@ -121,44 +124,39 @@ export default function CartPage() {
     setIsLoading(true);
 
     try {
-      const orderData = {
+      const orderPayload = {
         items: items
-          .filter(item => !item.isGift) // filter out gift items before sending to backend
+          .filter(item => !item.isGift)
           .map((item) => ({
             product: item.id,
-            name: item.name,
+            productType: (item as any).productType || 'food',
             quantity: item.quantity,
           })),
-        totalAmount: totalWithFees,
-        subtotal: subtotal,
-        deliveryFee: deliveryFee,
         deliveryOption: deliveryOption,
-        deliveryLocation: deliveryOption === 'delivery' ? deliveryLocations.find(loc => loc.value === deliveryLocation)?.label : undefined,
+        deliveryZoneId: deliveryOption === 'delivery' ? selectedZoneId : undefined,
         deliveryAddress: deliveryOption === 'delivery' ? customerInfo.address : undefined,
-        customerName: customerInfo.name,
-        customerEmail: customerInfo.email,
-        customerPhone: customerInfo.phone,
-        status: 'pending' as const,
+        customerName: customerInfo.name.trim(),
+        customerEmail: customerInfo.email.trim(),
+        customerPhone: customerInfo.phone.trim(),
       };
 
-      const order = await createOrder(orderData);
-      if (!order) throw new Error('Failed to create order');
+      const result = await createOrder(orderPayload);
+      if (!result || !result.order) throw new Error('Failed to create order');
 
-      const paymentData = {
+      const { order, guestAccessToken } = result;
+
+      const paymentResult = await initiatePayment({
         orderId: order._id,
-        email: customerInfo.email,
-        amount: totalWithFees,
-        currency: 'NGN',
-      };
+        guestAccessToken: guestAccessToken || undefined,
+      });
 
-      const paymentResult = await initiatePayment(paymentData);
       if (!paymentResult) throw new Error('Failed to initiate payment');
 
-      // Store order data for callback
       const pendingOrder = {
         orderId: order._id,
-        items: orderData.items,
-        totalAmount: totalWithFees,
+        guestAccessToken,
+        items: orderPayload.items,
+        totalAmount: order.totalAmount,
         status: 'pending',
         tx_ref: paymentResult.transactionId,
         customerInfo,
@@ -387,7 +385,7 @@ export default function CartPage() {
                           </div>
                         </div>
                         <div className="space-y-1.5 sm:space-y-2">
-                          <label className="text-[10px] sm:text-sm font-bold text-gray-500 ml-1 uppercase tracking-wider">Phone Number</label>
+                          <label className="text-[10px] sm:text-sm font-bold text-gray-500 ml-1 uppercase tracking-wider">Phone Number (Nigerian)</label>
                           <div className="relative group">
                             <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors text-sm sm:text-base" />
                             <input
@@ -427,7 +425,7 @@ export default function CartPage() {
                               value={customerInfo.address}
                               onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
                               className="w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-[#f58c55] outline-none font-medium resize-none min-h-25 sm:min-h-30 text-sm sm:text-base"
-                              placeholder="Tell us exactly where to bring your food..."
+                              placeholder="Tell us exactly where to bring your order..."
                             />
                           </div>
                         </div>
@@ -471,14 +469,14 @@ export default function CartPage() {
 
                 {deliveryOption === 'delivery' && (
                   <div className="space-y-2">
-                    <p className="text-[10px] sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Location</p>
+                    <p className="text-[10px] sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Delivery Zone</p>
                     <select
-                      value={deliveryLocation}
-                      onChange={(e) => setDeliveryLocation(e.target.value)}
+                      value={selectedZoneId}
+                      onChange={(e) => setSelectedZoneId(e.target.value)}
                       className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 font-bold text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#f58c55]/20 cursor-pointer"
                     >
-                      {deliveryLocations.map(loc => (
-                        <option key={loc.value} value={loc.value}>{loc.label} (+₦{loc.price})</option>
+                      {deliveryZones.map(zone => (
+                        <option key={zone.id} value={zone.id}>{zone.name} (+₦{zone.fee.toLocaleString()})</option>
                       ))}
                     </select>
                   </div>
@@ -490,8 +488,8 @@ export default function CartPage() {
                     <span>₦{subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-gray-500 font-medium text-sm sm:text-base">
-                    <span>Service Fee</span>
-                    <span>{deliveryFee > 0 ? `₦${deliveryFee.toLocaleString()}` : 'Free'}</span>
+                    <span>Delivery Fee</span>
+                    <span>{deliveryOption === 'pickup' ? 'Free (Pickup)' : `₦${deliveryFee.toLocaleString()}`}</span>
                   </div>
                   <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-700">
                     <span className="text-lg sm:text-xl font-bold">Total</span>

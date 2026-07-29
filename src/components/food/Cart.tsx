@@ -162,52 +162,41 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
     setIsLoading(true);
 
     try {
-      const orderData = {
+      const orderPayload = {
         items: items.map((item) => ({
           product: item.id,
-          name: item.name,
+          productType: (item as any).productType || (orderType === 'home-items' ? 'goods' : 'food'),
           quantity: item.quantity,
         })),
-        totalAmount: totalWithFees,
-        subtotal: subtotal,
-        deliveryFee: deliveryFee,
-        deliveryOption: deliveryOption,
-        deliveryLocation: deliveryOption === 'delivery' ? deliveryLocations.find(loc => loc.value === deliveryLocation)?.label : undefined,
+        deliveryOption,
+        deliveryZoneId: deliveryOption === 'delivery' ? (deliveryLocation === 'gidan-kwano' ? 'gidan_kwano_dama' : deliveryLocation === 'gidan-mangoro' ? 'gidan_mangoro' : deliveryLocation === 'albishiri' ? 'albishiri_kpakungu' : deliveryLocation === 'bosso' ? 'bosso' : 'minna_town') : undefined,
         deliveryAddress: deliveryOption === 'delivery' ? customerInfo.address : undefined,
-        customerName: customerInfo.name,
-        customerEmail: customerInfo.email,
-        customerPhone: customerInfo.phone,
-        status: 'pending' as const,
+        customerName: customerInfo.name.trim(),
+        customerEmail: customerInfo.email.trim(),
+        customerPhone: customerInfo.phone.trim(),
       };
 
-      console.log('Creating order:', orderData);
-      const order = await createOrder(orderData);
+      console.log('Creating order:', orderPayload);
+      const result = await createOrder(orderPayload);
       
-      if (!order) {
+      if (!result || !result.order) {
         throw new Error('Failed to create order - no order returned');
       }
 
-      console.log('Order created successfully:', order);
+      const { order, guestAccessToken } = result;
 
-      const paymentData = {
+      const paymentResult = await initiatePayment({
         orderId: order._id,
-        email: customerInfo.email,
-        amount: totalWithFees,
-        currency: 'NGN',
-      };
-
-      console.log('Initiating payment:', paymentData);
-      const paymentResult = await initiatePayment(paymentData);
+        guestAccessToken: guestAccessToken || undefined,
+      });
       
       if (!paymentResult) {
         throw new Error('Failed to initiate payment - no payment result returned');
       }
 
-      console.log('Payment initiated successfully:', paymentResult);
-
-      // Trigger the success callback to show free water alert
       if (onOrderSuccess) {
         onOrderSuccess();
+      }
       }
 
       // Store order data in both sessionStorage AND localStorage as backup

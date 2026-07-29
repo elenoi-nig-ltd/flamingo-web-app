@@ -15,11 +15,10 @@ export interface Payment {
   paymentProvider: 'paystack';
 }
 
-export interface CreatePaymentDto {
+export interface InitiatePaymentDto {
   orderId: string;
-  email: string;
-  amount: number;
-  currency?: string;
+  guestAccessToken?: string;
+  mobileCallbackUrl?: string;
 }
 
 export interface InitiatePaymentResponse {
@@ -33,7 +32,6 @@ export const usePayments = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Helper: Handle fetch errors consistently
   const handleFetchError = async (response: Response): Promise<never> => {
     let message = 'An unexpected error occurred';
     try {
@@ -46,10 +44,10 @@ export const usePayments = () => {
   };
 
   /**
-   * Initiate Paystack payment
+   * Initiate Paystack payment using backend-authoritative order ID
    */
   const initiatePayment = async (
-    paymentData: CreatePaymentDto
+    paymentData: InitiatePaymentDto
   ): Promise<InitiatePaymentResponse | null> => {
     setLoading(true);
     setError(null);
@@ -60,10 +58,7 @@ export const usePayments = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...paymentData,
-          currency: paymentData.currency || 'NGN',
-        }),
+        body: JSON.stringify(paymentData),
         credentials: 'include',
       });
 
@@ -97,8 +92,6 @@ export const usePayments = () => {
     setError(null);
 
     try {
-      console.log('Verifying payment with reference:', transactionId);
-
       const response = await fetch(`${BASEURL}/payments/verify/${encodeURIComponent(transactionId)}`, {
         method: 'GET',
         credentials: 'include',
@@ -109,7 +102,6 @@ export const usePayments = () => {
       }
 
       const payment: Payment = await response.json();
-      console.log('Payment verified:', payment.status);
       return payment;
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to verify payment';
@@ -121,15 +113,12 @@ export const usePayments = () => {
     }
   };
 
-  /**
-   * Optional: Alias for clarity (Paystack uses "reference")
-   */
   const verifyPaymentByReference = verifyPayment;
 
   /**
    * Get payment by order ID
    */
-  const getPaymentByOrderId = async (orderId: string): Promise<Payment | null> => {
+  const getPaymentByOrderId = async (orderId: string, guestToken?: string): Promise<Payment | null> => {
     if (!orderId) {
       setError('Order ID is required');
       return null;
@@ -139,8 +128,19 @@ export const usePayments = () => {
     setError(null);
 
     try {
-      const response = await fetch(`${BASEURL}/payments/order/${orderId}`, {
+      const url = guestToken
+        ? `${BASEURL}/payments/order/guest/${orderId}`
+        : `${BASEURL}/payments/order/${orderId}`;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (guestToken) {
+        headers['x-guest-token'] = guestToken;
+      }
+
+      const response = await fetch(url, {
         method: 'GET',
+        headers,
         credentials: 'include',
       });
 
@@ -167,6 +167,6 @@ export const usePayments = () => {
     getPaymentByOrderId,
     loading,
     error,
-    setError, // optional: allow clearing error
+    setError,
   };
 };

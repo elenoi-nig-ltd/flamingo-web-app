@@ -18,9 +18,9 @@ interface Advertisement {
 }
 
 interface ActiveAdsProps {
-  location: string; // Ad location type
+  location: string; 
   className?: string;
-  viewMode?: 'carousel' | 'grid'; // Display mode
+  viewMode?: 'carousel' | 'grid'; 
 }
 
 export default function ActiveAds({ location, className = '', viewMode = 'grid' }: ActiveAdsProps) {
@@ -38,7 +38,7 @@ export default function ActiveAds({ location, className = '', viewMode = 'grid' 
     if (ads.length > 1) {
       const interval = setInterval(() => {
         setCurrentAdIndex((prev) => (prev + 1) % ads.length);
-      }, 5000); // Rotate every 5 seconds
+      }, 5000); 
 
       return () => clearInterval(interval);
     }

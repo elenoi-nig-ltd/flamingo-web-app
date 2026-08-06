@@ -25,6 +25,7 @@ export class CloudinaryError extends Error {
   }
 }
 
+
 /**
  * Uploads an image file to Cloudinary
  * @param file - The image file to upload

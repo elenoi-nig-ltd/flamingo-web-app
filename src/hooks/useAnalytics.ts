@@ -56,6 +56,10 @@ export interface OperationsAnalytics {
     catalogProductsOutOfStock: number;
     catalogHomeItemsOutOfStock: number;
   };
+  catalogue?: {
+    food: { total: number; healthy: number; low: number; outOfStock: number };
+    homeItems: { total: number; healthy: number; low: number; outOfStock: number };
+  };
   advertisements: {
     total: number;
     pending: number;
@@ -78,6 +82,14 @@ export interface OperationsAnalytics {
     total: number;
     createdInPeriod: number;
     byRole: Record<'admin' | 'staff' | 'customer' | 'landlord', number>;
+  };
+  traffic?: {
+    uniqueVisitors: number;
+    sessions: number;
+    pageViews: number;
+    viewsPerSession: number;
+    series: Array<{ period: string; uniqueVisitors: number; sessions: number; pageViews: number }>;
+    topPages: Array<{ path: string; pageViews: number }>;
   };
 }
 
@@ -144,11 +156,13 @@ function useAnalyticsRequest<T>(
       to: filters.to,
       timezone: filters.timezone ?? 'Africa/Lagos',
       granularity: filters.granularity ?? 'day',
+      _t: Date.now().toString(),
     });
 
-    setState({ data: null, loading: true, error: null });
+    setState((prev) => ({ ...prev, loading: true, error: null }));
 
     fetch(`${BASEURL}/admin/analytics/${endpoint}?${params}`, {
+      cache: 'no-store',
       headers: getAuthHeaders(),
       signal: controller.signal,
     })
@@ -168,7 +182,7 @@ function useAnalyticsRequest<T>(
       .then((data) => setState({ data, loading: false, error: null }))
       .catch((error: Error) => {
         if (error.name !== 'AbortError') {
-          setState({ data: null, loading: false, error: error.message });
+          setState((prev) => ({ ...prev, loading: false, error: error.message }));
         }
       });
 

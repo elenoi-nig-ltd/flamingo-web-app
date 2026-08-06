@@ -90,8 +90,8 @@ const [paymentStatus, setPaymentStatus] = useState<{
   // --------------------------------------------------------------
   const verifyPayment = async (reference: string): Promise<boolean> => {
     try {
-      await axios.get(`${BASEURL}/payments/verify/${reference}`);
-      return true;
+      const response = await axios.get(`${BASEURL}/payments/verify/${encodeURIComponent(reference)}`);
+      return response.data?.status === 'completed';
     } catch (err) {
       console.error('Backend verification failed', err);
       return false;

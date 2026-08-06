@@ -9,6 +9,7 @@ import Topbar from './Topbar';
 import WhatsAppButton from '@/components/ui/WhatsAppButton'; 
 import { SidebarProvider, useSidebar } from './admin/SidebarContext';
 import { CartProvider } from '@/contexts/CartContext';
+import TrafficTracker from './TrafficTracker';
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -84,6 +85,7 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   return (
     <CartProvider>
       <SidebarProvider>
+        <TrafficTracker />
         <LayoutContent>{children}</LayoutContent>
       </SidebarProvider>
     </CartProvider>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BASEURL } from '@/config/api/contants';
+import { clearAuthSession, isAuthTokenExpired } from '@/utils/auth';
 
 interface User {
   id: string;
@@ -93,6 +94,13 @@ export const useAuth = () => {
       if (!token) {
         setLoading(false);
         localStorage.removeItem('user');
+        return;
+      }
+
+      if (isAuthTokenExpired(token)) {
+        clearAuthSession();
+        setUser(null);
+        setLoading(false);
         return;
       }
 

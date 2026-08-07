@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { getErrorMessage } from '@/utils/checkout';
 
 export const BASEURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:6000';
 
@@ -36,7 +37,7 @@ export const usePayments = () => {
     let message = 'An unexpected error occurred';
     try {
       const data = await response.json();
-      message = data.message || data.error || message;
+      message = getErrorMessage(data, message);
     } catch {
       // Ignore JSON parse error
     }

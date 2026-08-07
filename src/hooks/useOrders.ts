@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
-import { getCookie } from 'cookies-next';
 import { BASEURL } from '@/config/api/contants';
+import { getAuthHeaders } from '@/utils/auth';
+import { getErrorMessage } from '@/utils/checkout';
 
 export interface OrderItem {
   product: string;
@@ -50,7 +51,7 @@ export interface DeliveryZone {
 }
 
 interface UpdateOrderDto {
-  status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'expired';
 }
 
 export const useOrders = () => {
@@ -94,19 +95,14 @@ export const useOrders = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = getCookie('token');
       const response = await fetch(`${BASEURL}/orders`, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to fetch orders: ${response.status}`);
+        throw new Error(getErrorMessage(errorData, `Failed to fetch orders: ${response.status}`));
       }
 
       const data = await response.json();
@@ -123,25 +119,21 @@ export const useOrders = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = getCookie('token');
-      const headers: Record<string, string> = {
+      const headers = {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
       const response = await fetch(`${BASEURL}/orders`, {
         method: 'POST',
         headers,
         body: JSON.stringify(orderData),
-        credentials: 'include',
       });
 
       const responseData = await response.json();
 
       if (!response.ok || !responseData) {
-        throw new Error(responseData?.message || `Failed to create order: ${response.status}`);
+        throw new Error(getErrorMessage(responseData, `Failed to create order: ${response.status}`));
       }
 
       return responseData;
@@ -165,20 +157,15 @@ export const useOrders = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = getCookie('token');
       const response = await fetch(`${BASEURL}/orders/${id}`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(orderData),
-        credentials: 'include',
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to update order: ${response.status}`);
+        throw new Error(getErrorMessage(errorData, `Failed to update order: ${response.status}`));
       }
 
       const updatedOrder = await response.json();
@@ -203,19 +190,14 @@ export const useOrders = () => {
     setLoading(true);
     setError(null);
     try {
-      const token = getCookie('token');
       const response = await fetch(`${BASEURL}/orders/${id}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: getAuthHeaders(),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to delete order: ${response.status}`);
+        throw new Error(getErrorMessage(errorData, `Failed to delete order: ${response.status}`));
       }
 
       setOrders((currentOrders) => currentOrders.filter((order) => order._id !== id));

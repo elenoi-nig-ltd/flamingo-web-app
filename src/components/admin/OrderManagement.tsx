@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useOrders } from '@/hooks/useOrders';
 import { useProducts } from '@/hooks/useProducts';
 import { useAuth } from '@/hooks/useAuth';
@@ -18,7 +18,7 @@ interface OrderItem {
 interface OrderFormData {
   items: OrderItem[];
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'expired';
 }
 
 interface FormErrors {
@@ -44,14 +44,18 @@ const OrdersManagement = () => {
   const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [showOrderDetails, setShowOrderDetails] = useState<boolean>(false);
+  const orderFormRef = useRef<HTMLDivElement>(null);
+  const statusInputRef = useRef<HTMLSelectElement>(null);
 
   const validateForm = () => {
     const errors: FormErrors = {};
-    if (formData.items.length === 0 || formData.items.some((item) => !item.product || item.quantity <= 0)) {
-      errors.items = 'At least one valid item with positive quantity is required';
+    if (!isEditing) {
+      if (formData.items.length === 0 || formData.items.some((item) => !item.product || item.quantity <= 0)) {
+        errors.items = 'At least one valid item with positive quantity is required';
+      }
+      if (formData.totalAmount <= 0) errors.totalAmount = 'Total amount must be greater than 0';
     }
-    if (formData.totalAmount <= 0) errors.totalAmount = 'Total amount must be greater than 0';
-    if (!['pending', 'processing', 'shipped', 'delivered', 'cancelled'].includes(formData.status)) {
+    if (!['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'expired'].includes(formData.status)) {
       errors.status = 'Invalid status';
     }
     setFormErrors(errors);
@@ -110,7 +114,7 @@ const OrdersManagement = () => {
     }
   };
 
-  const handleEdit = (order: { _id: string; items: { product: { _id: string; name: string } | null; quantity: number }[]; totalAmount: number; status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' }) => {
+  const handleEdit = (order: { _id: string; items: { product: { _id: string; name: string } | null; quantity: number }[]; totalAmount: number; status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'expired' }) => {
     setIsEditing(true);
     setCurrentOrderId(order._id);
     setFormData({
@@ -122,6 +126,10 @@ const OrdersManagement = () => {
       status: order.status,
     });
     setFormErrors({});
+    requestAnimationFrame(() => {
+      orderFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      statusInputRef.current?.focus({ preventScroll: true });
+    });
   };
 
   const handleDeleteClick = (id: string) => {
@@ -191,6 +199,7 @@ const OrdersManagement = () => {
 
       {/* Order Form */}
       <motion.div
+        ref={orderFormRef}
         className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-8 rounded-xl shadow-lg mb-10 w-full border border-gray-200/50 dark:border-gray-700/50"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -231,6 +240,7 @@ const OrdersManagement = () => {
               Status
             </label>
             <select
+              ref={statusInputRef}
               id="status"
               name="status"
               value={formData.status}
@@ -247,6 +257,7 @@ const OrdersManagement = () => {
               <option value="shipped" className="text-gray-900 dark:text-gray-200">Shipped</option>
               <option value="delivered" className="text-gray-900 dark:text-gray-200">Delivered</option>
               <option value="cancelled" className="text-gray-900 dark:text-gray-200">Cancelled</option>
+              <option value="expired" className="text-gray-900 dark:text-gray-200">Expired</option>
             </select>
             {formErrors.status && (
               <p id="status-error" className="text-red-500 dark:text-red-400 text-sm mt-1">

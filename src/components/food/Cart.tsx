@@ -8,6 +8,7 @@ import { useOrders } from '@/hooks/useOrders';
 import { useAuth } from '@/hooks/useAuth';
 import { toPng } from 'html-to-image';
 import DistributedAds from '@/components/advertisements/DistributedAds';
+import { getErrorMessage, NIGERIAN_PHONE_MESSAGE, NIGERIAN_PHONE_PATTERN } from '@/utils/checkout';
 
 interface CartItem {
   id: string;
@@ -33,66 +34,18 @@ interface CartProps {
 const SafeErrorDisplay = ({ error }: { error: any }) => {
   if (!error) return null;
 
-  let displayText = 'An error occurred';
-
-  if (typeof error === 'string') {
-    displayText = error;
-  } else if (error instanceof Error) {
-    displayText = error.message;
-  } else if (typeof error === 'object' && error !== null) {
-    const errorObj = error as any;
-    if (errorObj.message) {
-      if (Array.isArray(errorObj.message.message)) {
-        displayText = errorObj.message.message.join(', ');
-      } else if (typeof errorObj.message.message === 'string') {
-        displayText = errorObj.message.message;
-      } else if (errorObj.message.error) {
-        displayText = errorObj.message.error;
-      } else {
-        displayText = errorObj.message;
-      }
-    } else if (errorObj.error) {
-      displayText = errorObj.error;
-    } else {
-      try {
-        displayText = JSON.stringify(error);
-      } catch {
-        displayText = 'An unknown error occurred';
-      }
-    }
-  }
+  const displayText = getErrorMessage(error, 'An error occurred');
 
   return (
     <p className="text-red-600 text-sm mb-4">{displayText}</p>
   );
 };
 
-// Error Modal component
-const ErrorModal = ({ message, onClose }: { message: string; onClose: () => void }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 dark:bg-gray-900/50">
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-md mx-4"
-    >
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Error</h3>
-        <p className="text-gray-600 dark:text-gray-400">{message}</p>
-      </div>
-      <button
-        onClick={onClose}
-        className="w-full px-4 py-2 bg-[#f58c55] hover:bg-[#f47a45] text-white rounded-lg transition-all duration-300"
-      >
-        Close
-      </button>
-    </motion.div>
-  </div>
-);
-
 const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveItem, onClearCart, onOrderSuccess, orderType = 'food' }: CartProps) => {
   const [showCustomerForm, setShowCustomerForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
@@ -149,12 +102,18 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
   const handleCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
+    if (!customerInfo.name.trim() || !customerInfo.email.trim() || !customerInfo.phone.trim()) {
       setErrorMessage('Please fill in all fields');
       return;
     }
 
-    if (deliveryOption === 'delivery' && !customerInfo.address) {
+    if (!NIGERIAN_PHONE_PATTERN.test(customerInfo.phone.trim())) {
+      setPhoneError(NIGERIAN_PHONE_MESSAGE);
+      setErrorMessage(NIGERIAN_PHONE_MESSAGE);
+      return;
+    }
+
+    if (deliveryOption === 'delivery' && !customerInfo.address.trim()) {
       setErrorMessage('Please enter your delivery address');
       return;
     }
@@ -236,36 +195,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
     } catch (error) {
       console.error('Checkout error details:', error);
       
-      let errorMessage = 'An error occurred during checkout';
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      } else if (typeof error === 'object' && error !== null) {
-        const errorObj = error as any;
-        if (errorObj.message) {
-          if (Array.isArray(errorObj.message.message)) {
-            errorMessage = errorObj.message.message.join(', ');
-          } else if (typeof errorObj.message.message === 'string') {
-            errorMessage = errorObj.message.message;
-          } else if (errorObj.message.error) {
-            errorMessage = errorObj.message.error;
-          } else {
-            errorMessage = errorObj.message;
-          }
-        } else if (errorObj.error) {
-          errorMessage = errorObj.error;
-        } else {
-          try {
-            errorMessage = JSON.stringify(error);
-          } catch {
-            errorMessage = 'An unknown error occurred';
-          }
-        }
-      }
-      
-      setErrorMessage(`Checkout failed: ${errorMessage}`);
+      setErrorMessage(`Checkout failed: ${getErrorMessage(error, 'An error occurred during checkout')}`);
     } finally {
       setIsLoading(false);
     }
@@ -277,6 +207,10 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
       ...prev,
       [name]: value,
     }));
+    if (name === 'phone') {
+      setPhoneError(value && !NIGERIAN_PHONE_PATTERN.test(value.trim()) ? NIGERIAN_PHONE_MESSAGE : null);
+    }
+    setErrorMessage(null);
   };
 
   const clearCart = () => {
@@ -715,7 +649,7 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                       </div>
                     </div>
                     
-                    <SafeErrorDisplay error={orderError || paymentError} />
+                    <SafeErrorDisplay error={orderError || paymentError || errorMessage} />
                     
                     <div className="grid grid-cols-5 gap-3">
                       <button
@@ -801,11 +735,16 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                               name="phone"
                               value={customerInfo.phone}
                               onChange={handleInputChange}
-                              className="w-full pl-11 pr-4 py-3.5 border border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] outline-none transition-all font-medium"
+                              pattern="(?:\+234|0)[789][01][0-9]{8}"
+                              inputMode="tel"
+                              aria-invalid={phoneError ? 'true' : 'false'}
+                              aria-describedby={phoneError ? 'checkout-phone-error' : undefined}
+                              className={`w-full pl-11 pr-4 py-3.5 border rounded-2xl bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#f58c55] outline-none transition-all font-medium ${phoneError ? 'border-red-500' : 'border-gray-200 dark:border-gray-700'}`}
                               placeholder="08012345678"
                               required
                             />
                           </div>
+                          {phoneError && <p id="checkout-phone-error" className="text-sm text-red-600 dark:text-red-400">{phoneError}</p>}
                         </div>
                       </div>
 
@@ -825,6 +764,8 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                           </div>
                         </div>
                       )}
+
+                      <SafeErrorDisplay error={orderError || paymentError || errorMessage} />
 
                       <div className="flex gap-3 pt-4">
                         <button
@@ -847,12 +788,6 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
                 </div>
               )}
 
-              {errorMessage && (
-                <ErrorModal
-                  message={errorMessage}
-                  onClose={() => setErrorMessage(null)}
-                />
-              )}
             </div>
           </motion.div>
         </>

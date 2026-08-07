@@ -17,39 +17,13 @@ import { useCart } from '@/hooks/useCart';
 import { toPng } from 'html-to-image';
 import DistributedAds from '@/components/advertisements/DistributedAds';
 import Header from '@/components/Header';
+import { getErrorMessage, NIGERIAN_PHONE_MESSAGE, NIGERIAN_PHONE_PATTERN } from '@/utils/checkout';
 
 // Safe error display component
 const SafeErrorDisplay = ({ error }: { error: any }) => {
   if (!error) return null;
 
-  let displayText = 'An error occurred';
-
-  if (typeof error === 'string') {
-    displayText = error;
-  } else if (error instanceof Error) {
-    displayText = error.message;
-  } else if (typeof error === 'object' && error !== null) {
-    const errorObj = error as any;
-    if (errorObj.message) {
-      if (Array.isArray(errorObj.message.message)) {
-        displayText = errorObj.message.message.join(', ');
-      } else if (typeof errorObj.message.message === 'string') {
-        displayText = errorObj.message.message;
-      } else if (errorObj.message.error) {
-        displayText = errorObj.message.error;
-      } else {
-        displayText = errorObj.message;
-      }
-    } else if (errorObj.error) {
-      displayText = errorObj.error;
-    } else {
-      try {
-        displayText = JSON.stringify(error);
-      } catch {
-        displayText = 'An unknown error occurred';
-      }
-    }
-  }
+  const displayText = getErrorMessage(error, 'An error occurred');
 
   return (
     <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl flex items-center space-x-3 mt-4">
@@ -69,6 +43,7 @@ export default function CartPage() {
   const [checkoutStep, setCheckoutStep] = useState<'review' | 'info'>('review');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
@@ -111,12 +86,18 @@ export default function CartPage() {
   const handleCustomerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
+    if (!customerInfo.name.trim() || !customerInfo.email.trim() || !customerInfo.phone.trim()) {
       setErrorMessage('Please fill in all customer details');
       return;
     }
 
-    if (deliveryOption === 'delivery' && !customerInfo.address) {
+    if (!NIGERIAN_PHONE_PATTERN.test(customerInfo.phone.trim())) {
+      setPhoneError(NIGERIAN_PHONE_MESSAGE);
+      setErrorMessage(NIGERIAN_PHONE_MESSAGE);
+      return;
+    }
+
+    if (deliveryOption === 'delivery' && !customerInfo.address.trim()) {
       setErrorMessage('Please enter your delivery address');
       return;
     }
@@ -168,7 +149,7 @@ export default function CartPage() {
       localStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
       window.location.href = paymentResult.paymentUrl;
     } catch (error: any) {
-      setErrorMessage(error.message || 'Checkout failed');
+      setErrorMessage(getErrorMessage(error, 'Checkout failed'));
     } finally {
       setIsLoading(false);
     }
@@ -392,11 +373,21 @@ export default function CartPage() {
                               type="tel"
                               required
                               value={customerInfo.phone}
-                              onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
-                              className="w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-[#f58c55] outline-none font-medium text-sm sm:text-base"
+                              onChange={(e) => {
+                                const phone = e.target.value;
+                                setCustomerInfo({...customerInfo, phone});
+                                setPhoneError(phone && !NIGERIAN_PHONE_PATTERN.test(phone.trim()) ? NIGERIAN_PHONE_MESSAGE : null);
+                                setErrorMessage(null);
+                              }}
+                              pattern="(?:\+234|0)[789][01][0-9]{8}"
+                              inputMode="tel"
+                              aria-invalid={phoneError ? 'true' : 'false'}
+                              aria-describedby={phoneError ? 'phone-error' : undefined}
+                              className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border focus:ring-2 focus:ring-[#f58c55] outline-none font-medium text-sm sm:text-base ${phoneError ? 'border-red-500' : 'border-gray-100 dark:border-gray-700'}`}
                               placeholder="e.g. 08012345678"
                             />
                           </div>
+                          {phoneError && <p id="phone-error" className="text-sm text-red-600 dark:text-red-400">{phoneError}</p>}
                         </div>
                       </div>
 

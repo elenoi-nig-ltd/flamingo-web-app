@@ -504,7 +504,7 @@ function DashboardContent({ operations, executive, isAdmin }: { operations: Oper
     { label: 'Cancelled', value: operations.bookings.cancelled, color: '#f43f5e' },
     { label: 'Expired', value: operations.bookings.expired, color: '#64748b' },
   ];
-  const change = executive?.summary.revenueChangePercentage;
+  const change = executive?.summary.revenueChangePercentage ?? null;
 
   return (
     <>
@@ -943,5 +943,4 @@ export default function AdminDashboard() {
     </main>
   );
 }
-
 

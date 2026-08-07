@@ -197,13 +197,17 @@ const Cart = ({ isOpen, items, totalPrice, onClose, onUpdateQuantity, onRemoveIt
       if (onOrderSuccess) {
         onOrderSuccess();
       }
-      }
 
       // Store order data in both sessionStorage AND localStorage as backup
       const pendingOrder = {
         orderId: order._id,
-        items: orderData.items,
-        totalAmount: totalWithFees,
+        guestAccessToken,
+        items: items.map((item) => ({
+          product: item.id,
+          name: item.name,
+          quantity: item.quantity,
+        })),
+        totalAmount: order.totalAmount,
         subtotal: subtotal,
         deliveryFee: deliveryFee,
         deliveryOption: deliveryOption,

@@ -21,6 +21,12 @@ export interface CreateOrderDto {
   customerPhone: string;
 }
 
+export interface AdminCreateOrderDto {
+  items: Array<{ product: string; quantity: number }>;
+  totalAmount: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+}
+
 export interface OrderCreatedResponse {
   order: {
     _id: string;
@@ -41,6 +47,10 @@ export interface DeliveryZone {
   id: string;
   name: string;
   fee: number;
+}
+
+interface UpdateOrderDto {
+  status?: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
 }
 
 export const useOrders = () => {
@@ -109,7 +119,7 @@ export const useOrders = () => {
     }
   };
 
-  const createOrder = async (orderData: CreateOrderDto): Promise<OrderCreatedResponse | null> => {
+  const createOrder = async (orderData: CreateOrderDto | AdminCreateOrderDto): Promise<OrderCreatedResponse | null> => {
     setLoading(true);
     setError(null);
     try {
@@ -145,6 +155,78 @@ export const useOrders = () => {
     }
   };
 
+  const updateOrder = async (id: string, orderData: UpdateOrderDto) => {
+    const role = getUserRole();
+    if (role !== 'admin') {
+      setError('Unauthorized access');
+      return null;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const token = getCookie('token');
+      const response = await fetch(`${BASEURL}/orders/${id}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to update order: ${response.status}`);
+      }
+
+      const updatedOrder = await response.json();
+      setOrders((currentOrders) => currentOrders.map((order) => (order._id === id ? updatedOrder : order)));
+      return updatedOrder;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while updating order';
+      setError(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteOrder = async (id: string) => {
+    const role = getUserRole();
+    if (role !== 'admin') {
+      setError('Unauthorized access');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const token = getCookie('token');
+      const response = await fetch(`${BASEURL}/orders/${id}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to delete order: ${response.status}`);
+      }
+
+      setOrders((currentOrders) => currentOrders.filter((order) => order._id !== id));
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while deleting order';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const clearError = () => {
     setError(null);
   };
@@ -165,6 +247,8 @@ export const useOrders = () => {
     loading,
     error,
     createOrder,
+    updateOrder,
+    deleteOrder,
     fetchDeliveryZones,
     fetchOrders,
     clearError,

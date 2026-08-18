@@ -505,19 +505,31 @@ function DashboardContent({ operations, executive, isAdmin }: { operations: Oper
     { label: 'Expired', value: operations.bookings.expired, color: '#64748b' },
   ];
   const change = executive?.summary.revenueChangePercentage ?? null;
+  const platformChange = executive?.summary.platformRevenueChangePercentage ?? change;
+
+  const ordersRevenue = executive?.summary.collectedRevenue ?? 0;
+  const adsRevenue =
+    executive?.advertisements.totalRevenue ??
+    (executive?.advertisements.paystackLabeledRevenue ?? 0) +
+      (executive?.advertisements.manuallyConfirmedRevenue ?? 0);
+  const bookingsRevenue = executive?.bookings.knownPaidAmount ?? 0;
+  const internetRevenue = executive?.internet?.knownPaidAmount ?? 0;
+  const totalPlatformRevenue =
+    executive?.summary.totalPlatformRevenue ??
+    ordersRevenue + adsRevenue + bookingsRevenue + internetRevenue;
 
   return (
     <>
-      {/* KPI Cards Grid */}
+      {/* Primary KPI Cards Grid */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
         {hasFinancialAnalytics ? (
           <MetricCard
-            label="Collected revenue"
-            value={money.format(executive.summary.collectedRevenue)}
-            note={change === null ? 'No comparable prior-period revenue' : 'against the previous period'}
-            change={change}
+            label="Full Platform Revenue"
+            value={money.format(totalPlatformRevenue)}
+            note={platformChange === null ? 'All domains (Orders, Ads, Bookings, Internet)' : 'vs previous period across all domains'}
+            change={platformChange}
             icon={<DollarSign className="h-5 w-5" />}
-            accent={change !== null && change < 0 ? 'orange' : 'green'}
+            accent={platformChange !== null && platformChange < 0 ? 'orange' : 'green'}
           />
         ) : (
           <MetricCard
@@ -549,6 +561,46 @@ function DashboardContent({ operations, executive, isAdmin }: { operations: Oper
           accent="orange"
         />
       </div>
+
+      {/* Domain Revenue Breakdown Section */}
+      {hasFinancialAnalytics && (
+        <section className="space-y-3 sm:space-y-4">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Revenue by Domain</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Financial earnings split across app domains in the selected period</p>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <MetricCard
+              label="Food & Product Orders"
+              value={money.format(ordersRevenue)}
+              note={`${number.format(executive.summary.paidOrderCount)} paid orders`}
+              icon={<ShoppingBag className="h-5 w-5" />}
+              accent="orange"
+            />
+            <MetricCard
+              label="Advertisements"
+              value={money.format(adsRevenue)}
+              note={`${number.format((executive.advertisements.paystackLabeledPaymentCount ?? 0) + (executive.advertisements.manuallyConfirmedPaymentCount ?? 0))} ad payments`}
+              icon={<Megaphone className="h-5 w-5" />}
+              accent="violet"
+            />
+            <MetricCard
+              label="Bookings"
+              value={money.format(bookingsRevenue)}
+              note={`${number.format(executive.bookings.paidCount)} completed booking payments`}
+              icon={<CalendarCheck className="h-5 w-5" />}
+              accent="blue"
+            />
+            <MetricCard
+              label="Internet Purchases"
+              value={money.format(internetRevenue)}
+              note={`${number.format(executive.internet?.paidCount ?? 0)} internet vouchers purchased`}
+              icon={<TrendingUp className="h-5 w-5" />}
+              accent="green"
+            />
+          </div>
+        </section>
+      )}
 
       {/* Site Traffic Section */}
       <section className="space-y-3 sm:space-y-4">
@@ -817,8 +869,8 @@ function DashboardContent({ operations, executive, isAdmin }: { operations: Oper
 export default function AdminDashboard() {
   const { user, loading: authLoading } = useAuth();
   const isAdmin = user?.role === 'admin';
-  const [rangeKey, setRangeKey] = useState<RangeKey>('30d');
-  const [filters, setFilters] = useState<AnalyticsFilters>(() => getRange('30d'));
+  const [rangeKey, setRangeKey] = useState<RangeKey>('today');
+  const [filters, setFilters] = useState<AnalyticsFilters>(() => getRange('today'));
   const operations = useOperationsAnalytics(filters, Boolean(user));
   const executive = useExecutiveAnalytics(filters, isAdmin);
 

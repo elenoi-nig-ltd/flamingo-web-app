@@ -96,6 +96,9 @@ export interface OperationsAnalytics {
 export interface ExecutiveAnalytics {
   period: AnalyticsPeriod & { currency: 'NGN' };
   summary: {
+    totalPlatformRevenue?: number;
+    previousTotalPlatformRevenue?: number;
+    platformRevenueChangePercentage?: number | null;
     collectedRevenue: number;
     previousCollectedRevenue: number;
     revenueChangePercentage: number | null;
@@ -107,6 +110,8 @@ export interface ExecutiveAnalytics {
     period: string;
     orders: number;
     advertisements: number;
+    bookings?: number;
+    internet?: number;
     total: number;
   }>;
   advertisements: {
@@ -114,18 +119,24 @@ export interface ExecutiveAnalytics {
     paystackLabeledPaymentCount: number;
     manuallyConfirmedRevenue: number;
     manuallyConfirmedPaymentCount: number;
-    includedInCollectedRevenue: false;
+    totalRevenue?: number;
+    includedInCollectedRevenue: boolean;
   };
   bookings: {
     paidCount: number;
     knownPaidAmount: number;
     unknownAmountCount: number;
-    includedInCollectedRevenue: false;
+    includedInCollectedRevenue: boolean;
+  };
+  internet?: {
+    paidCount: number;
+    knownPaidAmount: number;
+    includedInCollectedRevenue: boolean;
   };
   dataQuality: {
-    partialRefundsSupported: false;
-    bookingRevenueIncluded: false;
-    internetRevenueIncluded: false;
+    partialRefundsSupported: boolean;
+    bookingRevenueIncluded: boolean;
+    internetRevenueIncluded: boolean;
     warnings: string[];
   };
 }

@@ -177,14 +177,14 @@ const RotatingWords = () => {
       <div style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.4s ease-in-out', minHeight: '60px' }}>
         {index < words.length ? (
           <p className="text-xl md:text-2xl font-bold text-white">
-            Nigeria's No.1 Student Platform for{' '}
+            Buy, sell and discover{' '}
             <span className="inline-block min-w-[220px] text-left text-yellow-300">
               {words[index]}
             </span>
           </p>
         ) : showFinal ? (
           <p className="text-2xl md:text-3xl font-bold text-amber-300">
-            An atmosphere of good feelings
+            Everything Minna. One Marketplace.
           </p>
         ) : null}
       </div>
@@ -449,11 +449,16 @@ export default function LandingPage() {
         <section className="w-full bg-gradient-to-r from-[#f89b64] dark:from-gray-800 to-[#f47a45] dark:to-gray-700 text-white dark:text-gray-200 text-center py-12 md:py-16 rounded-b-[50px] shadow-lg dark:shadow-gray-900 transition-all duration-300">
           <div className="container mx-auto px-4">
             <h1 className="text-5xl md:text-7xl font-bold mb-2" style={{ fontFamily: 'Parisienne, cursive' }}>
-              Welcome to Flamingo
+              Everything Minna. One Marketplace.
             </h1>
             <RotatingWords />
+            <p className="text-base md:text-lg font-medium mt-4 max-w-2xl mx-auto text-white/90">
+              Buy, sell, rent and discover what you need around Minna. Find
+              properties, vehicles, phones, electronics, household items,
+              services, food, internet and more.
+            </p>
             <p className="text-lg md:text-xl font-semibold mt-8 tracking-wide">
-              What do you want to buy?
+              What are you looking for?
             </p>
             <div className="flex flex-col md:flex-row justify-center gap-4 px-4 mt-6">
               {categoriesLoading ? (
@@ -475,7 +480,7 @@ export default function LandingPage() {
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
                         onFocus={() => setSearchOpen(true)}
-                        placeholder="I am looking for..."
+                        placeholder="Search houses, cars, phones, furniture, services..."
                         className="flex-1 px-3 py-3 bg-transparent text-gray-800 dark:text-gray-200 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none"
                       />
                       {searchQuery && (

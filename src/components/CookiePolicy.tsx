@@ -80,8 +80,7 @@ const CookiePolicy = () => {
           <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             Your Cookie Choices
           </h2>
-          <ul className="list-disc list-inside text-gray-7
-System: 00 dark:text-gray-300 leading-relaxed">
+          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 leading-relaxed">
             <li>
               <span className="font-medium">Browser Settings:</span> You can manage cookie preferences through your browser settings.
             </li>

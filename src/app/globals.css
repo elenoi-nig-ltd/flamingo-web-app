@@ -1,23 +1,93 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Parisienne&display=swap');
+/*@import url('https://fonts.googleapis.com/css2?family=Parisienne&display=swap');*/
 @import "tailwindcss";
+
+/*
+ * Dark mode is class-based, not media-query based.
+ *
+ * This project is Tailwind v4, which no longer loads `tailwind.config.js` on
+ * its own — the `darkMode: 'class'` in that file has no effect. Without this
+ * directive the `dark:` variant falls back to `prefers-color-scheme`, so the
+ * whole site silently followed the visitor's OS using styling that was written
+ * for an explicit toggle. `ThemeProvider` owns the `.dark` class on <html>;
+ * this makes the `dark:` utilities respond to it.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Warm neutral scale.
+ *
+ * Tailwind's stock `gray` is cool — gray-900 is #101828, hue ~220°, very close
+ * to the complement of this brand's hue. Against cream (#f8f5e6, ~48°) and
+ * terracotta (#f58c55, ~22°) that made dark mode read as a different product
+ * and turned the orange muddy.
+ *
+ * These overrides re-point the whole scale to a warm greige family running from
+ * hue 22–38°, so every existing `bg-gray-*` / `text-gray-*` / `border-gray-*`
+ * reference warms at once, in both themes, with no component edits.
+ *
+ * Contrast on the dark surfaces clears WCAG AA comfortably:
+ *   gray-100 on gray-900  14.9:1
+ *   gray-300 on gray-800   9.2:1
+ *   gray-400 on gray-900   6.5:1
+ *
+ * Saturation matters more than hue here. An earlier pass used 18–24% at the
+ * dark end, which stopped reading as warm grey and read as dark brown instead;
+ * the dark end is held to ~9–11%, in line with Tailwind's `stone`, while the
+ * light end stays creamy so it still matches the brand's cream surfaces.
+ */
+@theme {
+  --color-gray-50: #faf8f4;
+  --color-gray-100: #f0ebe3;
+  --color-gray-200: #e5ded2;
+  --color-gray-300: #cdc6bb;
+  --color-gray-400: #a39c92;
+  --color-gray-500: #837c72;
+  --color-gray-600: #5c564e;
+  --color-gray-700: #36322c;
+  --color-gray-800: #262320;
+  --color-gray-900: #1a1815;
+  --color-gray-950: #100e0c;
+}
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --font-poppins: 'Poppins', sans-serif; /* Define the variable */
+  /*
+   * `--font-poppins` is deliberately NOT defined here.
+   *
+   * It used to be hardcoded as `"Poppins", sans-serif`, which silently beat the
+   * value `next/font` sets from `layout.tsx` — both land on :root/<html>, and
+   * the literal won. Swapping the font in layout.tsx therefore changed nothing.
+   * `next/font` is now the only writer of this variable; to change the typeface,
+   * change the `next/font` import in layout.tsx and nothing else.
+   */
+  color-scheme: light;
+}
+
+/*
+ * Mirrors `ThemeProvider`. Kept in step with the warm `gray-900` above so the
+ * body background and the app's `dark:bg-gray-900` surfaces are the same colour,
+ * and so native controls — the homepage category <select>, scrollbars, focus
+ * rings — render light or dark with the rest of the page instead of always light.
+ */
+/*
+ * Mirrors `ThemeProvider`. Referencing the theme tokens rather than repeating
+ * their hex values means the body background can never drift from the app's
+ * `dark:bg-gray-900` surfaces — which it did, twice.
+ *
+ * `color-scheme` is what makes native controls — the homepage category
+ * <select>, scrollbars, focus rings — render light or dark with the rest of the
+ * page instead of always light.
+ */
+.dark {
+  --background: var(--color-gray-900);
+  --foreground: var(--color-gray-100);
+  color-scheme: dark;
 }
 
 @theme inline {
   --font-sans: var(--font-poppins);
   --font-mono: var(--font-poppins); /* Or use a monospace font */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

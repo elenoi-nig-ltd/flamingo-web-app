@@ -16,8 +16,17 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const { isOpen } = useSidebar();
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
+  // Marketplace location/category/listing hub pages (spec §2, §4, §5) and the
+  // Minna guide (spec §10) should always render the global chrome.
+  const isMarketplaceRoute =
+    pathname === '/minna' ||
+    pathname.startsWith('/minna/') ||
+    pathname === '/minna-guide' ||
+    pathname.startsWith('/minna-guide/');
+
   // Routes where header should be shown (home, auth pages, and dynamic product pages)
-  const showHeader = ['/', '/admin/login', '/admin/register', '/terms', '/policy', '/cookies', '/cancellation'].includes(pathname) || 
+  const showHeader = ['/', '/admin/login', '/admin/register', '/terms', '/policy', '/cookies', '/cancellation', '/search'].includes(pathname) || 
+                    isMarketplaceRoute ||
                     /^\/[a-zA-Z0-9-]+\/[a-zA-Z0-9]+$/.test(pathname);
   
   // Routes where sidebar should be shown (admin routes)
@@ -27,8 +36,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const showTopbar = showSidebar;
 
   // Define the routes where you want to show the footer
-  const showFooterRoutes = ['/', '/food', '/home-items', '/real-estates'];
+  const showFooterRoutes = ['/', '/food', '/home-items', '/real-estates', '/search'];
   const showFooter = showFooterRoutes.some(route => pathname.startsWith(route)) || 
+                    isMarketplaceRoute ||
                     /^\/[a-zA-Z0-9-]+\/[a-zA-Z0-9]+$/.test(pathname);
 
   useEffect(() => {

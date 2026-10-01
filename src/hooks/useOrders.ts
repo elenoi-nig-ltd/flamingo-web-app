@@ -25,7 +25,7 @@ export interface CreateOrderDto {
 export interface AdminCreateOrderDto {
   items: Array<{ product: string; quantity: number }>;
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'expired';
 }
 
 export interface OrderCreatedResponse {

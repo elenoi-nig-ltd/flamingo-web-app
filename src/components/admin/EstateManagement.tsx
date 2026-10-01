@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealEstates } from '@/hooks/useRealEstates';
 import { uploadMultipleImagesToCloudinary, CloudinaryUploadResponse } from '@/utils/cloudinary';
+import { MINNA_AREAS } from '@/config/marketplace';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSpinner, FaTimes, FaArrowLeft, FaArrowRight, FaCheckCircle, FaRegCircle, FaUndo } from 'react-icons/fa';
 
@@ -15,6 +16,7 @@ interface RealEstate {
   description: string;
   price: number;
   address: string;
+  areaName?: string;
   propertyType: string;
   bedrooms: number;
   bathrooms: number;
@@ -54,6 +56,7 @@ const EstateManagement = () => {
     description: '',
     price: '',
     address: '',
+    areaName: '',
     propertyType: '',
     bedrooms: '',
     bathrooms: '',
@@ -203,14 +206,6 @@ const EstateManagement = () => {
       setUploadError('Price must be a valid number greater than 0');
       return;
     }
-    if (isNaN(area) || area <= 0) {
-      setUploadError('Area must be a valid number greater than 0');
-      return;
-    }
-    if (formData.propertyType === 'lodge' && (!totalRooms || totalRooms < 1)) {
-      setUploadError('Total rooms must be at least 1 for lodges');
-      return;
-    }
 
     setUploadLoading(true);
 
@@ -240,6 +235,9 @@ const EstateManagement = () => {
       description: formData.description,
       price,
       address: formData.address,
+      state: 'Niger State',
+      city: 'Minna',
+      areaName: formData.areaName || undefined,
       propertyType: formData.propertyType,
       bedrooms,
       bathrooms,
@@ -429,6 +427,22 @@ const EstateManagement = () => {
                 <option value="condo" className="text-gray-900 dark:text-gray-200">Condo</option>
                 <option value="townhouse" className="text-gray-900 dark:text-gray-200">Townhouse</option>
                 <option value="land" className="text-gray-900 dark:text-gray-200">Land</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Minna Area (Optional)</label>
+              <select
+                name="areaName"
+                value={formData.areaName}
+                onChange={handleInputChange}
+                className="w-full p-3 bg-white/50 dark:bg-gray-700/50 backdrop-blur-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#f58c55]/50 dark:focus:ring-[#f7a16b]/50 transition-all duration-300 text-gray-900 dark:text-gray-200 border-gray-200/50 dark:border-gray-600/50"
+              >
+                <option value="" className="text-gray-900 dark:text-gray-200">Select Area</option>
+                {MINNA_AREAS.map((area) => (
+                  <option key={area.slug} value={area.name} className="text-gray-900 dark:text-gray-200">
+                    {area.name}
+                  </option>
+                ))}
               </select>
             </div>
             {formData.propertyType === 'lodge' && (

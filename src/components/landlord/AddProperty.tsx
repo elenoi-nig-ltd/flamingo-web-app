@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import Header from '../Header';
 import LandlordSidebar from './LandlordSidebar';
 import { uploadMultipleImagesToCloudinary } from '@/utils/cloudinary';
+import { MINNA_AREAS } from '@/config/marketplace';
 
 const AddProperty = () => {
   const { createRealEstate, createLoading, createError } = useRealEstates();
@@ -19,10 +20,18 @@ const AddProperty = () => {
     description: '',
     price: 0,
     address: '',
+    state: 'Niger State',
+    city: 'Minna',
+    areaName: '',
+    listingType: 'rent',
     propertyType: '',
     bedrooms: 0,
     bathrooms: 0,
     area: 0,
+    totalRooms: 0,
+    parking: false,
+    water: false,
+    furnished: false,
     images: [] as File[],
   });
   const [previewImages, setPreviewImages] = useState<string[]>([]);
@@ -100,10 +109,18 @@ const AddProperty = () => {
         description: formData.description,
         price: Number(formData.price),
         address: formData.address,
+        state: formData.state,
+        city: formData.city,
+        areaName: formData.areaName || undefined,
+        listingType: formData.listingType,
         propertyType: formData.propertyType,
-        bedrooms: Number(formData.bedrooms),
-        bathrooms: Number(formData.bathrooms),
-        area: Number(formData.area),
+        bedrooms: Number(formData.bedrooms) || 0,
+        bathrooms: Number(formData.bathrooms) || 0,
+        area: Number(formData.area) || 0,
+        totalRooms: formData.propertyType === 'lodge' && Number(formData.totalRooms) > 0 ? Number(formData.totalRooms) : undefined,
+        parking: formData.parking,
+        water: formData.water,
+        furnished: formData.furnished,
         images: [] as string[],
       };
 
@@ -206,48 +223,119 @@ const AddProperty = () => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    placeholder="Address"
+                    placeholder="Address / Street Name"
                     className="w-full pl-3 p-3 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
                     required
                   />
                 </div>
                 <div className="w-full">
                   <select
-                    name="propertyType"
-                    value={formData.propertyType}
+                    name="areaName"
+                    value={formData.areaName}
                     onChange={handleChange}
                     className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
-                    required
                   >
-                    <option value="" className="text-gray-500 dark:text-gray-400">
-                      Select Property Type
-                    </option>
-                    <option value="apartment">Apartment</option>
-                    <option value="lodge">Lodge</option>
-                    <option value="house">House</option>
-                    <option value="condo">Condo</option>
-                    <option value="townhouse">Townhouse</option>
-                    <option value="land">Land</option>
+                    <option value="">Select Area in Minna (Optional)</option>
+                    {MINNA_AREAS.map((area) => (
+                      <option key={area.slug} value={area.name}>
+                        {area.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
+                <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 w-full">
+                  <div className="w-full sm:w-1/2">
+                    <select
+                      name="listingType"
+                      value={formData.listingType}
+                      onChange={handleChange}
+                      className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+                    >
+                      <option value="rent">For Rent</option>
+                      <option value="sale">For Sale</option>
+                    </select>
+                  </div>
+                  <div className="w-full sm:w-1/2">
+                    <select
+                      name="propertyType"
+                      value={formData.propertyType}
+                      onChange={handleChange}
+                      className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+                      required
+                    >
+                      <option value="" className="text-gray-500 dark:text-gray-400">
+                        Select Property Type
+                      </option>
+                      <option value="apartment">Apartment</option>
+                      <option value="lodge">Lodge</option>
+                      <option value="house">House</option>
+                      <option value="condo">Condo</option>
+                      <option value="townhouse">Townhouse</option>
+                      <option value="land">Land</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-6 p-4 border rounded bg-gray-50 dark:bg-gray-700/50 dark:border-gray-600">
+                  <label className="flex items-center space-x-2 cursor-pointer text-gray-700 dark:text-gray-200">
+                    <input
+                      type="checkbox"
+                      name="parking"
+                      checked={formData.parking}
+                      onChange={(e) => setFormData({ ...formData, parking: e.target.checked })}
+                      className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500"
+                    />
+                    <span>Parking Space</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer text-gray-700 dark:text-gray-200">
+                    <input
+                      type="checkbox"
+                      name="water"
+                      checked={formData.water}
+                      onChange={(e) => setFormData({ ...formData, water: e.target.checked })}
+                      className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500"
+                    />
+                    <span>Water / Borehole</span>
+                  </label>
+                  <label className="flex items-center space-x-2 cursor-pointer text-gray-700 dark:text-gray-200">
+                    <input
+                      type="checkbox"
+                      name="furnished"
+                      checked={formData.furnished}
+                      onChange={(e) => setFormData({ ...formData, furnished: e.target.checked })}
+                      className="w-4 h-4 text-orange-500 rounded focus:ring-orange-500"
+                    />
+                    <span>Furnished</span>
+                  </label>
+                </div>
+                {formData.propertyType === 'lodge' && (
+                  <div className="relative w-full">
+                    <input
+                      type="number"
+                      name="totalRooms"
+                      value={formData.totalRooms || ''}
+                      onChange={handleChange}
+                      placeholder="Total Rooms Available (Optional for Lodges)"
+                      className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
+                      min="1"
+                    />
+                  </div>
+                )}
                 <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 w-full">
                   <input
                     type="number"
                     name="bedrooms"
                     value={formData.bedrooms || ''}
                     onChange={handleChange}
-                    placeholder="Bedrooms"
+                    placeholder="Bedrooms (Optional)"
                     className="w-full sm:w-1/2 p-3 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
-                    required
                   />
                   <input
                     type="number"
                     name="bathrooms"
                     value={formData.bathrooms || ''}
                     onChange={handleChange}
-                    placeholder="Bathrooms"
+                    placeholder="Bathrooms (Optional)"
                     className="w-full sm:w-1/2 p-3 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
-                    required
                   />
                 </div>
                 <div className="relative w-full">
@@ -256,9 +344,8 @@ const AddProperty = () => {
                     name="area"
                     value={formData.area || ''}
                     onChange={handleChange}
-                    placeholder="Area (sq ft)"
+                    placeholder="Floor Size in m² (Optional)"
                     className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"
-                    required
                   />
                 </div>
                 <div className="relative w-full">

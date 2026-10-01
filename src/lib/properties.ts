@@ -54,13 +54,15 @@ export interface Property {
   bookingStatus?: string | null;
   createdAt?: string;
   updatedAt?: string;
-  // Forward-compatible structured fields (backend may add later).
+  // Forward-compatible structured fields.
   listingType?: string;
-  /**
-   * Structured Minna area name, distinct from the numeric `area` above (square
-   * metres). Named to avoid that collision — see `ListingLike` in config/urls.
-   */
   areaName?: string;
+  verificationLevels?: ('phone' | 'seller' | 'property')[];
+  status?: string;
+  expiresAt?: string;
+  parking?: boolean;
+  water?: boolean;
+  furnished?: boolean;
   // Derived on the server for convenience.
   areaSlug: string;
   categorySlug: string;
@@ -160,6 +162,12 @@ export function normalizeProperty(raw: any): Property {
     updatedAt: raw?.updatedAt,
     listingType: raw?.listingType,
     areaName: typeof raw?.areaName === 'string' ? raw.areaName : undefined,
+    verificationLevels: Array.isArray(raw?.verificationLevels) ? raw.verificationLevels : undefined,
+    status: raw?.status || 'active',
+    expiresAt: raw?.expiresAt,
+    parking: Boolean(raw?.parking),
+    water: Boolean(raw?.water),
+    furnished: Boolean(raw?.furnished),
   };
 
   return {

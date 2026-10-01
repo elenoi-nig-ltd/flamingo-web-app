@@ -24,6 +24,7 @@ import { formatNaira, titleCase } from '@/lib/format';
 import Breadcrumbs from '@/components/marketplace/Breadcrumbs';
 import PropertyListingView from '@/components/marketplace/PropertyListingView';
 import ListingDetailView from '@/components/marketplace/ListingDetailView';
+import FoodInterface from '@/components/food/FoodInterface';
 import JsonLd from '@/components/seo/JsonLd';
 import {
   breadcrumbSchema,
@@ -290,31 +291,38 @@ function HubShell({
   category?: CategoryHint;
   area?: string;
 }) {
-  const showComingSoon = category && !isPropertyFamily(category);
+  const isFoodCategory = category?.slug === 'food' || category?.parentSlug === 'food';
+  const showComingSoon = category && !isPropertyFamily(category) && !isFoodCategory;
 
   return (
     <main className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900">
       <JsonLd data={[breadcrumbSchema(crumbs), itemListSchema(properties)]} />
 
-      <section className="bg-gradient-to-r from-[#f89b64] to-[#f47a45] pt-28 pb-10 text-white dark:from-gray-800 dark:to-gray-700">
-        <div className="container mx-auto max-w-7xl px-4">
-          <Breadcrumbs items={crumbs} className="mb-4 text-white/80" />
-          <h1 className="text-3xl font-bold md:text-4xl">{title}</h1>
-          <p className="mt-2 max-w-2xl text-white/90">{subtitle}</p>
-        </div>
-      </section>
+      {isFoodCategory ? (
+        <FoodInterface />
+      ) : (
+        <>
+          <section className="bg-gradient-to-r from-[#f89b64] to-[#f47a45] pt-28 pb-10 text-white dark:from-gray-800 dark:to-gray-700">
+            <div className="container mx-auto max-w-7xl px-4">
+              <Breadcrumbs items={crumbs} className="mb-4 text-white/80" />
+              <h1 className="text-3xl font-bold md:text-4xl">{title}</h1>
+              <p className="mt-2 max-w-2xl text-white/90">{subtitle}</p>
+            </div>
+          </section>
 
-      <div className="container mx-auto max-w-7xl px-4 py-8">
-        {showComingSoon ? (
-          <ComingSoon title={title} />
-        ) : (
-          <PropertyListingView
-            properties={properties}
-            emptyTitle={`No listings in ${title} yet`}
-            emptyMessage="We’re actively adding genuine Minna listings here. Check back soon, or list your property."
-          />
-        )}
-      </div>
+          <div className="container mx-auto max-w-7xl px-4 py-8">
+            {showComingSoon ? (
+              <ComingSoon title={title} />
+            ) : (
+              <PropertyListingView
+                properties={properties}
+                emptyTitle={`No listings in ${title} yet`}
+                emptyMessage="We’re actively adding genuine Minna listings here. Check back soon, or list your property."
+              />
+            )}
+          </div>
+        </>
+      )}
     </main>
   );
 }

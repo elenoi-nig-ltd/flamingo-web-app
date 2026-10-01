@@ -57,20 +57,20 @@ found so far — see B8.
 Repo: `flamingo-web-backend` (NestJS + Mongoose). All of B1–B6 are **additive and non-breaking**:
 optional field + DTO + landlord form input.
 
-- [ ] **B1. Structured location on `real-estate.schema.ts`** — `state`, `city`, `areaName`, and a
+- [x] **B1. Structured location on `real-estate.schema.ts`** — `state`, `city`, `areaName`, and a
       stored `slug`. Spec §4/§5. Must not be named `area`.
       *Why:* the frontend parses the free-text `address`, and `resolvePropertyAreaSlug`
       (`src/config/urls.ts`) **silently defaults to `gidan-kwano`** when nothing matches —
       confirmed live on "Alheri Lodge Gidan-Mangoro", a real Flamingo location filed under the
       wrong area. This is what lets the default be deleted.
-- [ ] **B2. `listingType`** (`rent` | `sale`) — spec §6 Rent/Sale filter.
+- [x] **B2. `listingType`** (`rent` | `sale`) — spec §6 Rent/Sale filter.
       `resolvePropertyCategorySlug` already reads `listingType`, so it lands into working code.
-- [ ] **B3. Amenity fields** — `parking`, `water`/`borehole`, `furnished`, plus actually populating
+- [x] **B3. Amenity fields** — `parking`, `water`/`borehole`, `furnished`, plus actually populating
       `amenities: string[]`. Spec §6 card fields + the furnished filter.
-- [ ] **B4. Verification tiers** — `verificationLevels: ('phone' | 'seller' | 'property')[]`,
+- [x] **B4. Verification tiers** — `verificationLevels: ('phone' | 'seller' | 'property')[]`,
       replacing the single `verified` boolean. Spec §7. `deriveVerificationLevels` in
       `VerifiedBadge.tsx` already accepts a `levels` array.
-- [ ] **B5. Listing status + expiry** — `status` (`active` | `expired` | …) and `expiresAt`.
+- [x] **B5. Listing status + expiry** — `status` (`active` | `expired` | …) and `expiresAt`.
       Spec §11 expired-listing handling.
 - [ ] **B6. Save / Report endpoints** — a save (favourite) relation and a report submission.
       Spec §6. Only needed by F5 in Section 4, so it can slip if time is short.
@@ -99,7 +99,7 @@ optional field + DTO + landlord form input.
         to every other undecorated field on every DTO in the API** — notably `landlordId`, which would
         let an owner reassign a listing. Real fix is `whitelist: true` globally; needs a decision,
         tracked as the security aside below.
-- [ ] **B7. Guard the open controllers** *(security, not spec — confirm before changing)*.
+- [x] **B7. Guard the open controllers** *(security, not spec — confirm before changing)*.
       `/categories` (`src/categories/category.controller.ts`) has **zero `@UseGuards`**; create,
       rename and delete are open to anyone who can reach the API. The only global guard is
       `ThrottlerGuard`, not auth. `home-item-categories` is inconsistent the same way: its `:id`
@@ -138,7 +138,7 @@ until it lands, so it sits here deliberately, before the frontend work that show
 - [ ] **F9. Delete the `?? 'gidan-kwano'` default** in `resolvePropertyAreaSlug` now that B1 is
       populated, so an unknown area segment 404s instead of silently mis-filing. The live bug, not
       a nicety.
-- [ ] **F1. `PropertyCard` card fields** — spec §6. `parking` and `water/borehole`
+- [x] **F1. `PropertyCard` card fields** — spec §6. `parking` and `water/borehole`
       (`PropertyCard.tsx:30-34`) are gated on `amenities`, which **the backend never sends**;
       `lib/properties.ts:152` coerces absent → `[]`, so both are permanently false and the icons
       never render. Wire to B3, show a label not just an icon, add `furnished`.

@@ -43,6 +43,18 @@ interface CreateRealEstatePayload {
   area: number;
   images: File[] | string[];
   totalRooms?: number;
+  state?: string;
+  city?: string;
+  areaName?: string;
+  slug?: string;
+  listingType?: string;
+  amenities?: string[];
+  parking?: boolean;
+  water?: boolean;
+  furnished?: boolean;
+  verificationLevels?: string[];
+  status?: string;
+  expiresAt?: string;
 }
 interface UpdateRealEstatePayload {
   title?: string;
@@ -55,6 +67,18 @@ interface UpdateRealEstatePayload {
   area?: number;
   images?: File[] | string[];
   totalRooms?: number;
+  state?: string;
+  city?: string;
+  areaName?: string;
+  slug?: string;
+  listingType?: string;
+  amenities?: string[];
+  parking?: boolean;
+  water?: boolean;
+  furnished?: boolean;
+  verificationLevels?: string[];
+  status?: string;
+  expiresAt?: string;
 }
 
 interface UseRealEstatesOptions {

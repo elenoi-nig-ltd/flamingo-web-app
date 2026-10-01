@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Bed, Bath, Square, MapPin, Car, Droplets, Clock } from 'lucide-react';
+import { Bed, Bath, Square, MapPin, Car, Droplets, Clock, Sofa } from 'lucide-react';
 import type { Property } from '@/lib/properties';
 import { buildPropertyListingPath } from '@/config/urls';
 import { isAnnualRentCategory } from '@/config/marketplace';
@@ -27,12 +27,15 @@ export default function PropertyCard({
     verified: property.verified,
   });
 
-  const hasParking = property.amenities?.some((a) =>
-    /park|garage|car/i.test(a),
-  );
-  const hasWater = property.amenities?.some((a) =>
-    /water|borehole|well/i.test(a),
-  );
+  const hasParking =
+    Boolean((property as any).parking) ||
+    property.amenities?.some((a) => /park|garage|car/i.test(a));
+  const hasWater =
+    Boolean((property as any).water) ||
+    property.amenities?.some((a) => /water|borehole|well/i.test(a));
+  const isFurnished =
+    Boolean((property as any).furnished) ||
+    property.amenities?.some((a) => /furnish/i.test(a));
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-[#f0e6d0] bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800">
@@ -130,6 +133,14 @@ export default function PropertyCard({
               title="Water / borehole available"
             >
               <Droplets className="h-4 w-4 text-[#f47a45]" />
+            </span>
+          )}
+          {isFurnished && (
+            <span
+              className="flex items-center gap-1"
+              title="Furnished"
+            >
+              <Sofa className="h-4 w-4 text-[#f47a45]" />
             </span>
           )}
         </div>

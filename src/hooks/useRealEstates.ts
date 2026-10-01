@@ -78,6 +78,8 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState({ min: 100000, max: 15000000 });
   const [propertyType, setPropertyType] = useState('');
   const [bedrooms, setBedrooms] = useState('');
@@ -562,6 +564,62 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
     }
   };
 
+  // Set the admin-only `verified` trust flag (spec §7).
+  // Backend: PATCH /real-estates/:id/verify, guarded by JwtAuthGuard + RolesGuard(@Roles(ADMIN)),
+  // so a non-admin token gets a 403 rather than a silent no-op.
+  const setRealEstateVerified = async (id: string, verified: boolean) => {
+    if (!user || user.role !== 'admin') {
+      setVerifyError('Only admins can change a listing\'s verification');
+      return false;
+    }
+
+    setVerifyLoading(true);
+    setVerifyError(null);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+
+      const response = await fetch(`${BASEURL}/real-estates/${id}/verify`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        credentials: 'include',
+        body: JSON.stringify({ verified }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to update verification: ${response.statusText}`);
+      }
+
+      // The endpoint wraps the updated listing as { success, message, data }.
+      const body = await response.json();
+      const transformedEstate = transformRealEstateData([body.data ?? body])[0];
+
+      setRealEstates(prev =>
+        prev.map(estate => estate.id === id ? transformedEstate : estate)
+      );
+
+      if (propertyDetails && propertyDetails.id === id) {
+        setPropertyDetails(transformedEstate);
+      }
+
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update verification';
+      setVerifyError(errorMessage);
+      console.error('Error updating verification:', err);
+      return false;
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
   // Refresh data
   const refreshData = useCallback(() => {
     fetchRealEstates();
@@ -593,6 +651,7 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
     createLoading,
     updateLoading,
     deleteLoading,
+    verifyLoading,
 
     // Error states
     error,
@@ -600,6 +659,7 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
     createError,
     updateError,
     deleteError,
+    verifyError,
 
     // Filter states
     priceRange,
@@ -619,6 +679,7 @@ export const useRealEstates = (options: UseRealEstatesOptions = {}) => {
     createRealEstate,
     updateRealEstate,
     deleteRealEstate,
+    setRealEstateVerified,
     refreshData,
 
     // Computed values

@@ -7,7 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRealEstates } from '@/hooks/useRealEstates';
 import { uploadMultipleImagesToCloudinary, CloudinaryUploadResponse } from '@/utils/cloudinary';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaSpinner, FaTimes, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
+import { FaSpinner, FaTimes, FaArrowLeft, FaArrowRight, FaCheckCircle, FaRegCircle, FaUndo } from 'react-icons/fa';
 
 interface RealEstate {
   id: string;
@@ -23,6 +23,7 @@ interface RealEstate {
   totalRooms?: number;
   roomsBooked?: number;
   roomsAvailable?: number;
+  verified: boolean;
 }
 
 const EstateManagement = () => {
@@ -40,6 +41,9 @@ const EstateManagement = () => {
     deleteRealEstate,
     deleteLoading,
     deleteError,
+    setRealEstateVerified,
+    verifyLoading,
+    verifyError,
   } = useRealEstates();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -296,6 +300,21 @@ const EstateManagement = () => {
 
   const handleDeleteCancel = () => {
     setShowDeleteModal(null);
+  };
+
+  // Admin-only: `verified` is a trust flag, not something the owning landlord can set
+  // (the backend rejects it with 403 for anyone who is not an admin).
+  const handleToggleVerified = async (estate: RealEstate) => {
+    setSuccessMessage(null);
+    const nextVerified = !estate.verified;
+    const success = await setRealEstateVerified(estate.id, nextVerified);
+    if (success) {
+      setSuccessMessage(
+        nextVerified
+          ? `"${estate.title}" marked as verified.`
+          : `Verification removed from "${estate.title}".`
+      );
+    }
   };
 
   const handleCarouselPrev = (estateId: string) => {
@@ -557,10 +576,16 @@ const EstateManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">All Real Estate Listings</h2>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-2">All Real Estate Listings</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Mark a listing verified only once you have physically confirmed the property exists and its
+            details are accurate. Verified means the listing was checked — it is not a guarantee of any
+            transaction.
+          </p>
           {loading && <div className="text-center py-4 text-gray-600 dark:text-gray-300">Loading listings...</div>}
           {error && <div className="text-red-500 dark:text-red-400 mb-4">{error}</div>}
           {deleteError && <div className="text-red-500 dark:text-red-400 mb-4">{deleteError}</div>}
+          {verifyError && <div className="text-red-500 dark:text-red-400 mb-4">{verifyError}</div>}
           {!loading && realEstates.length === 0 && (
             <div className="text-center py-4 text-gray-500 dark:text-gray-400">No listings found.</div>
           )}
@@ -605,6 +630,16 @@ const EstateManagement = () => {
                     )}
                   </div>
                   <h3 className="text-lg font-semibold mt-2 text-gray-800 dark:text-gray-200">{estate.title}</h3>
+                  <span
+                    className={`inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full text-xs font-medium ${
+                      estate.verified
+                        ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700/60 dark:text-gray-300'
+                    }`}
+                  >
+                    {estate.verified ? <FaCheckCircle size={12} /> : <FaRegCircle size={12} />}
+                    {estate.verified ? 'Verified' : 'Not verified'}
+                  </span>
                   <p className="text-gray-600 dark:text-gray-300">{estate.description}</p>
                   <p className="text-gray-600 dark:text-gray-300">Price: ₦{estate.price.toLocaleString()}</p>
                   <p className="text-gray-600 dark:text-gray-300">Address: {estate.address}</p>
@@ -626,6 +661,34 @@ const EstateManagement = () => {
                       disabled={deleteLoading}
                     >
                       Edit
+                    </motion.button>
+                    <motion.button
+                      onClick={() => handleToggleVerified(estate)}
+                      className={`flex-1 py-2 inline-flex items-center justify-center gap-1.5 rounded-xl transition-all duration-300 disabled:text-gray-400 disabled:cursor-not-allowed ${
+                        estate.verified
+                          ? 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100'
+                          : 'text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300'
+                      }`}
+                      whileHover={{ scale: verifyLoading ? 1 : 1.05 }}
+                      whileTap={{ scale: verifyLoading ? 1 : 0.95 }}
+                      disabled={verifyLoading}
+                      title={
+                        estate.verified
+                          ? 'Remove the verified flag from this listing'
+                          : 'Mark this listing verified (only after a physical check)'
+                      }
+                    >
+                      {estate.verified ? (
+                        <>
+                          <FaUndo size={12} />
+                          {verifyLoading ? 'Saving...' : 'Unverify'}
+                        </>
+                      ) : (
+                        <>
+                          <FaCheckCircle size={12} />
+                          {verifyLoading ? 'Saving...' : 'Verify'}
+                        </>
+                      )}
                     </motion.button>
                     <motion.button
                       onClick={() => handleDeleteClick(estate.id)}

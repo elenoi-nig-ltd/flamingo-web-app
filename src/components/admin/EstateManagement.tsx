@@ -153,6 +153,7 @@ const EstateManagement = () => {
       description: estate.description,
       price: estate.price.toString(),
       address: estate.address,
+      areaName: estate.areaName || '',
       propertyType: estate.propertyType,
       bedrooms: estate.bedrooms.toString(),
       bathrooms: estate.bathrooms.toString(),
@@ -173,6 +174,7 @@ const EstateManagement = () => {
       description: '',
       price: '',
       address: '',
+      areaName: '',
       propertyType: '',
       bedrooms: '',
       bathrooms: '',
@@ -190,7 +192,6 @@ const EstateManagement = () => {
     e.preventDefault();
     setSuccessMessage(null);
     setUploadError(null);
-
     if (!formData.title || !formData.description || !formData.price || !formData.address || !formData.propertyType || !formData.area) {
       setUploadError('Please fill in all required fields');
       return;
@@ -270,6 +271,7 @@ const EstateManagement = () => {
         description: '',
         price: '',
         address: '',
+        areaName: '',
         propertyType: '',
         bedrooms: '',
         bathrooms: '',

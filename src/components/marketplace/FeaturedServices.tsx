@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { Utensils, Wifi, ShoppingBag, ArrowRight } from 'lucide-[#f47a45]'; // standard lucide icons
 import { Utensils as FoodIcon, Wifi as WifiIcon, Armchair, ChevronRight } from 'lucide-react';
 import SectionHeading from './SectionHeading';
 

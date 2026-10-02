@@ -74,7 +74,7 @@ const COLLAGE = [
 const POPULAR_SEARCHES = [
   "Toyota Camry",
   "3 Bedroom Apartment",
-  "iPhone 15",
+  "iPhone 18",
   "Jobs",
   "Food & Drinks",
 ];
@@ -181,15 +181,15 @@ export default function Hero() {
               <HeroSearch />
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <div className="mt-4 sm:mt-5 flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                 Popular searches:
               </span>
               {POPULAR_SEARCHES.map((term) => (
                 <Link
                   key={term}
                   href={`/search?q=${encodeURIComponent(term)}`}
-                  className="rounded-full border border-[#e8dcc4] bg-white/70 px-3 py-1.5 text-sm text-gray-700 transition-colors hover:border-[#f58c55] hover:text-[#e2703a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f58c55] focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-200 dark:hover:border-[#f7a16b] dark:hover:text-[#f7a16b] dark:focus-visible:ring-offset-gray-900"
+                  className="rounded-full border border-[#e8dcc4] bg-white/70 px-2.5 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm text-gray-700 transition-colors hover:border-[#f58c55] hover:text-[#e2703a] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f58c55] focus-visible:ring-offset-2 dark:border-gray-700 dark:bg-gray-800/70 dark:text-gray-200 dark:hover:border-[#f7a16b] dark:hover:text-[#f7a16b] dark:focus-visible:ring-offset-gray-900"
                 >
                   {term}
                 </Link>

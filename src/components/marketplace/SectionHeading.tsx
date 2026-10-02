@@ -26,13 +26,13 @@ export default function SectionHeading({
   hrefLabel?: string;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-4">
+    <div className="mb-4 flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <h2 className="text-xl font-bold tracking-tight text-gray-900 sm:text-2xl dark:text-gray-100">
+        <h2 className="text-base font-bold tracking-tight text-gray-900 sm:text-xl lg:text-2xl dark:text-gray-100">
           {title}
         </h2>
         {subtitle && (
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          <p className="mt-0.5 hidden text-sm text-gray-600 sm:block dark:text-gray-400">
             {subtitle}
           </p>
         )}
@@ -40,10 +40,10 @@ export default function SectionHeading({
       {href && (
         <Link
           href={href}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-md text-sm font-semibold text-[#f47a45] transition-colors hover:text-[#f58c55] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f58c55] focus-visible:ring-offset-2 dark:text-[#f7a16b] dark:focus-visible:ring-offset-gray-900"
+          className="mt-0.5 inline-flex shrink-0 items-center gap-1 rounded-md text-xs font-semibold text-[#f47a45] transition-colors hover:text-[#f58c55] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f58c55] focus-visible:ring-offset-2 sm:text-sm dark:text-[#f7a16b] dark:focus-visible:ring-offset-gray-900"
         >
           {hrefLabel}
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
         </Link>
       )}
     </div>

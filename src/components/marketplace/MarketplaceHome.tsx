@@ -7,6 +7,9 @@ import GuideTeaser from './GuideTeaser';
 import Hero from './Hero';
 import PropertyRail from './PropertyRail';
 import SectionHeading from './SectionHeading';
+import FeaturedServices from './FeaturedServices';
+import FeaturedProductsRail from './FeaturedProductsRail';
+import FoodProductsRail from './FoodProductsRail';
 
 /**
  * The marketplace homepage (spec §1, §2, §3, §9).
@@ -14,7 +17,16 @@ import SectionHeading from './SectionHeading';
  * Server component: every heading, category link, area link and listing link
  * below is rendered into the initial HTML, which is the point of the spec.
  *
- * Section order follows §9 exactly.
+ * Section order:
+ *   1. Hero
+ *   2. Browse Categories
+ *   3. Featured Home Items rail  (shows first when products exist; renders null otherwise)
+ *   4. Food & Drinks rail        (shows first when home items are empty)
+ *   5-8. Property rails
+ *   9. Explore Minna
+ *   10. Marketplace Services CTA (moved to bottom — it reads as a CTA, not content)
+ *   11. Sell something
+ *   12. Minna Marketplace Guide
  */
 export default function MarketplaceHome({
   properties,
@@ -40,27 +52,33 @@ export default function MarketplaceHome({
     <>
       {/*
         §9: hero — the promise, the search control and the product collage.
-        Self-contained in `Hero.tsx`; the old inline orange field lived here.
-
-        NOTE: the previous hero carried the only homepage link to `/create-ad`
-        (paid banner advertising), via "Promoting a business?". That is gone
-        with the redesign, and `/create-ad` is now reachable only from `/my-ads`,
-        which nothing in the header or footer links to. The paid promotion CTA
-        is meant to return as its own section further down the page.
+        Self-contained in `Hero.tsx`.
       */}
       <Hero />
 
       {/*
         One rhythm for the whole page: the container owns the vertical spacing
         via `gap`, so no section carries its own padding and they cannot drift
-        apart. Previously six different paddings were in play.
+        apart.
       */}
       <div className={`${CONTAINER} mt-8 flex flex-col gap-8 sm:gap-10`}>
-        {/* 4. Browse Categories */}
+        {/* 2. Browse Categories */}
         <section>
           <SectionHeading title="Browse categories" />
           <CategoryGrid />
         </section>
+
+        {/*
+          3. Featured Home Items — horizontally scrollable snap rail.
+          Returns null when empty so the food rail naturally floats up to
+          the top position (no empty box, no flash of nothing).
+        */}
+        <FoodProductsRail />
+
+        {/*
+          4. Home Essentials — sits below food.
+        */}
+        <FeaturedProductsRail />
 
         {/* 5-8. Property rails */}
         <PropertyRail
@@ -100,7 +118,15 @@ export default function MarketplaceHome({
           <AreaGrid />
         </section>
 
-        {/* 10. Sell something */}
+        {/*
+          10. Marketplace Services & Essentials — moved to the bottom.
+          This section reads as a set of CTAs ("Explore Food", "Explore Campus WiFi"…)
+          rather than as product content, so it belongs after the browsable inventory,
+          not immediately below the category chips.
+        */}
+        <FeaturedServices />
+
+        {/* 11. Sell something */}
         <section>
           <div className="flex flex-col items-center gap-4 rounded-2xl border border-[#f0e6d0] bg-[#f5f3eb] px-6 py-8 text-center sm:flex-row sm:justify-between sm:text-left dark:border-gray-700 dark:bg-gray-800">
             <div>
@@ -120,7 +146,7 @@ export default function MarketplaceHome({
           </div>
         </section>
 
-        {/* 11. Minna Marketplace Guide */}
+        {/* 12. Minna Marketplace Guide */}
         <section>
           <SectionHeading
             title="Minna marketplace guide"

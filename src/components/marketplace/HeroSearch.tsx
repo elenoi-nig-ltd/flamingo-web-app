@@ -65,18 +65,9 @@ export default function HeroSearch() {
     <form
       onSubmit={handleSubmit}
       role="search"
-      className="mx-auto flex w-full max-w-2xl flex-col rounded-2xl border border-gray-100 dark:border-gray-700 bg-white p-2 shadow-sm sm:flex-row sm:items-center sm:rounded-full dark:bg-gray-800"
+      className="mx-auto flex w-full max-w-2xl flex-row items-center rounded-full border border-gray-100 dark:border-gray-700 bg-white p-1.5 sm:p-2 shadow-sm dark:bg-gray-800"
     >
-      {/*
-        The label sits inside the wrapper rather than beside it: a `sr-only`
-        sibling would still be a flex child, and these rows are laid out
-        edge to edge.
-
-        Type is `text-base` across all three controls, not `text-sm` on the two
-        that were smaller. Below 16px, iOS Safari zooms the viewport on focus —
-        which the select was tripping, since it was the one form field at 14px.
-      */}
-      <div className="flex flex-1 items-center gap-2.5 rounded-xl px-3.5 focus-within:ring-2 focus-within:ring-[#f58c55]/20 sm:rounded-l-full sm:rounded-r-none dark:focus-within:ring-[#f7a16b]/30">
+      <div className="flex flex-1 items-center gap-2 rounded-full px-3 focus-within:ring-2 focus-within:ring-[#f58c55]/20 dark:focus-within:ring-[#f7a16b]/30">
         <label htmlFor="home-search" className="sr-only">
           Search the Minna marketplace
         </label>
@@ -87,22 +78,18 @@ export default function HeroSearch() {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search cars, homes, phones, furniture…"
-          className="w-full bg-transparent py-3 text-sm sm:text-base leading-6 text-gray-900 placeholder-gray-500 focus:outline-none dark:text-gray-100 dark:placeholder-gray-400"
+          className="w-full bg-transparent py-2.5 sm:py-3 text-sm sm:text-base leading-6 text-gray-900 placeholder-gray-500 focus:outline-none dark:text-gray-100 dark:placeholder-gray-400"
         />
       </div>
 
-      {/*
-        The hairline. `h-px w-full` reads as a rule between stacked rows; from
-        `sm` it turns into `w-px` and stretches to the row height instead. Drawn
-        as an element rather than a `border-t` so it can change axis, and so the
-        rounded corners of the rows above and below cannot curve it.
-      */}
+      {/* Hairline divider - hidden on mobile */}
       <span
         aria-hidden="true"
-        className="block h-px w-full shrink-0 bg-gray-200 sm:my-2 sm:h-auto sm:w-px sm:self-stretch dark:bg-gray-700"
+        className="hidden sm:block sm:my-2 sm:h-auto sm:w-px sm:self-stretch bg-gray-200 dark:bg-gray-700"
       />
 
-      <div className="relative rounded-xl focus-within:ring-2 focus-within:ring-[#f58c55]/20 sm:shrink-0 sm:rounded-none dark:focus-within:ring-[#f7a16b]/30">
+      {/* Category selector - hidden on mobile */}
+      <div className="hidden sm:relative sm:block sm:shrink-0 focus-within:ring-2 focus-within:ring-[#f58c55]/20 dark:focus-within:ring-[#f7a16b]/30">
         <label htmlFor="home-category" className="sr-only">
           Browse a category
         </label>
@@ -113,18 +100,6 @@ export default function HeroSearch() {
             if (event.target.value)
               router.push(buildCategoryPath(event.target.value));
           }}
-          /*
-           * `appearance-none` drops the browser's own chevron, which is the one
-           * part of this control that could not be sized, coloured or aligned to
-           * anything else — it rendered at whatever weight the platform chose and
-           * sat on a different baseline from the text. The arrow below replaces
-           * it.
-           *
-           * `color-scheme` follows the card, not the page: the native option
-           * popup is drawn by the OS, so it has to be told which surface it is
-           * opening over — `light` on the white card, `dark` on `gray-800`. Get
-           * it wrong and the popup is a white flash off a dark control.
-           */
           className="w-full cursor-pointer appearance-none bg-transparent py-3 pl-3.5 pr-10 text-sm sm:text-base font-medium leading-6 text-gray-700 [color-scheme:light] focus:outline-none sm:w-auto dark:text-gray-200 dark:[color-scheme:dark]"
         >
           <option value="">All categories</option>
@@ -140,15 +115,9 @@ export default function HeroSearch() {
         />
       </div>
 
-      {/*
-        Full width when the card is stacked — a thumb-height target on the row a
-        thumb already rests on — then an inset pill button beside the select.
-        `ring-offset` is set to the card's own surface so the focus ring reads as
-        a ring rather than a white halo on the dark card.
-      */}
       <button
         type="submit"
-        className="mt-2 rounded-xl bg-[#f58c55] px-7 py-2 sm:py-3 text-sm sm:text-base font-semibold text-white transition-colors hover:bg-[#f47a45] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f47a45] focus-visible:ring-offset-2 sm:mt-0 sm:rounded-full dark:focus-visible:ring-offset-gray-800"
+        className="rounded-full bg-[#f58c55] px-5 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white transition-colors hover:bg-[#f47a45] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f47a45] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-gray-800"
       >
         Search
       </button>

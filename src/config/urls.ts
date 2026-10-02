@@ -91,10 +91,10 @@ export function resolvePropertyCategorySlug(listing: ListingLike): string {
   return 'houses-for-rent';
 }
 
-/** Resolve which Minna area slug a listing belongs to (defaults to gidan-kwano). */
+/** Resolve which Minna area slug a listing belongs to. */
 export function resolvePropertyAreaSlug(listing: ListingLike): string {
   // Only `areaName` is consulted — never `listing.area`, which on the live model
-  // is a number (square metres) and used to throw here.
+  // is a number (square metres).
   const area = resolveAreaFromAddress(listing.address, listing.areaName);
   return area?.slug ?? 'gidan-kwano';
 }

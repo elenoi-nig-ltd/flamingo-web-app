@@ -3,17 +3,6 @@ import type { Property } from "@/lib/properties";
 import PropertyCard from "./PropertyCard";
 import SectionHeading from "./SectionHeading";
 
-/**
- * A marketplace product rail (spec §9).
- *
- * Storefront pattern: a section heading with a "see all" link and a
- * horizontally scrolling row of listing cards. Listings render through the
- * shared server-side `PropertyCard`, so every card links to that listing's
- * permanent `/minna/...` URL and is present in the server HTML.
- *
- * Vertical spacing is owned by the page container's `gap`, not by this section,
- * so every section shares one rhythm.
- */
 export default function PropertyRail({
   title,
   subtitle,
@@ -33,12 +22,6 @@ export default function PropertyRail({
 
   return (
     <section>
-      {/*
-        The subtitle is dropped when the rail is empty: three lines describing
-        listings that do not exist is a lot of nothing, and with thin inventory
-        it was most of the page. The heading stays in the server HTML either way,
-        which is what §9 needs.
-      */}
       <SectionHeading
         title={title}
         subtitle={isEmpty ? undefined : subtitle}
@@ -55,11 +38,11 @@ export default function PropertyRail({
           {emptyMessage}
         </p>
       ) : (
-        <ul className="-mx-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2">
+        <ul className="flex snap-x snap-proximity gap-4 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {properties.map((property) => (
             <li
               key={property.id}
-              className="w-[260px] shrink-0 snap-start sm:w-[280px] mb-4"
+              className="w-[240px] shrink-0 snap-start sm:w-[280px]"
             >
               <PropertyCard property={property} />
             </li>

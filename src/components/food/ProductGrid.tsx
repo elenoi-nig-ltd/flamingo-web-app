@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaShoppingCart } from 'react-icons/fa';
+import { ShoppingBag, Check } from 'lucide-react';
 import { useCategories } from '@/hooks/useCategories';
+import { formatNaira } from '@/lib/format';
 
 interface ProductGridProps {
   products: FoodProduct[];
@@ -13,33 +15,10 @@ interface ProductGridProps {
   onAddToCart: (product: { id: string; name: string; image: string; price: number }) => void;
 }
 
-/* ---------- Card-level toast (appears inside the card) ---------- */
-const CardToast: React.FC<{ message: string; onClose: () => void }> = ({
-  message,
-  onClose,
-}) => {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 2000);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      className="absolute inset-x-0 bottom-0 bg-green-600 text-white text-xs py-1 px-2 rounded-t-md text-center"
-    >
-      {message}
-    </motion.div>
-  );
-};
-/* ---------------------------------------------------------------- */
-
 interface FoodProduct {
   _id: string;
   name: string;
-  category: string | { _id: string; name: string; description: string }; // Can be ID or populated object
+  category: string | { _id: string; name: string; description: string };
   images: string[];
   price: number;
   description: string;
@@ -55,19 +34,13 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   onAddToCart,
 }) => {
   const { categories } = useCategories();
-  const [filteredProducts, setFilteredProducts] = useState<FoodProduct[]>([]);
-  
-  /* ---- Per-card toast state (mobile + web) ---- */
-  const [cardToast, setCardToast] = useState<{ id: string; message: string } | null>(null);
-  /* -------------------------------------------- */
+  const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
 
   // Filter products based on category and search query
-  useEffect(() => {
+  const filteredProducts = React.useMemo(() => {
     let filtered = products;
 
-    // Apply category filtering
     if (selectedCategoryId && selectedCategoryId !== 'All') {
-      // Filter by category ID - handle both populated and unpopulated category
       filtered = filtered.filter(product => {
         const categoryId = typeof product.category === 'string' 
           ? product.category 
@@ -75,7 +48,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
         return categoryId === selectedCategoryId;
       });
     } else if (selectedCategory && selectedCategory !== 'All') {
-      // Fallback: filter by category name if ID not available
       const category = categories.find(cat => cat.name === selectedCategory);
       if (category) {
         filtered = filtered.filter(product => {
@@ -87,7 +59,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       }
     }
 
-    // Apply search query filtering
     if (searchQuery && searchQuery.trim() !== '') {
       filtered = filtered.filter(product =>
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -95,27 +66,26 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       );
     }
 
-    setFilteredProducts(filtered);
+    return filtered;
   }, [products, selectedCategory, selectedCategoryId, searchQuery, categories]);
 
   const selectedCategoryName = selectedCategory === 'All'
     ? 'All Categories'
     : categories.find(cat => cat._id === selectedCategoryId)?.name || selectedCategory || 'Selected Category';
 
-  // Show loading skeleton while products are being fetched
   if (products.length === 0 && !searchQuery) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
         {[...Array(8)].map((_, index) => (
-          <div key={index} className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden animate-pulse">
-            <div className="w-full h-48 bg-gray-300 dark:bg-gray-600"></div>
-            <div className="p-4 space-y-3">
-              <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4"></div>
-              <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-full"></div>
-              <div className="h-3 bg-gray-300 dark:bg-gray-600 rounded w-2/3"></div>
+          <div key={index} className="rounded-2xl border border-amber-100 bg-[#fffbf4] p-4 shadow-sm animate-pulse dark:border-gray-700 dark:bg-gray-800">
+            <div className="w-full h-40 bg-amber-100 dark:bg-gray-700 rounded-xl"></div>
+            <div className="p-2 space-y-3 mt-2">
+              <div className="h-4 bg-amber-100 dark:bg-gray-700 rounded w-3/4"></div>
+              <div className="h-3 bg-amber-100 dark:bg-gray-700 rounded w-full"></div>
+              <div className="h-3 bg-amber-100 dark:bg-gray-700 rounded w-2/3"></div>
               <div className="flex items-center justify-between pt-2">
-                <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-1/3"></div>
-                <div className="h-8 bg-gray-300 dark:bg-gray-600 rounded w-20"></div>
+                <div className="h-5 bg-amber-100 dark:bg-gray-700 rounded w-1/3"></div>
+                <div className="h-8 bg-amber-100 dark:bg-gray-700 rounded w-20"></div>
               </div>
             </div>
           </div>
@@ -124,23 +94,21 @@ const ProductGrid: React.FC<ProductGridProps> = ({
     );
   }
 
-  // Show message if no products found
   if (filteredProducts.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full mb-4">
-          <FaShoppingCart className="text-3xl text-gray-400 dark:text-gray-500" />
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 dark:bg-gray-700 rounded-full mb-4">
+          <FaShoppingCart className="text-3xl text-amber-500 dark:text-gray-400" />
         </div>
-        <p className="text-gray-500 dark:text-gray-400 text-lg font-medium mb-2">
+        <p className="text-gray-700 dark:text-gray-300 text-lg font-semibold mb-2">
           No products found in {selectedCategoryName}
         </p>
-        {searchQuery && (
-          <p className="text-gray-400 dark:text-gray-500 text-sm">
+        {searchQuery ? (
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             Try adjusting your search terms.
           </p>
-        )}
-        {selectedCategory !== 'All' && !searchQuery && (
-          <p className="text-gray-400 dark:text-gray-500 text-sm">
+        ) : (
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             Try selecting a different category.
           </p>
         )}
@@ -151,7 +119,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   const handleAddToCart = (e: React.MouseEvent, product: FoodProduct) => {
     e.stopPropagation();
 
-    // Global toast (desktop)
     onAddToCart({
       id: product._id,
       name: product.name,
@@ -159,85 +126,96 @@ const ProductGrid: React.FC<ProductGridProps> = ({
       price: product.price
     });
 
-    // Card-level toast (mobile + web)
-    setCardToast({ id: product._id, message: 'Food added to orders' });
-    setTimeout(() => setCardToast(null), 2200);
+    setAddedIds((prev) => new Set(prev).add(product._id));
+    setTimeout(() => {
+      setAddedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(product._id);
+        return next;
+      });
+    }, 1500);
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 p-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
       {filteredProducts.map((product) => {
-        // Handle both populated category object and category ID string
         const categoryName = typeof product.category === 'string'
-          ? categories.find(cat => cat._id === product.category)?.name || 'Uncategorized'
-          : product.category?.name || 'Uncategorized';
+          ? categories.find(cat => cat._id === product.category)?.name
+          : product.category?.name;
+
+        const image = product.images && product.images.length > 0 ? product.images[0] : '/assets/images/placeholder-food.jpg';
+        const added = addedIds.has(product._id);
+        const isAvailable = product.isAvailable !== false;
 
         return (
           <motion.div
             key={product._id}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 relative"
-            whileHover={{ y: -5 }}
-            initial={{ opacity: 0, y: 20 }}
+            className="group flex flex-col justify-between overflow-hidden rounded-2xl border border-amber-100 bg-[#fffbf4] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800"
+            whileHover={{ y: -4 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="relative">
+            {/* Image section */}
+            <div className="relative h-44 w-full overflow-hidden bg-amber-50 dark:bg-gray-700">
               <img
-                src={product.images && product.images.length > 0 ? product.images[0] : '/assets/images/placeholder-food.jpg'}
+                src={image}
                 alt={product.name}
-                className="w-full h-48 object-cover"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = '/assets/images/placeholder-food.jpg';
                 }}
               />
-              <div className="absolute top-2 right-2 bg-[#f58c55] text-white px-2 py-1 rounded-full text-sm font-semibold">
-                ₦{product.price.toLocaleString()}
+              <div className="absolute right-2.5 top-2.5 rounded-full bg-[#f47a45] px-2.5 py-1 text-xs font-bold text-white shadow-md">
+                {formatNaira(product.price)}
               </div>
-              {product.isAvailable === false && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">
+              {!isAvailable && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center backdrop-blur-[1px]">
+                  <span className="bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow">
                     Unavailable
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">{product.name}</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-xs mb-1">{categoryName}</p>
-              <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">{product.description}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-[#f58c55] font-bold text-lg">
-                  ₦{product.price.toLocaleString()}
+            {/* Info section */}
+            <div className="flex flex-1 flex-col p-4">
+              {categoryName && (
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#f47a45]">
+                  {categoryName}
                 </span>
-                <motion.button
-                  onClick={(e) => product.isAvailable !== false && handleAddToCart(e, product)}
-                  className={`px-4 py-2 rounded-lg transition-colors flex items-center space-x-2 ${
-                    product.isAvailable !== false
-                      ? 'bg-[#f58c55] hover:bg-[#f47a45] text-white'
-                      : 'bg-gray-400 cursor-not-allowed text-gray-200'
-                  }`}
-                  whileHover={product.isAvailable !== false ? { scale: 1.05 } : {}}
-                  whileTap={product.isAvailable !== false ? { scale: 0.95 } : {}}
-                  disabled={product.isAvailable === false}
-                >
-                  <FaShoppingCart />
-                  <span>{product.isAvailable !== false ? 'Order' : 'Unavailable'}</span>
-                </motion.button>
-              </div>
+              )}
+              <h3 className="mt-0.5 line-clamp-1 text-sm font-bold text-gray-900 group-hover:text-[#f47a45] dark:text-gray-100">
+                {product.name}
+              </h3>
+              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                {product.description}
+              </p>
 
-              {/* ---------- Card toast (mobile + web) ---------- */}
-              <div className="relative h-6 mt-2">
-                {cardToast?.id === product._id && (
-                  <CardToast
-                    message={cardToast.message}
-                    onClose={() => setCardToast(null)}
-                  />
-                )}
+              <div className="mt-4 flex items-center justify-between border-t border-amber-100/80 pt-3 dark:border-gray-700/60">
+                <span className="text-sm font-extrabold text-[#f47a45]">
+                  {formatNaira(product.price)}
+                </span>
+                <button
+                  onClick={(e) => isAvailable && handleAddToCart(e, product)}
+                  disabled={!isAvailable}
+                  className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold text-white transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f58c55] ${
+                    !isAvailable
+                      ? 'bg-gray-400 cursor-not-allowed opacity-70'
+                      : added
+                      ? 'bg-green-500'
+                      : 'bg-[#f58c55] hover:bg-[#f47a45]'
+                  }`}
+                >
+                  {added ? (
+                    <><Check className="h-3.5 w-3.5" /> Added</>
+                  ) : (
+                    <><ShoppingBag className="h-3.5 w-3.5" /> Order</>
+                  )}
+                </button>
               </div>
-              {/* ------------------------------------------------ */}
             </div>
           </motion.div>
         );

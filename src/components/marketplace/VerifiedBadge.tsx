@@ -93,7 +93,7 @@ export default function VerifiedBadge({
 /** A small row of badges for a listing card. */
 export function VerifiedBadgeRow({
   levels,
-  max = 2,
+  max = 3,
 }: {
   levels: VerificationLevel[];
   max?: number;

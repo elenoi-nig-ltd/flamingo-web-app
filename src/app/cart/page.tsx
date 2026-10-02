@@ -9,6 +9,7 @@ import {
   FaArrowLeft, FaCheckCircle, FaExclamationCircle,
   FaGift, FaClock
 } from 'react-icons/fa';
+import { ShoppingBag, ArrowRight, ShieldCheck, Sparkles, Truck, Store, X, Trash2, ArrowLeft, Download, CreditCard, Gift, Clock, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePayments } from '@/hooks/usePayments';
 import { useOrders, DeliveryZone } from '@/hooks/useOrders';
@@ -18,6 +19,7 @@ import { toPng } from 'html-to-image';
 import DistributedAds from '@/components/advertisements/DistributedAds';
 import Header from '@/components/Header';
 import { getErrorMessage, NIGERIAN_PHONE_MESSAGE, NIGERIAN_PHONE_PATTERN } from '@/utils/checkout';
+import { formatNaira } from '@/lib/format';
 
 // Safe error display component
 const SafeErrorDisplay = ({ error }: { error: any }) => {
@@ -26,9 +28,9 @@ const SafeErrorDisplay = ({ error }: { error: any }) => {
   const displayText = getErrorMessage(error, 'An error occurred');
 
   return (
-    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-2xl flex items-center space-x-3 mt-4">
-      <FaExclamationCircle className="text-red-500 shrink-0" />
-      <p className="text-red-600 dark:text-red-400 text-sm font-medium">{displayText}</p>
+    <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl flex items-center space-x-3 mt-4">
+      <AlertCircle className="text-red-500 shrink-0 h-5 w-5" />
+      <p className="text-red-600 dark:text-red-300 text-xs sm:text-sm font-medium">{displayText}</p>
     </div>
   );
 };
@@ -161,7 +163,7 @@ export default function CartPage() {
     try {
       const container = document.getElementById('cart-summary-capture');
       if (container) {
-        const dataUrl = await toPng(container, { backgroundColor: '#ffffff', quality: 1.0 });
+        const dataUrl = await toPng(container, { backgroundColor: '#faf7f0', quality: 1.0 });
         const link = document.createElement('a');
         link.download = `flamingo-order-${Date.now()}.png`;
         link.href = dataUrl;
@@ -176,28 +178,28 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 transition-colors duration-300">
         <Header />
-        <div className="pt-24 sm:pt-32 pb-12 px-4 max-w-4xl mx-auto text-center">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-8 sm:p-12 shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-800">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-orange-50 dark:bg-orange-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaShoppingBasket className="text-orange-500 text-3xl sm:text-4xl" />
+        <div className="pt-28 sm:pt-32 pb-16 px-4 max-w-4xl mx-auto text-center">
+          <div className="bg-[#faf7f0] dark:bg-gray-800 rounded-3xl p-8 sm:p-14 shadow-lg border border-[#ede8da] dark:border-gray-700">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 bg-[#f58c55]/10 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ShoppingBag className="text-[#f47a45] h-10 w-10 sm:h-12 sm:w-12" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-4">Your cart is empty</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-base sm:text-lg mb-8 sm:mb-10 max-w-md mx-auto">
-              Looks like you haven't added any delicious meals yet. Start exploring our menu to satisfy your cravings!
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-3">Your cart is empty</h1>
+            <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base mb-8 max-w-md mx-auto leading-relaxed">
+              Explore food, drinks, home essentials and properties listed across Minna!
             </p>
             <button 
               onClick={() => router.push('/food')}
-              className="bg-[#f58c55] hover:bg-[#f47a45] text-white px-8 sm:px-10 py-3 sm:py-4 rounded-2xl font-bold transition-all shadow-lg shadow-orange-500/30 text-base sm:text-lg cursor-pointer"
+              className="bg-[#f58c55] hover:bg-[#f47a45] text-white px-8 sm:px-10 py-3.5 rounded-full font-bold transition-all shadow-md hover:shadow-lg text-sm sm:text-base cursor-pointer"
             >
-              Browse Menu
+              Browse Food Menu
             </button>
             
-            <div className="mt-12 sm:mt-16 pt-8 sm:pt-12 border-t border-gray-100 dark:border-gray-700">
-              <p className="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Featured Deals</p>
+            <div className="mt-12 pt-8 border-t border-[#ede8da] dark:border-gray-700">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">Featured Partners</p>
               <div className="max-w-md mx-auto">
-                <DistributedAds location="checkout_page" position={0} className="rounded-3xl shadow-lg" />
+                <DistributedAds location="checkout_page" position={0} className="rounded-2xl shadow-sm border border-[#ede8da] dark:border-gray-700" />
               </div>
             </div>
           </div>
@@ -207,24 +209,24 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-[#f8f5e6] dark:bg-gray-900 transition-colors duration-300">
       <Header />
       
-      <main className="pt-24 sm:pt-28 pb-12 sm:pb-20 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <main className="pt-24 sm:pt-28 pb-12 sm:pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {/* Progress Header */}
         <div className="flex items-center space-x-3 sm:space-x-4 mb-6 sm:mb-8">
           <button 
             onClick={() => checkoutStep === 'info' ? setCheckoutStep('review') : router.back()}
-            className="p-2.5 sm:p-3 bg-white dark:bg-gray-800 rounded-xl shadow-sm text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors cursor-pointer"
+            className="p-2.5 sm:p-3 bg-[#faf7f0] dark:bg-gray-800 rounded-2xl border border-[#ede8da] dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:text-[#f47a45] transition-colors cursor-pointer shadow-sm"
           >
-            <FaArrowLeft className="text-sm sm:text-base" />
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white leading-tight">Checkout</h1>
-            <div className="flex items-center space-x-2 mt-0.5 sm:mt-1">
-              <span className={`text-xs sm:text-sm font-bold ${checkoutStep === 'review' ? 'text-orange-500' : 'text-gray-400'}`}>Review Cart</span>
-              <span className="w-3 sm:w-4 h-px bg-gray-300 dark:bg-gray-700"></span>
-              <span className={`text-xs sm:text-sm font-bold ${checkoutStep === 'info' ? 'text-orange-500' : 'text-gray-400'}`}>Delivery Info</span>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white leading-tight">Checkout</h1>
+            <div className="flex items-center space-x-2 mt-0.5">
+              <span className={`text-xs font-bold ${checkoutStep === 'review' ? 'text-[#f47a45]' : 'text-gray-400'}`}>1. Review Cart</span>
+              <span className="w-3 h-px bg-gray-300 dark:bg-gray-700"></span>
+              <span className={`text-xs font-bold ${checkoutStep === 'info' ? 'text-[#f47a45]' : 'text-gray-400'}`}>2. Delivery Info</span>
             </div>
           </div>
         </div>
@@ -236,97 +238,97 @@ export default function CartPage() {
               {checkoutStep === 'review' ? (
                 <motion.div 
                   key="review"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   className="space-y-4"
                 >
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-                    <div className="p-4 sm:p-6 border-b border-gray-50 dark:border-gray-700 flex justify-between items-center">
-                      <h2 className="text-lg sm:text-xl font-bold">Your Selection ({totalItems})</h2>
-                      <button onClick={clearCart} className="text-red-500 hover:text-red-600 font-bold text-xs sm:text-sm flex items-center space-x-1.5 sm:space-x-2 cursor-pointer">
-                        <FaTrash className="text-[10px] sm:text-xs" />
+                  <div className="bg-[#faf7f0] dark:bg-gray-800 rounded-3xl border border-[#ede8da] dark:border-gray-700 overflow-hidden shadow-sm">
+                    <div className="p-5 sm:p-6 bg-white dark:bg-gray-800/80 border-b border-[#ede8da] dark:border-gray-700 flex justify-between items-center">
+                      <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white">Your Selection ({totalItems} items)</h2>
+                      <button onClick={clearCart} className="text-red-500 hover:text-red-600 font-semibold text-xs flex items-center space-x-1.5 cursor-pointer">
+                        <Trash2 className="h-3.5 w-3.5" />
                         <span>Clear All</span>
                       </button>
                     </div>
 
                     {hasFoodItem && (
-                      <div className="mx-4 sm:mx-6 mt-4 sm:mt-6 p-3.5 sm:p-4 bg-linear-to-r from-blue-500 to-cyan-500 rounded-xl sm:rounded-2xl text-white flex items-center justify-between shadow-lg shadow-blue-500/20">
-                        <div className="flex items-center space-x-3 sm:space-x-4">
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center backdrop-blur-md">
-                            <FaGift className="text-lg sm:text-xl animate-bounce" />
+                      <div className="mx-4 sm:mx-6 mt-4 sm:mt-5 p-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl text-white flex items-center justify-between shadow-md">
+                        <div className="flex items-center space-x-3.5">
+                          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
+                            <Gift className="h-5 w-5 text-white animate-bounce" />
                           </div>
                           <div>
-                            <p className="font-bold text-[10px] sm:text-sm opacity-90 uppercase tracking-wider">Food Order Reward</p>
-                            <p className="font-extrabold text-sm sm:text-lg">Free Bottled Water Included!</p>
+                            <p className="font-semibold text-[10px] uppercase tracking-wider opacity-90">Food Order Bonus</p>
+                            <p className="font-extrabold text-sm sm:text-base">Complimentary Bottled Water Included!</p>
                           </div>
                         </div>
-                        <div className="hidden sm:block px-4 py-2 bg-white/20 rounded-lg text-xs font-bold backdrop-blur-md border border-white/30">
-                          ₦0.00
+                        <div className="hidden sm:block px-3 py-1.5 bg-white/20 rounded-lg text-xs font-bold backdrop-blur-md border border-white/30">
+                          FREE
                         </div>
                       </div>
                     )}
 
                     {hasFoodItem && (
-                      <div className="mx-4 sm:mx-6 mt-3 p-3.5 sm:p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl sm:rounded-2xl flex items-center space-x-3.5 shadow-sm">
-                        <FaClock className="text-amber-500 shrink-0 text-lg sm:text-xl" />
+                      <div className="mx-4 sm:mx-6 mt-3 p-3.5 bg-amber-500/10 border border-amber-200 dark:border-amber-900/30 rounded-2xl flex items-center space-x-3">
+                        <Clock className="text-[#f47a45] shrink-0 h-5 w-5" />
                         <div>
-                          <p className="text-amber-800 dark:text-amber-400 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Ordering hours</p>
-                          <p className="text-amber-700 dark:text-amber-300 text-xs sm:text-sm font-medium">
-                            Online ordering closes at <span className="font-bold">9:30 PM</span> daily. Orders placed after this time will be processed the next morning.
+                          <p className="text-[#f47a45] text-[10px] font-bold uppercase tracking-wider">Ordering Hours</p>
+                          <p className="text-gray-700 dark:text-gray-300 text-xs font-medium">
+                            Online food orders close at <span className="font-bold text-[#f47a45]">9:30 PM</span> daily.
                           </p>
                         </div>
                       </div>
                     )}
                     
-                    <div className="divide-y divide-gray-50 dark:divide-gray-700 mt-2 sm:mt-4">
+                    <div className="divide-y divide-[#ede8da] dark:divide-gray-700/60 p-4 sm:p-6 space-y-3">
                       {items.map((item) => (
-                        <div key={item.id} className={`p-3.5 sm:p-6 flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6 hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors ${item.isGift ? 'bg-blue-50/30 dark:bg-blue-900/10' : ''}`}>
-                          <div className="flex items-center space-x-3 sm:space-x-6 flex-1 min-w-0">
-                            <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-xl sm:rounded-2xl overflow-hidden shrink-0 shadow-md">
+                        <div key={item.id} className={`pt-3 first:pt-0 flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0 ${item.isGift ? 'bg-amber-50/50 dark:bg-amber-900/10 p-3 rounded-2xl' : ''}`}>
+                          <div className="flex items-center space-x-3.5 flex-1 min-w-0">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 bg-white dark:bg-gray-700 border border-[#ede8da] dark:border-gray-600">
                               <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-2 mb-0.5 sm:mb-1">
-                                <h3 className="text-base sm:text-xl font-bold text-gray-900 dark:text-white truncate">{item.name}</h3>
+                              <div className="flex items-center space-x-2 mb-0.5">
+                                <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate">{item.name}</h3>
                                 {item.isGift && (
-                                  <span className="shrink-0 bg-blue-500 text-white text-[8px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full flex items-center space-x-1">
-                                    <FaGift size={7} className="sm:w-2 sm:h-2" />
-                                    <span>FREE</span>
+                                  <span className="shrink-0 bg-[#f58c55] text-white text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center space-x-1">
+                                    <Gift className="h-2.5 w-2.5" />
+                                    <span>FREE GIFT</span>
                                   </span>
                                 )}
                               </div>
-                              <p className={`text-sm sm:text-lg font-extrabold ${item.isGift ? 'text-blue-500' : 'text-[#f58c55]'}`}>
-                                {item.isGift ? 'Gift' : `₦${item.price.toLocaleString()}`}
+                              <p className={`text-xs sm:text-sm font-extrabold ${item.isGift ? 'text-[#f47a45]' : 'text-[#f47a45]'}`}>
+                                {item.isGift ? 'Free Gift' : formatNaira(item.price)}
                               </p>
                             </div>
                           </div>
                           
-                          <div className="flex items-center justify-between sm:justify-end sm:space-x-8">
+                          <div className="flex items-center justify-between sm:justify-end sm:space-x-6">
                             {item.isGift ? (
-                              <div className="text-[10px] sm:text-sm font-bold text-blue-500 flex items-center space-x-2 bg-blue-50 dark:bg-blue-900/30 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800">
-                                <span>Complimentary Item</span>
+                              <div className="text-xs font-bold text-[#f47a45] bg-amber-50 dark:bg-amber-900/30 px-3 py-1.5 rounded-xl border border-amber-200 dark:border-amber-800">
+                                Free Reward
                               </div>
                             ) : (
-                              <div className="bg-gray-100 dark:bg-gray-700 rounded-lg sm:rounded-xl p-1 flex items-center space-x-2 sm:space-x-4 border border-gray-200 dark:border-gray-600">
+                              <div className="bg-white dark:bg-gray-700 rounded-xl p-1 flex items-center space-x-2 border border-[#ede8da] dark:border-gray-600">
                                 <button 
                                   onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                  className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center text-gray-500 hover:text-orange-500 transition-colors bg-white dark:bg-gray-800 rounded-md sm:rounded-lg shadow-sm cursor-pointer"
+                                  className="w-7 h-7 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-[#f47a45] rounded-lg"
                                 >
-                                  <FaMinus className="text-[8px] sm:text-[10px]" />
+                                  <FaMinus className="text-[10px]" />
                                 </button>
-                                <span className="font-bold text-sm sm:text-lg min-w-4.5 sm:min-w-6 text-center">{item.quantity}</span>
+                                <span className="font-bold text-xs sm:text-sm text-gray-900 dark:text-white min-w-4 text-center">{item.quantity}</span>
                                 <button 
                                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                  className="w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center text-gray-500 hover:text-orange-500 transition-colors bg-white dark:bg-gray-800 rounded-md sm:rounded-lg shadow-sm cursor-pointer"
+                                  className="w-7 h-7 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-[#f47a45] rounded-lg"
                                 >
-                                  <FaPlus className="text-[8px] sm:text-[10px]" />
+                                  <FaPlus className="text-[10px]" />
                                 </button>
                               </div>
                             )}
                             <div className="text-right">
-                              <p className="font-extrabold text-gray-900 dark:text-white text-base sm:text-lg">
-                                {item.isGift ? 'FREE' : `₦${(item.price * item.quantity).toLocaleString()}`}
+                              <p className="font-extrabold text-gray-900 dark:text-white text-sm sm:text-base">
+                                {item.isGift ? 'FREE' : formatNaira(item.price * item.quantity)}
                               </p>
                             </div>
                           </div>
@@ -336,39 +338,39 @@ export default function CartPage() {
                   </div>
 
                   {/* Interleaved Ad */}
-                  <div className="py-1 sm:py-2">
-                    <DistributedAds location="checkout_page" position={0} className="rounded-2xl sm:rounded-3xl shadow-md border border-gray-100 dark:border-gray-800" />
+                  <div className="py-1">
+                    <DistributedAds location="checkout_page" position={0} className="rounded-2xl shadow-sm border border-[#ede8da] dark:border-gray-700" />
                   </div>
                 </motion.div>
               ) : (
                 <motion.div 
                   key="info"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                 >
-                  <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 sm:p-8">
-                    <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Delivery Details</h2>
-                    <form id="customer-info-form" onSubmit={handleCustomerSubmit} className="space-y-5 sm:space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
-                        <div className="space-y-1.5 sm:space-y-2">
-                          <label className="text-[10px] sm:text-sm font-bold text-gray-500 ml-1 uppercase tracking-wider">Full Name</label>
-                          <div className="relative group">
-                            <FaUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors text-sm sm:text-base" />
+                  <div className="bg-[#faf7f0] dark:bg-gray-800 rounded-3xl border border-[#ede8da] dark:border-gray-700 p-5 sm:p-8 shadow-sm">
+                    <h2 className="text-lg sm:text-xl font-bold mb-6 text-gray-900 dark:text-white">Delivery Details</h2>
+                    <form id="customer-info-form" onSubmit={handleCustomerSubmit} className="space-y-4 sm:space-y-5">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Full Name</label>
+                          <div className="relative">
+                            <FaUser className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                             <input
                               type="text"
                               required
                               value={customerInfo.name}
                               onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
-                              className="w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-[#f58c55] outline-none font-medium text-sm sm:text-base"
+                              className="w-full pl-10 pr-3.5 py-3 rounded-xl bg-white dark:bg-gray-900 border border-[#ede8da] dark:border-gray-700 focus:ring-2 focus:ring-[#f58c55] outline-none font-medium text-xs sm:text-sm text-gray-900 dark:text-white"
                               placeholder="e.g. John Doe"
                             />
                           </div>
                         </div>
-                        <div className="space-y-1.5 sm:space-y-2">
-                          <label className="text-[10px] sm:text-sm font-bold text-gray-500 ml-1 uppercase tracking-wider">Phone Number (Nigerian)</label>
-                          <div className="relative group">
-                            <FaPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors text-sm sm:text-base" />
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Phone Number (Nigerian)</label>
+                          <div className="relative">
+                            <FaPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                             <input
                               type="tel"
                               required
@@ -381,42 +383,40 @@ export default function CartPage() {
                               }}
                               pattern="(?:\+234|0)[789][01][0-9]{8}"
                               inputMode="tel"
-                              aria-invalid={phoneError ? 'true' : 'false'}
-                              aria-describedby={phoneError ? 'phone-error' : undefined}
-                              className={`w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border focus:ring-2 focus:ring-[#f58c55] outline-none font-medium text-sm sm:text-base ${phoneError ? 'border-red-500' : 'border-gray-100 dark:border-gray-700'}`}
+                              className={`w-full pl-10 pr-3.5 py-3 rounded-xl bg-white dark:bg-gray-900 border focus:ring-2 focus:ring-[#f58c55] outline-none font-medium text-xs sm:text-sm text-gray-900 dark:text-white ${phoneError ? 'border-red-500' : 'border-[#ede8da] dark:border-gray-700'}`}
                               placeholder="e.g. 08012345678"
                             />
                           </div>
-                          {phoneError && <p id="phone-error" className="text-sm text-red-600 dark:text-red-400">{phoneError}</p>}
+                          {phoneError && <p id="phone-error" className="text-xs text-red-600 dark:text-red-400 mt-1">{phoneError}</p>}
                         </div>
                       </div>
 
-                      <div className="space-y-1.5 sm:space-y-2">
-                        <label className="text-[10px] sm:text-sm font-bold text-gray-500 ml-1 uppercase tracking-wider">Email Address</label>
-                        <div className="relative group">
-                          <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-orange-500 transition-colors text-sm sm:text-base" />
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Email Address</label>
+                        <div className="relative">
+                          <FaEnvelope className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
                           <input
                             type="email"
                             required
                             value={customerInfo.email}
                             onChange={(e) => setCustomerInfo({...customerInfo, email: e.target.value})}
-                            className="w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-[#f58c55] outline-none font-medium text-sm sm:text-base"
+                            className="w-full pl-10 pr-3.5 py-3 rounded-xl bg-white dark:bg-gray-900 border border-[#ede8da] dark:border-gray-700 focus:ring-2 focus:ring-[#f58c55] outline-none font-medium text-xs sm:text-sm text-gray-900 dark:text-white"
                             placeholder="e.g. john@example.com"
                           />
                         </div>
                       </div>
 
                       {deliveryOption === 'delivery' && (
-                        <div className="space-y-1.5 sm:space-y-2">
-                          <label className="text-[10px] sm:text-sm font-bold text-gray-500 ml-1 uppercase tracking-wider">Delivery Address</label>
-                          <div className="relative group">
-                            <FaTruck className="absolute left-4 top-4 text-gray-400 group-focus-within:text-orange-500 transition-colors text-sm sm:text-base" />
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider ml-1">Delivery Address</label>
+                          <div className="relative">
+                            <Truck className="absolute left-3.5 top-3.5 text-gray-400 h-4 w-4" />
                             <textarea
                               required
                               value={customerInfo.address}
                               onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
-                              className="w-full pl-11 sm:pl-12 pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 focus:ring-2 focus:ring-[#f58c55] outline-none font-medium resize-none min-h-25 sm:min-h-30 text-sm sm:text-base"
-                              placeholder="Tell us exactly where to bring your order..."
+                              className="w-full pl-10 pr-3.5 py-3 rounded-xl bg-white dark:bg-gray-900 border border-[#ede8da] dark:border-gray-700 focus:ring-2 focus:ring-[#f58c55] outline-none font-medium resize-none min-h-[90px] text-xs sm:text-sm text-gray-900 dark:text-white"
+                              placeholder="Tell us your lodge or home address in Minna..."
                             />
                           </div>
                         </div>
@@ -430,122 +430,120 @@ export default function CartPage() {
 
           {/* Right Column: Order Summary & Ads */}
           <div className="space-y-6 lg:sticky lg:top-28">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden">
-              <div className="p-5 sm:p-8 space-y-5 sm:space-y-6">
-                <h2 className="text-xl sm:text-2xl font-bold flex items-center space-x-2">
-                  <FaReceipt className="text-[#f58c55] text-lg sm:text-xl" />
-                  <span>Order Summary</span>
-                </h2>
+            <div className="bg-[#faf7f0] dark:bg-gray-800 rounded-3xl border border-[#ede8da] dark:border-gray-700 overflow-hidden shadow-sm p-5 sm:p-6 space-y-5">
+              <h2 className="text-base sm:text-lg font-bold flex items-center space-x-2 text-gray-900 dark:text-white">
+                <FaReceipt className="text-[#f47a45]" />
+                <span>Order Summary</span>
+              </h2>
 
-                {/* Service Mode Selection */}
-                <div className="space-y-3">
-                  <p className="text-[10px] sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Service Mode</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button 
-                      onClick={() => setDeliveryOption('pickup')}
-                      className={`py-2.5 sm:py-3 rounded-xl border-2 font-bold flex flex-col items-center space-y-1 transition-all cursor-pointer ${deliveryOption === 'pickup' ? 'border-[#f58c55] bg-orange-50 text-[#f58c55] dark:bg-orange-900/20' : 'border-gray-100 dark:border-gray-700 text-gray-500'}`}
-                    >
-                      <FaStore className="text-sm sm:text-base" />
-                      <span className="text-[10px] sm:text-xs">Pickup</span>
-                    </button>
-                    <button 
-                      onClick={() => setDeliveryOption('delivery')}
-                      className={`py-2.5 sm:py-3 rounded-xl border-2 font-bold flex flex-col items-center space-y-1 transition-all cursor-pointer ${deliveryOption === 'delivery' ? 'border-[#f58c55] bg-orange-50 text-[#f58c55] dark:bg-orange-900/20' : 'border-gray-100 dark:border-gray-700 text-gray-500'}`}
-                    >
-                      <FaTruck className="text-sm sm:text-base" />
-                      <span className="text-[10px] sm:text-xs">Delivery</span>
-                    </button>
-                  </div>
-                </div>
-
-                {deliveryOption === 'delivery' && (
-                  <div className="space-y-2">
-                    <p className="text-[10px] sm:text-sm font-bold text-gray-500 uppercase tracking-widest">Delivery Zone</p>
-                    <select
-                      value={selectedZoneId}
-                      onChange={(e) => setSelectedZoneId(e.target.value)}
-                      className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700 font-bold text-xs sm:text-sm outline-none focus:ring-2 focus:ring-[#f58c55]/20 cursor-pointer"
-                    >
-                      {deliveryZones.map(zone => (
-                        <option key={zone.id} value={zone.id}>{zone.name} (+₦{zone.fee.toLocaleString()})</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                <div className="space-y-3 sm:space-y-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <div className="flex justify-between text-gray-500 font-medium text-sm sm:text-base">
-                    <span>Subtotal</span>
-                    <span>₦{subtotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-500 font-medium text-sm sm:text-base">
-                    <span>Delivery Fee</span>
-                    <span>{deliveryOption === 'pickup' ? 'Free (Pickup)' : `₦${deliveryFee.toLocaleString()}`}</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <span className="text-lg sm:text-xl font-bold">Total</span>
-                    <span className="text-xl sm:text-2xl font-extrabold text-[#f58c55]">₦{totalWithFees.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <SafeErrorDisplay error={orderError || paymentError || errorMessage} />
-
-                {checkoutStep === 'review' ? (
+              {/* Service Mode Selection */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Fulfillment Method</p>
+                <div className="grid grid-cols-2 gap-2.5">
                   <button 
-                    onClick={() => setCheckoutStep('info')}
-                    className="w-full bg-[#f58c55] hover:bg-[#f47a45] text-white py-4 sm:py-5 rounded-2xl font-extrabold text-base sm:text-lg transition-all shadow-lg shadow-orange-500/30 flex items-center justify-center space-x-2 sm:space-x-3 cursor-pointer"
+                    onClick={() => setDeliveryOption('pickup')}
+                    className={`py-2.5 px-3 rounded-xl border font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer text-xs ${deliveryOption === 'pickup' ? 'border-[#f58c55] bg-[#f58c55] text-white shadow-md' : 'border-[#ede8da] dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
                   >
-                    <span>Proceed to Payment</span>
-                    <FaCheckCircle className="text-sm sm:text-base" />
+                    <Store className="h-4 w-4" />
+                    <span>Pickup</span>
                   </button>
-                ) : (
                   <button 
-                    form="customer-info-form"
-                    disabled={isLoading || orderLoading || paymentLoading}
-                    className="w-full bg-green-500 hover:bg-green-600 text-white py-4 sm:py-5 rounded-2xl font-extrabold text-base sm:text-lg transition-all shadow-lg shadow-green-500/30 flex items-center justify-center space-x-2 sm:space-x-3 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
+                    onClick={() => setDeliveryOption('delivery')}
+                    className={`py-2.5 px-3 rounded-xl border font-bold flex items-center justify-center space-x-2 transition-all cursor-pointer text-xs ${deliveryOption === 'delivery' ? 'border-[#f58c55] bg-[#f58c55] text-white shadow-md' : 'border-[#ede8da] dark:border-gray-700 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
                   >
-                    <FaCreditCard className="text-sm sm:text-base" />
-                    <span>{isLoading || orderLoading || paymentLoading ? 'Processing...' : 'Pay Now'}</span>
+                    <Truck className="h-4 w-4" />
+                    <span>Delivery</span>
                   </button>
-                )}
-
-                <button 
-                  onClick={handleDownloadSummary}
-                  className="w-full bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center space-x-2 border border-purple-100 dark:border-purple-800 hover:bg-purple-100 transition-all cursor-pointer"
-                >
-                  <FaDownload className="text-xs sm:text-sm" />
-                  <span>Download Summary (PNG)</span>
-                </button>
+                </div>
               </div>
+
+              {deliveryOption === 'delivery' && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">Delivery Zone</p>
+                  <select
+                    value={selectedZoneId}
+                    onChange={(e) => setSelectedZoneId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-gray-700 border border-[#ede8da] dark:border-gray-600 font-medium text-xs outline-none focus:ring-2 focus:ring-[#f58c55] text-gray-900 dark:text-white cursor-pointer"
+                  >
+                    {deliveryZones.map(zone => (
+                      <option key={zone.id} value={zone.id}>{zone.name} (+₦{zone.fee.toLocaleString()})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="space-y-2 pt-3 border-t border-[#ede8da] dark:border-gray-700 text-xs">
+                <div className="flex justify-between text-gray-600 dark:text-gray-400 font-medium">
+                  <span>Subtotal</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">₦{subtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-gray-600 dark:text-gray-400 font-medium">
+                  <span>Delivery Fee</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{deliveryOption === 'pickup' ? 'Free' : `₦${deliveryFee.toLocaleString()}`}</span>
+                </div>
+                <div className="flex justify-between items-center pt-3 border-t border-[#ede8da] dark:border-gray-700">
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">Total</span>
+                  <span className="text-lg font-extrabold text-[#f47a45]">{formatNaira(totalWithFees)}</span>
+                </div>
+              </div>
+
+              <SafeErrorDisplay error={orderError || paymentError || errorMessage} />
+
+              {checkoutStep === 'review' ? (
+                <button 
+                  onClick={() => setCheckoutStep('info')}
+                  className="w-full bg-[#f58c55] hover:bg-[#f47a45] text-white py-3.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer"
+                >
+                  <span>Proceed to Delivery Info</span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button 
+                  form="customer-info-form"
+                  disabled={isLoading || orderLoading || paymentLoading}
+                  className="w-full bg-[#f58c55] hover:bg-[#f47a45] text-white py-3.5 rounded-xl font-bold text-sm transition-all shadow-md flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span>{isLoading || orderLoading || paymentLoading ? 'Processing...' : `Pay ${formatNaira(totalWithFees)}`}</span>
+                </button>
+              )}
+
+              <button 
+                onClick={handleDownloadSummary}
+                className="w-full bg-amber-50 dark:bg-amber-900/20 text-[#f47a45] py-2.5 rounded-xl font-bold text-xs flex items-center justify-center space-x-2 border border-amber-200 dark:border-amber-900/40 hover:bg-amber-100 transition-all cursor-pointer"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Download Order Summary</span>
+              </button>
             </div>
 
-            {/* Sidebar Ad (Always Visible on Desktop) */}
-            <div className="hidden lg:block bg-white dark:bg-gray-800 rounded-3xl p-2 shadow-sm border border-gray-100 dark:border-gray-800">
+            {/* Sidebar Ad */}
+            <div className="hidden lg:block bg-[#faf7f0] dark:bg-gray-800 rounded-3xl p-2 border border-[#ede8da] dark:border-gray-700">
               <DistributedAds location="checkout_page" position={0} className="rounded-2xl" />
             </div>
           </div>
         </div>
 
         {/* Hidden capture area for PNG summary */}
-        <div id="cart-summary-capture" className="fixed left-[-9999px] bg-white p-10 w-150 rounded-3xl border">
-          <div className="flex justify-between items-center border-b pb-6 mb-6">
-            <h1 className="text-3xl font-bold text-orange-500">Flamingo Order</h1>
-            <p className="text-gray-400 font-bold">{new Date().toLocaleDateString()}</p>
+        <div id="cart-summary-capture" className="fixed left-[-9999px] bg-[#faf7f0] p-8 w-[500px] rounded-3xl border border-[#ede8da]">
+          <div className="flex justify-between items-center border-b border-[#ede8da] pb-4 mb-4">
+            <h1 className="text-xl font-bold text-[#f47a45]">Flamingo Order</h1>
+            <p className="text-xs font-semibold text-gray-500">{new Date().toLocaleDateString()}</p>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {items.map(item => (
-              <div key={item.id} className="flex justify-between border-b pb-4">
-                <span className="font-bold text-lg">{item.name} x{item.quantity} {item.isGift ? '(FREE GIFT)' : ''}</span>
-                <span className="font-bold text-lg text-gray-700">₦{(item.price * item.quantity).toLocaleString()}</span>
+              <div key={item.id} className="flex justify-between border-b border-[#ede8da] pb-2 text-sm">
+                <span className="font-semibold">{item.name} x{item.quantity} {item.isGift ? '(FREE GIFT)' : ''}</span>
+                <span className="font-bold text-gray-800">{formatNaira(item.price * item.quantity)}</span>
               </div>
             ))}
           </div>
-          <div className="mt-8 pt-6 border-t-2 border-orange-500 space-y-2">
-            <div className="flex justify-between text-xl font-extrabold">
+          <div className="mt-6 pt-4 border-t-2 border-[#f58c55] space-y-1">
+            <div className="flex justify-between text-base font-extrabold">
               <span>Grand Total</span>
-              <span className="text-[#f58c55]">₦{totalWithFees.toLocaleString()}</span>
+              <span className="text-[#f47a45]">{formatNaira(totalWithFees)}</span>
             </div>
-            <p className="text-sm text-gray-400 font-bold uppercase tracking-widest mt-4">Thank you for choosing Flamingo!</p>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-2">Flamingo Marketplace Minna</p>
           </div>
         </div>
       </main>
